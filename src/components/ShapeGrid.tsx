@@ -22,7 +22,7 @@ export function ShapeGrid({ className }: { className?: string }) {
       <g fill="var(--c-teal)">
         <path d="M100 0 h50 a50 50 0 0 1 -50 50 z" />
         <path d="M100 50 a50 50 0 0 1 50 50 h-50 z" />
-        <path d="M200 0 a50 50 0 0 0 0 100 z" />
+        <path d="M200 0 a50 50 0 0 0 0 100 z" fill="var(--c-teal-2)" />
       </g>
 
       {/* row 1, col 3 — two yellow semicircles */}

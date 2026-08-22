@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  /* Brand palette, sampled from the festival artwork.
-     Eyeballed from raster reference — confirm against the source file. */
-  --c-cream: #fae7d0;
-  --c-ink: #171514;
-  --c-green: #00713f;
-  --c-pink: #f4b8ab;
-  --c-teal: #2e86a6;
-  --c-yellow: #fbb116;
-  --c-purple: #6e5c99;
-  --c-indigo: #4e4b9e;
-  --c-red: #f5233f;
+  /* Brand palette, sampled directly from the master artwork
+     (branding/website/shapes.png and the identity poster). */
+  --c-cream: #feecd2;
+  --c-ink: #181717;
+  --c-green: #077c4c;
+  --c-pink: #f8b3a7;
+  --c-teal: #338fad;
+  --c-teal-2: #4f8daa;
+  --c-yellow: #fbac18;
+  --c-purple: #6e5889;
+  --c-indigo: #4e4c9b;
+  --c-red: #ee364f;
 
   --background: var(--c-cream);
   --foreground: var(--c-ink);
@@ -29,11 +30,12 @@
   --color-purple: var(--c-purple);
   --color-indigo: var(--c-indigo);
   --color-red: var(--c-red);
-  --font-sans: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), Helvetica, Arial, sans-serif;
+  /* Brand face is Helvetica Neue: exact on Apple platforms, Arial elsewhere.
+     The wordmark itself is outlined, so it never depends on this stack. */
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }

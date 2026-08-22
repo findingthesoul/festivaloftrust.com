@@ -3,17 +3,18 @@ import { Wordmark } from "@/components/Wordmark";
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col gap-10 px-6 py-8 sm:px-10 sm:py-12">
+    <main className="mx-auto flex min-h-dvh w-full max-w-6xl flex-col gap-12 px-6 py-8 sm:px-10 sm:py-12">
       {/* Masthead, as on the poster */}
-      <h1 className="text-green text-center text-[clamp(1.35rem,4.5vw,3.5rem)] font-bold tracking-[-0.02em] text-balance">
+      <h1 className="text-green text-center text-[clamp(1.35rem,4.5vw,3.25rem)] font-bold tracking-[-0.01em] text-balance">
         CAPE TOWN <span className="font-normal">|</span> 25.09.2026
       </h1>
 
-      {/* Horizontal lockup: shape mark beside the wordmark */}
+      {/* Horizontal lockup: shape mark and wordmark share a height, as in the
+          official artwork. The wordmark is 2:1, so it sets the overall width. */}
       <div className="flex flex-1 items-center justify-center">
-        <div className="flex w-full flex-col items-center gap-8 sm:flex-row sm:justify-center sm:gap-10">
-          <ShapeGrid className="w-48 shrink-0 sm:w-56 md:w-72" />
-          <Wordmark className="text-[clamp(3rem,12vw,7rem)] sm:text-[clamp(3rem,9vw,7rem)]" />
+        <div className="flex flex-col items-center gap-7 sm:flex-row sm:gap-9">
+          <ShapeGrid className="h-32 w-32 shrink-0 sm:h-36 sm:w-36 md:h-44 md:w-44 lg:h-52 lg:w-52" />
+          <Wordmark className="h-24 w-auto sm:h-36 md:h-44 lg:h-52" />
         </div>
       </div>
 

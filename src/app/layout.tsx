@@ -1,12 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-
-// Helvetica-style grotesque, closest web match to the wordmark artwork.
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
 
 const title = "Festival of Trust";
 const description =
@@ -29,7 +22,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}
       </body>
