@@ -54,6 +54,24 @@ Gaps the guide already documents, and what each one costs an external app:
 | Org mappings unsupported on `POST /links` | `festival_host` in the manifest cannot actually be linked yet. Person-only. |
 | `activity_types` informational only | The API accepts any snake_case type, so a typo lands silently on the timeline. |
 
+### Blocker found: the app catalogue is closed by a CHECK constraint
+
+`public.app.slug` carries `app_slug_check`, an allow-list of known slugs. Every
+in-family app so far (`fibre-flow`, `fibre-pulse`, …) registered itself by
+dropping that constraint, inserting, and re-adding it with its own slug appended
+— inside a platform migration.
+
+So registering an app is not "an INSERT" as the guide says. It is **a schema
+migration against the platform database**, which means a deploy, and means the
+set of installable apps is fixed at platform build time.
+
+For a first-party app in the monorepo that is merely awkward. For genuinely
+third-party apps it is the structural blocker: nobody outside the platform team
+can register one, however good the API around it is. Self-registration cannot be
+built on top of this table without dropping the constraint permanently and
+validating slugs some other way.
+
+
 ## Open questions this raised
 
 - **Workspace-scoped sharing.** `festival_plan` RLS is owner-scoped, because

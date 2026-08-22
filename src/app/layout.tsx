@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
+import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
 
 const title = "Festival of Trust";
 const description =
-  "Festival of Trust — Cape Town, 25 September 2026. A grassroots movement that finds trust where it already lives, celebrates it in the open, and helps build it where it is missing. Grow trust, one pocket at a time.";
+  "A grassroots movement that finds trust where it already lives, celebrates it in the open, and helps build it where it is missing. Grow trust, one pocket at a time.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.festivaloftrust.com"),
-  title,
+  title: { default: title, template: `%s — ${title}` },
   description,
   openGraph: {
     title,
@@ -23,8 +24,19 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="bg-background text-foreground flex min-h-full flex-col">
+        <SiteNav />
         {children}
+        <footer className="mx-auto w-full max-w-5xl border-t border-ink/15 px-6 py-10 text-sm sm:px-10">
+          {/* Displays the festival address but routes to Sjoerd's inbox: the
+              hello@ mailbox does not exist yet. Deliberate, not a typo. */}
+          <a
+            href="mailto:s@soul.com"
+            className="text-green font-medium underline decoration-2 underline-offset-4 transition-opacity hover:opacity-70"
+          >
+            hello@festivaloftrust.com
+          </a>
+        </footer>
       </body>
     </html>
   );
