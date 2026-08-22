@@ -5,6 +5,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
+      // Working tool rather than public-facing content.
+      disallow: "/planner",
     },
     sitemap: "https://www.festivaloftrust.com/sitemap.xml",
   };

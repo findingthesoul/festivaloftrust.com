@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  // Serve the generated planner document at a clean /planner URL.
+  async rewrites() {
+    return [{ source: "/planner", destination: "/planner.html" }];
+  },
 };
 
 export default nextConfig;

@@ -42,3 +42,6 @@ next-env.d.ts
 
 # claude local settings
 .claude/settings.local.json
+
+# generated from src/assets/planner.fragment.html by scripts/build-planner.mjs
+/public/planner.html
