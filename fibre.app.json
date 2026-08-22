@@ -1,0 +1,39 @@
+{
+  "$schema": "https://thefibre.app/schemas/fibre-app-manifest.v1.json",
+  "app_slug": "fot-planner",
+  "app_name": "Festival planner",
+  "version": "0.1.0",
+  "description": "Plans a Festival of Trust: the nine steps, visitor tier, costs and funding, producing an offer and the contribution per visitor.",
+
+  "scopes_requested": [
+    "read:persons",
+    "write:persons",
+    "read:organisations",
+    "write:activities"
+  ],
+
+  "entity_mappings": [
+    {
+      "app_entity": "festival_organiser",
+      "platform_entity": "person",
+      "mapping_kind": "identity",
+      "match_on": ["email"],
+      "description": "The person organising a festival IS a Fibre person; matched on email."
+    },
+    {
+      "app_entity": "festival_host",
+      "platform_entity": "organisation",
+      "mapping_kind": "reference",
+      "match_on": ["name"],
+      "description": "The hosting community or organisation. Note: org mappings on POST /links are not implemented yet — this is one of the gaps this pilot is testing."
+    }
+  ],
+
+  "curator_fields": [],
+
+  "activity_types": [
+    { "type": "fot_planner.plan.created", "subject": "Started planning {festival_name}" },
+    { "type": "fot_planner.plan.updated", "subject": "Updated the plan for {festival_name}" },
+    { "type": "fot_planner.offer.issued", "subject": "Offer issued for {festival_name}" }
+  ]
+}
