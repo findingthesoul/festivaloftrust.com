@@ -58,6 +58,16 @@ export default function Home() {
         {/* Narrative */}
         <section className="mx-auto max-w-2xl space-y-6 border-t border-ink/15 py-20 text-[clamp(1.05rem,1.6vw,1.3rem)] leading-relaxed text-pretty sm:py-28">
           <h1 className="sr-only">Festival of Trust</h1>
+
+          {/* Opening spread of the brochure: sets up the turn the rest of the
+              page depends on, so it reads as display type, not body copy. */}
+          <p className="text-[clamp(1.6rem,4.5vw,2.75rem)] leading-[1.15] font-bold tracking-[-0.02em] text-balance">
+            Trust seems to be disappearing everywhere.
+            <span className="text-green block">
+              But look closer, and the picture is not that grim.
+            </span>
+          </p>
+
           <p>
             Somewhere, a promise gets kept between two relatives. A neighbour
             shows up without being asked. A stranger returns a wallet, cash
