@@ -1,46 +1,38 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Helvetica-style grotesque, closest web match to the wordmark artwork.
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const title = "Festival of Trust";
+const description =
+  "Festival of Trust — Cape Town, 25 September 2026. A gathering about trust: how we build it, lose it, and rebuild it together.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.festivaloftrust.com"),
-  title: "Festival of Trust",
-  description:
-    "A gathering about trust — how we build it, lose it, and rebuild it together.",
+  title,
+  description,
   openGraph: {
-    title: "Festival of Trust",
-    description:
-      "A gathering about trust — how we build it, lose it, and rebuild it together.",
+    title,
+    description,
     url: "https://www.festivaloftrust.com",
-    siteName: "Festival of Trust",
+    siteName: title,
     locale: "en_GB",
     type: "website",
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Festival of Trust",
-    description:
-      "A gathering about trust — how we build it, lose it, and rebuild it together.",
-  },
+  twitter: { card: "summary_large_image", title, description },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        {children}
+      </body>
     </html>
   );
 }

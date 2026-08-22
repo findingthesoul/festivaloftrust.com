@@ -1,32 +1,39 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf8f4;
-  --foreground: #1a1714;
-  --muted: #6b625a;
-  --rule: #e2dcd2;
+  /* Brand palette, sampled from the festival artwork.
+     Eyeballed from raster reference — confirm against the source file. */
+  --c-cream: #fae7d0;
+  --c-ink: #171514;
+  --c-green: #00713f;
+  --c-pink: #f4b8ab;
+  --c-teal: #2e86a6;
+  --c-yellow: #fbb116;
+  --c-purple: #6e5c99;
+  --c-indigo: #4e4b9e;
+  --c-red: #f5233f;
+
+  --background: var(--c-cream);
+  --foreground: var(--c-ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-muted: var(--muted);
-  --color-rule: var(--rule);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #12100e;
-    --foreground: #f2eee7;
-    --muted: #9a9088;
-    --rule: #2d2823;
-  }
+  --color-cream: var(--c-cream);
+  --color-ink: var(--c-ink);
+  --color-green: var(--c-green);
+  --color-pink: var(--c-pink);
+  --color-teal: var(--c-teal);
+  --color-yellow: var(--c-yellow);
+  --color-purple: var(--c-purple);
+  --color-indigo: var(--c-indigo);
+  --color-red: var(--c-red);
+  --font-sans: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-inter), Helvetica, Arial, sans-serif;
 }
