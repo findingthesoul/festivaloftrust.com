@@ -3,7 +3,7 @@ import "./globals.css";
 
 const title = "Festival of Trust";
 const description =
-  "Festival of Trust — Cape Town, 25 September 2026. A gathering about trust: how we build it, lose it, and rebuild it together.";
+  "Festival of Trust — Cape Town, 25 September 2026. A grassroots movement that finds trust where it already lives, celebrates it in the open, and helps build it where it is missing. Grow trust, one pocket at a time.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.festivaloftrust.com"),
