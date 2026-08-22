@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ShapeGrid } from "@/components/ShapeGrid";
 import { Wordmark } from "@/components/Wordmark";
 
@@ -124,6 +125,13 @@ export default function Home() {
             Different starting point, same principle: trust grows by doing, not
             by saying so.
           </p>
+
+          <Link
+            href="/join"
+            className="bg-green text-cream mt-12 inline-block px-7 py-3.5 text-lg font-medium transition-opacity hover:opacity-85"
+          >
+            Host a festival
+          </Link>
         </section>
       </main>
     </>
