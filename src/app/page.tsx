@@ -23,8 +23,10 @@ export default function Home() {
           A gathering about trust — how we build it, lose it, and rebuild it
           together.
         </p>
+        {/* Displays the festival address but routes to Sjoerd's inbox: the
+            hello@ mailbox does not exist yet. Deliberate, not a typo. */}
         <a
-          href="mailto:hello@festivaloftrust.com"
+          href="mailto:s@soul.com"
           className="text-green font-medium underline decoration-2 underline-offset-4 transition-opacity hover:opacity-70"
         >
           hello@festivaloftrust.com
