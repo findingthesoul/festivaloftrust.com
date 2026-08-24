@@ -17,7 +17,16 @@ import {
 import { StepMark } from "@/components/StepMark";
 import { StepDetail } from "./step-detail";
 
-const MARKER = "capetown";
+/**
+ * Placeholder festival. The marker is the URL slug
+ * (festivaloftrust.com/[marker]); the title uses a separate display form, per
+ * the build prompt's `title (derived): 'Festival of Trust ' + display marker`.
+ *
+ * Both are stand-ins until runs come from the platform, where the display name
+ * arrives as the run's `subject_label`.
+ */
+const MARKER = "example";
+const MARKER_DISPLAY = "Example";
 
 export function Planner() {
   // The browser store is the source of truth. setPlan persists on every call,
@@ -62,7 +71,7 @@ export function Planner() {
           Festival of Trust
         </p>
         <h1 className="mt-2 text-[clamp(2rem,6vw,3.25rem)] leading-[1.05] font-bold tracking-[-0.02em]">
-          Festival of Trust {MARKER}
+          Festival of Trust {MARKER_DISPLAY}
         </h1>
         <p className="text-green mt-2 text-lg font-medium">
           Grow trust, one pocket at a time.

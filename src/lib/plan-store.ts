@@ -20,7 +20,9 @@ import { emptyPlanFor, type PlanState } from "./plan-state";
 export type { PlanState, StepState } from "./plan-state";
 
 const KEY = "fot.plan.v1";
-const MARKER = "capetown";
+// Placeholder until runs come from the platform, where the festival arrives
+// as the run's subject_label. Kept in step with src/app/plan/planner.tsx.
+const MARKER = "example";
 
 let cache: PlanState | null = null;
 const listeners = new Set<() => void>();

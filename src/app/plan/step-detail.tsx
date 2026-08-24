@@ -46,6 +46,21 @@ export function StepDetail({
         </div>
       </header>
 
+      <section className="mt-8 max-w-2xl">
+        <h3 className="text-ink/50 text-xs tracking-[0.15em] uppercase">
+          What good looks like
+        </h3>
+        <p className="mt-2 leading-relaxed text-pretty">{step.whatGoodLooksLike}</p>
+      </section>
+
+      {/* Only steps 1 and 2 carry one. A2 asks for a quiet aside — it is not a
+          task and not a step of its own. */}
+      {step.readiness && (
+        <p className="text-ink/70 mt-6 max-w-2xl border-l-2 border-ink/20 pl-4 leading-relaxed text-pretty italic">
+          {step.readiness}
+        </p>
+      )}
+
       {/* Tasks and reflection carry equal weight, per the spec's core
           principle: the early steps are relational, not logistical. */}
       <div className="mt-10 grid gap-10 md:grid-cols-2">

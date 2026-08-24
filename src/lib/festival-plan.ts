@@ -1,10 +1,12 @@
 /**
- * The nine steps, per the Planner App build prompt.
+ * The nine steps.
  *
- * Tasks, traps and reflections are placeholders: the spec sources them from
- * "manual documents A2", which are not in the repo or the Drive project folder.
- * They are plain data, so importing the real content is a change to this file
- * and nothing else.
+ * Content is the real step copy from manual A2 — purposes, tasks, traps,
+ * readiness notes and reflections. Tasks are editable defaults, not fixed.
+ *
+ * Per-variation task swaps (Communities vs Organisations) are still OPEN in
+ * A2. Until they are written, both variations share this generic set and the
+ * toggle drives only the copy the build prompt already marked (steps 1 and 3).
  */
 
 export type Phase = "orientation" | "doing" | "culmination";
@@ -12,22 +14,16 @@ export type Variation = "communities" | "organisations";
 export type StepStatus = "not_started" | "in_progress" | "done";
 
 /**
- * Phase colours. Confirmed by the Developer Briefing (§5, "Colour marks phase,
- * not step") — these are the system, not an approximation of the poster.
+ * Phase colours, confirmed by A2 and the Developer Briefing (§5, "Colour marks
+ * phase, not step").
  *
  * Colour groups the nine steps into three phases of three. A step never gets
- * its own colour; the briefing is explicit that doing so breaks the system.
+ * its own colour; both sources are explicit that doing so breaks the system.
  *
  * Why these differ from the site's palette: `globals.css` is sampled from the
  * shape artwork, which uses eight colours across the grid. That is an event
  * *composition* — "each festival may compose its own arrangement of the nine
  * forms" — not the phase system. The two are meant to differ.
- *
- * Both the briefing and the build prompt add that hexes are read from current
- * artwork and want confirming against the designer's master file. Sampling the
- * master PNGs also puts the wordmark at #181717 rather than the briefing's
- * #3B3F8F, so INK below is the briefing's value and the site keeps the sampled
- * one until a designer settles it.
  */
 export const PHASES: Record<Phase, { label: string; color: string }> = {
   orientation: { label: "Orientation", color: "#E9C60F" },
@@ -43,8 +39,15 @@ export type StepSeed = {
   verb: string;
   phase: Phase;
   purpose: string;
+  /** Optional to display; the standard the step is aiming at. */
+  whatGoodLooksLike: string;
   tasks: string[];
   trap: string;
+  /**
+   * Only steps 1 and 2 carry one. It is not a task and not a separate step —
+   * A2 asks for a quiet aside.
+   */
+  readiness?: string;
   reflection: string;
 };
 
@@ -53,145 +56,180 @@ export const STEPS: StepSeed[] = [
     id: 1,
     verb: "Listen",
     phase: "orientation",
-    purpose: "Discover the need.",
+    purpose:
+      "Discover the need. Find out what trust looks like, and where it is thin, in this specific place, before planning anything.",
+    whatGoodLooksLike:
+      "You can describe the community in its own words, not yours. You know who is gathering and what holds them together. You have heard, from real people, where trust already lives and where it strains.",
     tasks: [
-      "Hold four conversations of two hours",
-      "Write down what you heard, not what you concluded",
-      "Notice who is already trusted here",
+      "Have unhurried conversations with people in the community",
+      "Ask how trust grows here, who people rely on, what is missing",
+      "Name who is gathering, and what holds them together",
+      "Listen for the pockets of trust that already exist",
+      "Resist pitching a festival, you are learning, not recruiting",
     ],
-    trap: "Arriving with the festival already designed in your head.",
-    reflection: "What did you hear that you did not expect?",
+    trap: "Arriving with the answer. If you already know what the festival will be before you have listened, you have skipped the step. Listening that only confirms your plan is not listening.",
+    readiness:
+      "This step also tests you. Can you sit with a community's account without correcting it. If listening feels like a delay before the real work, pause. The listening is the real work.",
+    reflection: "What surprised you about how trust lives here?",
   },
   {
     id: 2,
     verb: "Gather",
     phase: "orientation",
-    purpose: "Form the core group.",
+    purpose:
+      "Form the core group. Bring together a small, diverse group who will steward the festival. Stewards, not staff.",
+    whatGoodLooksLike:
+      "A handful of people who care, from different backgrounds, generations, and vantage points. They own the festival together. No single person carries it alone.",
     tasks: [
-      "Invite the people the conversations pointed to",
-      "Agree how often you will meet",
-      "Make room for someone who disagrees",
+      "Invite people whose presence widens the group's view, not just its workload",
+      "Seek difference: someone who knows the elders, someone who knows the young",
+      "Include at least one person from outside your usual circle",
+      "Agree how you will work together before you agree what to do",
     ],
-    trap: "Gathering people who already agree with each other.",
-    reflection: "Who is missing from this group, and why?",
+    trap: "Gathering people who agree with you and are easy to work with. A core group that shares one perspective will design a festival for people like themselves.",
+    readiness:
+      "Here you learn what you carry and what others must. If you cannot let others shape the festival, notice that now, while it is still small.",
+    reflection: "Whose perspective is still missing from this group?",
   },
   {
     id: 3,
     verb: "Align",
     phase: "orientation",
-    purpose: "Clarify purpose and vision.",
+    purpose:
+      "Clarify purpose and vision. Agree why here, why now, and what people should carry home. This becomes the test for every later choice.",
+    whatGoodLooksLike:
+      "The core group can say, in a sentence or two, why this festival exists and what it hopes people leave with. When a later decision is hard, you return to this and it helps.",
     tasks: [
-      "Name the four elements together",
-      "Write one sentence the whole group can stand behind",
-      "Decide what this festival is not",
+      "Answer together: why are we doing this",
+      "Answer together: who do we hope will come",
+      "Answer together: what do we want people to carry home",
+      "Write the purpose plainly and keep it where the group can see it",
     ],
-    trap: "Settling for words everyone can accept but nobody means.",
-    reflection: "Where did the group struggle to agree, and what does that tell you?",
+    trap: 'A purpose so broad it decides nothing. "Bring people together" is true of every event. Push until the purpose is specific enough to rule some things out.',
+    reflection: "Does our purpose help us say no to something?",
   },
   {
     id: 4,
     verb: "Connect",
     phase: "doing",
-    purpose: "Build partnerships.",
+    purpose:
+      "Build partnerships. Invite organisations, schools, artists, businesses, and local leaders to strengthen the social fabric with you.",
+    whatGoodLooksLike:
+      "You have partners, not sponsors. People and groups who see the festival as theirs too, who contribute more than money: space, reach, trust, hands.",
     tasks: [
-      "List who already holds trust in this place",
-      "Approach partners with an invitation, not a request",
-      "Agree what each partner brings",
+      "List organisations, schools, artists, businesses, local leaders",
+      "Approach each with an invitation to build, not a request to fund",
+      "Be clear about the shared aim",
+      "Let partners shape their own contribution",
     ],
-    trap: "Treating partners as suppliers rather than co-hosts.",
-    reflection: "What are you asking of partners, and what are you offering them?",
+    trap: "Treating partnership as fundraising. The moment the conversation is only about money, you have lost the point. Partners join the work; sponsors buy a logo.",
+    reflection: "Who did we invite to give, when we should have invited them to join?",
   },
   {
     id: 5,
     verb: "Design",
     phase: "doing",
-    purpose: "Shape the festival journey.",
+    purpose:
+      "Shape the festival journey. Choose the movements, formats, and artistic elements that carry people from experience to their own sense of agency.",
+    whatGoodLooksLike:
+      "A day that moves. Not a stack of sessions, but a sequence that deepens: people arrive as strangers and leave having met. The design fits this community, tuned to it, not copied from elsewhere.",
     tasks: [
-      "Map the arc of the day",
-      "Decide where encounter happens, not just programme",
-      "Leave deliberate space that is not filled",
+      "Work with the five movements as the spine",
+      "Set the four pillars for this community using the dials",
+      "Start from a named preset if this is your first time",
+      "Choose formats, conversations, and art that serve the movements",
+      "Leave empty space: a shared meal, an unhurried conversation",
     ],
-    trap: "Filling every hour and leaving no room for what emerges.",
-    reflection: "Where in the day does a stranger become someone you know?",
+    trap: "Designing a programme instead of a journey. A good festival is not a full timetable. Empty space, a shared meal, an unhurried conversation often do more than another session.",
+    reflection: "Where in the day does a stranger first feel they belong?",
   },
   {
     id: 6,
     verb: "Invite",
     phase: "doing",
-    purpose: "Bring the community together.",
+    purpose:
+      "Bring the community together. Reach people personally first, publicly second. Aim to gather people who would not usually meet.",
+    whatGoodLooksLike:
+      "The room holds a mix that does not happen by accident. People came because someone they trust asked them, not because they saw a poster.",
     tasks: [
-      "Invite through people, not posters",
-      "Make it easy for someone to bring another",
-      "Check who has not been reached",
+      "Make personal invitations the core of your outreach",
+      "Ask partners and the core group to invite people directly",
+      "Use public reach to widen, not replace, the personal ask",
+      "Notice who is not coming, and go to them",
     ],
-    trap: "Broadcasting widely and reaching only the already-connected.",
-    reflection: "Who would not see themselves in this invitation?",
+    trap: "Relying on marketing. People rarely join a conversation about trust because of an advert. They come because they were asked, by name, by someone who matters to them.",
+    reflection: "Who in the room would surprise the rest of the room?",
   },
   {
     id: 7,
     verb: "Host",
     phase: "culmination",
-    purpose: "Facilitate meaningful encounters.",
+    purpose:
+      "Facilitate meaningful encounters. Hold the space so that trust can grow. Do not control the outcome.",
+    whatGoodLooksLike:
+      "People relax. Strangers talk. The team is present but not central. The day belongs to the participants, and the hosts make that possible without making it about themselves.",
     tasks: [
-      "Welcome every arrival by name where you can",
-      "Hold the frame, then get out of the way",
-      "Watch for who is standing alone",
+      "Attend to welcome, hospitality, facilitation, inclusion, reflection",
+      "Prepare facilitators well",
+      "Watch the room and adjust",
+      "Protect the quiet moments as carefully as the loud ones",
     ],
-    trap: "Managing the event instead of hosting the people.",
-    reflection: "What happened that you did not plan?",
+    trap: "Over-programming the day out of nervousness. Silence and open space feel risky to a host and often feel rich to a participant. Trust the room.",
+    reflection: "What happened that we did not plan, and was better for it?",
   },
   {
     id: 8,
     verb: "Harvest",
     phase: "culmination",
-    purpose: "Capture stories and learning.",
+    purpose: "Capture stories and learning. Turn one day into shared community knowledge.",
+    whatGoodLooksLike:
+      "The festival leaves a trace. Stories told, relationships named, commitments made, ideas surfaced. Not a report filed and forgotten, but something the community can hold and use.",
     tasks: [
-      "Collect stories while they are still warm",
-      "Ask what changed, not what people thought of it",
-      "Record what you would do differently",
+      "Gather stories, insights, relationships formed, commitments made",
+      "Capture with consent and care, never by extraction",
+      "Let people say what mattered to them",
+      "Keep it in a form the community owns, not only the organisers",
     ],
-    trap: "Measuring attendance and calling it impact.",
-    reflection: "Which story tells you most about what actually happened?",
+    trap: "Measuring the wrong thing. Attendance and satisfaction are easy to count and say little about trust. Look instead for what people intend to carry on.",
+    reflection: "What did the community learn about itself today?",
   },
   {
     id: 9,
     verb: "Grow",
     phase: "culmination",
-    purpose: "Sustain the web of trust.",
+    purpose:
+      "Sustain the web. Support participants to keep going, start their own initiatives, and become organisers themselves.",
+    whatGoodLooksLike:
+      "The festival was a beginning. Conversations continue. New pockets of trust form. Some participants become the next organisers. The web is denser than it was.",
     tasks: [
-      "Decide what continues without you",
-      "Introduce people who should know each other",
-      "Share what you learned with the next pocket",
+      "Before people leave, open a path to what comes next",
+      "Offer further conversations, learning circles, small initiatives, future gatherings",
+      "Stay in light contact",
+      "Connect this festival's web to others",
+      "Hand the work onward rather than holding it",
     ],
-    trap: "Letting the energy end with the event.",
-    reflection: "What will still be true here in a year?",
+    trap: "Treating the festival as the finish line. If everything ends when the room empties, the pockets stay scattered. The threads form only if someone tends them after.",
+    reflection: "What is now possible here that was not possible before?",
   },
 ];
 
-/** Per-variation copy and task swaps. Kept in one object per spec §5.
- *  OPEN: real swaps come from manuals B and C. */
+/**
+ * Per-variation copy. A2 leaves the task swaps OPEN, so both variations share
+ * the generic task set and only the copy the build prompt marked changes here.
+ */
 export const VARIATION_OVERRIDES: Record<
   Variation,
   Partial<Record<number, Partial<Pick<StepSeed, "purpose" | "tasks">>>>
 > = {
-  communities: {
-    4: {
-      tasks: [
-        "List who already holds trust in this place",
-        "Approach a funder who believes trust is worth investing in",
-        "Agree what each partner brings",
-      ],
-    },
-  },
+  communities: {},
   organisations: {
-    1: { purpose: "Discover the need inside the organisation." },
-    3: { purpose: "Clarify purpose and vision with the organisation." },
-    4: {
-      tasks: [
-        "List who already holds trust across the organisation",
-        "Brief internal sponsors",
-        "Agree what each team brings",
-      ],
+    1: {
+      purpose:
+        "Discover the need. Find out what trust looks like, and where it is thin, inside this specific organisation, before planning anything.",
+    },
+    3: {
+      purpose:
+        "Clarify purpose and vision. Agree why this organisation, why now, and what people should carry back to their work. This becomes the test for every later choice.",
     },
   },
 };
@@ -205,3 +243,16 @@ export function statusOf(checked: number, total: number): StepStatus {
   if (total === 0 || checked === 0) return "not_started";
   return checked >= total ? "done" : "in_progress";
 }
+
+/** Accent colours from the brand palette, one per domain. */
+export const DOMAIN_ACCENTS = [
+  "bg-pink",
+  "bg-teal",
+  "bg-yellow",
+  "bg-green",
+  "bg-purple",
+  "bg-indigo",
+  "bg-red",
+  "bg-pink",
+  "bg-teal",
+] as const;
