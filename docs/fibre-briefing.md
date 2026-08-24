@@ -4,13 +4,6 @@ _Written 2026-08-24 from the platform side, against The Fibre v0.17.0 /
 Flow 1.13.0. Every API claim below was checked against the running code or the
 live API; where something is relayed rather than verified it says so._
 
-> **Correction (planner side, 2026-08-24).** The endpoint table below omits the
-> `/api/v1` prefix on the `/apps/...` rows. Every route is mounted under it —
-> `server.ts:119` routes `/apps` into the v1 router. Against production:
-> `/api/v1/apps/whoami` → 401 (exists), `/apps/whoami` → 404. A client written
-> from the table verbatim 404s on every call. `src/lib/fibre.ts` uses the
-> corrected paths.
-
 ## What you are building
 
 The Festival of Trust planner: a tool that walks an organiser through nine
