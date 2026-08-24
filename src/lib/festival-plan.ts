@@ -12,26 +12,31 @@ export type Variation = "communities" | "organisations";
 export type StepStatus = "not_started" | "in_progress" | "done";
 
 /**
- * Phase colours as written in the build prompt (§7).
+ * Phase colours. Confirmed by the Developer Briefing (§5, "Colour marks phase,
+ * not step") — these are the system, not an approximation of the poster.
  *
- * NOTE — these three do not appear in the brand artwork. Sampling the master
- * files (branding/website/shapes.png, the identity poster) gives yellow
- * #fbac18, red #ee364f, purple #6e5889 and indigo #4e4c9b, with no orange or
- * magenta anywhere, and a black (#181717) wordmark rather than indigo.
+ * Colour groups the nine steps into three phases of three. A step never gets
+ * its own colour; the briefing is explicit that doing so breaks the system.
  *
- * The spec says to follow it literally but also "confirm all hex against the
- * designer's master file, values here are read from artwork" — so this is
- * flagged rather than silently changed. To switch to sampled brand colours,
- * replace the three `color` values with the `brandAlternative` beside each.
+ * Why these differ from the site's palette: `globals.css` is sampled from the
+ * shape artwork, which uses eight colours across the grid. That is an event
+ * *composition* — "each festival may compose its own arrangement of the nine
+ * forms" — not the phase system. The two are meant to differ.
+ *
+ * Both the briefing and the build prompt add that hexes are read from current
+ * artwork and want confirming against the designer's master file. Sampling the
+ * master PNGs also puts the wordmark at #181717 rather than the briefing's
+ * #3B3F8F, so INK below is the briefing's value and the site keeps the sampled
+ * one until a designer settles it.
  */
-export const PHASES: Record<
-  Phase,
-  { label: string; color: string; brandAlternative: string }
-> = {
-  orientation: { label: "Orientation", color: "#E9C60F", brandAlternative: "#fbac18" },
-  doing: { label: "Doing", color: "#F0921E", brandAlternative: "#ee364f" },
-  culmination: { label: "Culmination", color: "#E6197F", brandAlternative: "#6e5889" },
+export const PHASES: Record<Phase, { label: string; color: string }> = {
+  orientation: { label: "Orientation", color: "#E9C60F" },
+  doing: { label: "Doing", color: "#F0921E" },
+  culmination: { label: "Culmination", color: "#E6197F" },
 };
+
+/** Deep indigo — the wordmark and primary text on light (Developer Briefing §5). */
+export const INK = "#3B3F8F";
 
 export type StepSeed = {
   id: number;
