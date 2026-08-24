@@ -262,9 +262,13 @@ flow with placeholder copy; only step 5 genuinely needs the real content.
   suggested tasks and some copy. `docs/brief-flow-as-planner-engine.md` gap 5,
   and the brief itself says it may not belong in Flow at all. It needs a design
   decision before any code, so keep the variation in the planner for now.
-- **The Thread has no app-key surface**, so turning a festival into a public
-  page with tickets and enrolment is not reachable yet. Same shape as the Flow
-  work, new scope pair, when it is wanted.
+- ~~The Thread has no app-key surface~~ — **shipped in v0.18.0.** Publish a
+  programme as a public page, edit it, and read its registrations at
+  `/api/v1/apps/fot-planner/thread/threads`, with scopes `read:programs`,
+  `write:programs`, `read:enrolments`. There is no `write:enrolments`:
+  registration comes from the public form, never from an app. The registration
+  form `answers` and every payment field stay behind the wall. See
+  `building-on-the-fibre.md` §5.5.
 - **No curator-data write API**, so the planner cannot annotate a person with
   its own fields. Fibre build-plan item 9a.
 
