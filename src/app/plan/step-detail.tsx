@@ -1,6 +1,6 @@
 "use client";
 
-import { PHASES, type StepSeed } from "@/lib/festival-plan";
+import { PHASES, STEP_COLORS, type StepSeed } from "@/lib/festival-plan";
 import type { StepState } from "@/lib/plan-store";
 import { StepMark } from "@/components/StepMark";
 
@@ -34,7 +34,7 @@ export function StepDetail({
       </button>
 
       <header className="mt-6 flex items-start gap-4">
-        <StepMark step={step.id} color={phase.color} className="mt-1 h-11 w-11 shrink-0" />
+        <StepMark step={step.id} className="mt-1 h-11 w-11 shrink-0" />
         <div>
           <p className="text-ink/50 text-xs tracking-[0.15em] uppercase">
             {phase.label}
@@ -109,7 +109,7 @@ export function StepDetail({
 
           <div
             className="mt-8 border-l-4 p-4 text-sm"
-            style={{ borderColor: phase.color, background: `${phase.color}14` }}
+            style={{ borderColor: STEP_COLORS[step.id], background: `${STEP_COLORS[step.id]}14` }}
           >
             <p className="font-bold">Watch for</p>
             <p className="mt-1 leading-relaxed text-pretty">{step.trap}</p>

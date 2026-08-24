@@ -118,8 +118,16 @@ export function Planner() {
                   onClick={() => setOpen(s.id)}
                   className="border-ink/15 hover:border-ink/40 group flex flex-col items-start border bg-white/40 p-5 text-left transition-colors"
                 >
-                  <StepMark step={s.id} color={phase.color} className="h-10 w-10" />
-                  <h2 className="mt-4 text-xl font-bold">{s.verb}</h2>
+                  <StepMark step={s.id} className="h-10 w-10" />
+                  {/* The marks now carry their own poster colour, so the phase
+                      needs saying rather than showing. */}
+                  <p
+                    className="mt-4 text-[0.65rem] font-medium tracking-[0.15em] uppercase"
+                    style={{ color: phase.color }}
+                  >
+                    {phase.label}
+                  </p>
+                  <h2 className="mt-1 text-xl font-bold">{s.verb}</h2>
                   <p className="text-ink/70 mt-1 flex-1 text-sm text-pretty">
                     {s.purpose}
                   </p>

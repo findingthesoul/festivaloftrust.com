@@ -34,6 +34,35 @@ export const PHASES: Record<Phase, { label: string; color: string }> = {
 /** Deep indigo — the wordmark and primary text on light (Developer Briefing §5). */
 export const INK = "#3B3F8F";
 
+/**
+ * Colour per step mark, taken from the poster grid.
+ *
+ * Sampled from branding/website/shapes.png — the designer's own web export, so
+ * sRGB with no conversion guesswork. Grid cell position is step number, so
+ * cell 1 (four circles) is Listen and cell 9 (the pentagon) is Grow.
+ *
+ * Nine forms, eight colours: Align and Connect share the yellow, Listen and
+ * Grow share the pink. Gather carries two teals within one form, so it is the
+ * one mark that needs a second value.
+ *
+ * Phase is still carried — by the label and the progress gradient — but the
+ * marks read as the poster does.
+ */
+export const STEP_COLORS: Record<number, string> = {
+  1: "#f8b3a7", // Listen — four circles
+  2: "#338fad", // Gather — quarter discs
+  3: "#fbac18", // Align — two half discs
+  4: "#fbac18", // Connect — two triangles
+  5: "#077c4c", // Design — the centre star
+  6: "#6e5889", // Invite — the turned square
+  7: "#4e4c9b", // Host — the square
+  8: "#ee364f", // Harvest — the circle
+  9: "#f8b3a7", // Grow — the pentagon
+};
+
+/** Gather's semicircle is a second, greyer teal in the artwork. */
+export const STEP_COLOR_ALT: Record<number, string> = { 2: "#4f8daa" };
+
 export type StepSeed = {
   id: number;
   verb: string;
