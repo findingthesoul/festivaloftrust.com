@@ -1,8 +1,8 @@
 -- ============================================================================
 -- Festival of Trust — the nine steps, as a Fibre Flow.
 --
--- Run this in the Supabase SQL editor for The Fibre, against the Solidarity Lab
--- workspace. It exists as SQL rather than as clicks because `system_key` is not
+-- Run this in the Supabase SQL editor for The Fibre. It targets the Festival
+-- of Trust workspace, found by slug. It exists as SQL rather than as clicks because `system_key` is not
 -- settable from Flow's UI or its API — Pulse's pipeline got its own the same
 -- way (20260708120000_pipeline_flow_in_flow.sql), and that is the precedent
 -- this follows.
@@ -15,13 +15,22 @@
 
 do $$
 declare
-  v_ws      uuid := 'eaf096f8-59f8-45d0-b3e3-3d31c8ebffeb';  -- Solidarity Lab
+  v_ws      uuid;
   v_owner   uuid;
   v_flow    uuid;
   v_version uuid;
   v_step    uuid;
   v_prev    uuid;
 begin
+  -- Looked up by slug rather than pasted: the Festival of Trust workspace, not
+  -- Solidarity Lab. Festival registrants become persons in whichever workspace
+  -- holds the festival, and they do not belong in Solidarity Lab's contact
+  -- graph alongside its clients.
+  select id into v_ws from public.workspace where slug = 'festival-of-trust-7va1';
+  if v_ws is null then
+    raise exception 'workspace festival-of-trust-7va1 not found';
+  end if;
+
   if exists (select 1 from public.flow_definition
               where workspace_id = v_ws and system_key = 'fot_festival') then
     raise notice 'fot_festival already exists — nothing to do';
