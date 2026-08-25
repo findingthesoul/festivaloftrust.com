@@ -188,6 +188,21 @@ export const link = (input: {
     body: { create_if_missing: false, ...input },
   });
 
+export type FibreOrganisation = { id: string; name: string; domain: string | null };
+
+/**
+ * Resolve one of our own record ids to the platform organisation it is linked
+ * to. 404s until the link exists.
+ *
+ * This is why the app holds no platform UUIDs: we say "festival_host `fot`",
+ * the platform says which organisation that is. Same reasoning as steps being
+ * addressed by key.
+ */
+export const linkedOrganisation = (appEntity: string, appRecordId: string) =>
+  call<FibreOrganisation>(
+    `/apps/${SLUG}/organisations/${encodeURIComponent(appEntity)}/${encodeURIComponent(appRecordId)}`,
+  );
+
 /**
  * Append a timeline event.
  *

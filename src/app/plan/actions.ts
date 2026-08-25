@@ -15,6 +15,8 @@
 import {
   addTask as apiAddTask,
   getRun,
+  link,
+  linkedOrganisation,
   listFlows,
   listRuns,
   setNote as apiSetNote,
@@ -54,6 +56,40 @@ export async function connectionStatus(): Promise<Connection> {
       ok: false,
       error: e instanceof FibreError ? e.detail : String(e),
     };
+  }
+}
+
+/**
+ * The Festival of Trust organisation, by our own record id rather than a UUID
+ * in config.
+ *
+ * Asks the platform what `festival_host/<marker>` points at; on a first run the
+ * link does not exist yet, so it is made by matching on name. `create_if_missing`
+ * stays false — if no organisation of that name exists, that is worth an error,
+ * not a new organisation invented in the shared contact graph.
+ */
+export async function hostOrganisationId(
+  marker: string,
+  name = "Festival of Trust",
+): Promise<{ id: string } | { error: string }> {
+  try {
+    const org = await linkedOrganisation("festival_host", marker);
+    return { id: org.id };
+  } catch (e) {
+    if (!(e instanceof FibreError) || e.status !== 404) {
+      return { error: e instanceof FibreError ? e.detail : String(e) };
+    }
+  }
+  try {
+    const made = await link({
+      app_entity: "festival_host",
+      app_record_id: marker,
+      match_on: { name },
+      create_if_missing: false,
+    });
+    return { id: made.platform_id };
+  } catch (e) {
+    return { error: e instanceof FibreError ? e.detail : String(e) };
   }
 }
 
