@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { connectionStatus } from "./actions";
+import { ConnectionBanner } from "./connection-banner";
 import { Planner } from "./planner";
+import { TenthArea } from "./tenth-area";
 
 export const metadata: Metadata = {
   title: "The planner",
@@ -7,19 +10,18 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function Page() {
+// The connection is read per request: a key can be minted, or an app suspended,
+// without this page being rebuilt.
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+  const connection = await connectionStatus();
+
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
       <Planner />
-
-      {/* The gate is not built. Saying so beats a lock that implies
-          protection which does not exist. */}
-      <p className="text-ink/50 mt-16 border-t border-ink/15 pt-6 text-sm text-pretty">
-        Work in progress. Approval and payment come before this page in the
-        intended flow but are not wired up, and your plan is saved in this
-        browser only — the platform entities it should write to do not exist
-        yet.
-      </p>
+      <TenthArea />
+      <ConnectionBanner connection={connection} />
     </main>
   );
 }
