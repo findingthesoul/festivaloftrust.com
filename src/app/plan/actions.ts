@@ -49,12 +49,14 @@ export async function connectionStatus(): Promise<Connection> {
       scopes: me.scopes ?? [],
     };
   } catch (e) {
-    // A key that exists but does not work is worth saying out loud: the app is
-    // probably registered but not yet approved or activated.
+    // Two different situations that a single message would blur: the platform
+    // turned us down (approval, activation, a revoked key), or it could not be
+    // reached at all. "Refused" is wrong for the second and sends someone
+    // checking permissions when the host is simply down.
     return {
       configured: true,
       ok: false,
-      error: e instanceof FibreError ? e.detail : String(e),
+      error: e instanceof FibreError ? e.detail : "could not be reached",
     };
   }
 }

@@ -1,12 +1,12 @@
 import type { MetadataRoute } from "next";
-import { NAV } from "@/components/SiteNav";
+import { PUBLIC_PATHS } from "@/components/SiteNav";
 
 const BASE = "https://www.festivaloftrust.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return NAV.map((item) => ({
-    url: item.href === "/" ? BASE : `${BASE}${item.href}`,
+  return PUBLIC_PATHS.map((path) => ({
+    url: path === "/" ? BASE : `${BASE}${path}`,
     changeFrequency: "monthly" as const,
-    priority: item.href === "/" ? 1 : 0.7,
+    priority: path === "/" ? 1 : 0.7,
   }));
 }

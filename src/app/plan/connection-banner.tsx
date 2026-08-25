@@ -28,9 +28,11 @@ export function ConnectionBanner({
     );
   }
 
-  const detail = connection.configured
-    ? `A key is set but the platform refused it: ${connection.error}`
-    : "No app key is configured yet, so this plan is saved in this browser only — not shared with your core group, and lost if site data is cleared.";
+  const detail = !connection.configured
+    ? "No app key is configured yet, so this plan is saved in this browser only — not shared with your core group, and lost if site data is cleared."
+    : connection.error === "could not be reached"
+      ? "The platform could not be reached. Your plan is showing from this browser; anything you change now is not being saved to the platform."
+      : `The platform turned the key down: ${connection.error}`;
 
   return (
     <aside className="mt-16 border-t border-ink/15 pt-6 text-sm">

@@ -10,6 +10,9 @@ export const NAV = [
   { href: "/contact", label: "Contact" },
 ];
 
+/** Public pages for the sitemap: the nav plus entry points not shown in it. */
+export const PUBLIC_PATHS = [...NAV.map((n) => n.href), "/join"];
+
 export function SiteNav() {
   return (
     <nav aria-label="Main" className="w-full">

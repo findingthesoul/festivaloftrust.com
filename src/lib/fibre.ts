@@ -97,9 +97,23 @@ async function call<T>(
   const parsed: unknown = text ? JSON.parse(text) : null;
 
   if (!res.ok) {
-    // The API answers errors as RFC 9457 problem documents.
-    const p = parsed as { detail?: string; title?: string } | null;
-    throw new FibreError(res.status, p?.detail ?? p?.title ?? res.statusText, parsed);
+    // Two error shapes in play: app-key auth failures are RFC 9457 problem
+    // documents, everything else answers { error }. Reading only the first
+    // turned "task not found" into a bare "Not Found".
+    const p = parsed as
+      | { detail?: string; title?: string; error?: unknown }
+      | null;
+    const fromError =
+      typeof p?.error === "string"
+        ? p.error
+        : p?.error
+          ? JSON.stringify(p.error)
+          : undefined;
+    throw new FibreError(
+      res.status,
+      p?.detail ?? fromError ?? p?.title ?? res.statusText,
+      parsed,
+    );
   }
   return parsed as T;
 }
