@@ -1,27 +1,31 @@
 "use client";
 
-import { PHASES, STEP_COLORS, type StepSeed } from "@/lib/festival-plan";
-import type { StepState } from "@/lib/plan-store";
+import { useState } from "react";
+import { PHASES } from "@/lib/festival-plan";
+import { STEP_COLORS } from "@/lib/festival-plan";
+import type { ViewStep } from "@/lib/plan-view";
 import { StepMark } from "@/components/StepMark";
 
 export function StepDetail({
   step,
-  state,
-  onChange,
   onBack,
+  onToggle,
+  onAddTask,
+  onSaveNote,
 }: {
-  step: StepSeed;
-  state: StepState;
-  onChange: (next: StepState) => void;
+  step: ViewStep;
   onBack: () => void;
+  onToggle: (taskId: string, done: boolean) => void;
+  onAddTask: (title: string) => void;
+  onSaveNote: (body: string) => void;
 }) {
   const phase = PHASES[step.phase];
-
-  const setTask = (i: number, patch: Partial<StepState["tasks"][number]>) =>
-    onChange({
-      ...state,
-      tasks: state.tasks.map((t, j) => (j === i ? { ...t, ...patch } : t)),
-    });
+  const accent = STEP_COLORS[step.number];
+  // Callers mount this with key={step.key}, so moving between steps remounts
+  // and these initialise from the new step. Syncing them in an effect instead
+  // would fight the user's cursor mid-sentence.
+  const [note, setNote] = useState(step.note);
+  const [newTask, setNewTask] = useState("");
 
   return (
     <div>
@@ -34,92 +38,89 @@ export function StepDetail({
       </button>
 
       <header className="mt-6 flex items-start gap-4">
-        <StepMark step={step.id} className="mt-1 h-11 w-11 shrink-0" />
+        <StepMark step={step.number} className="mt-1 h-11 w-11 shrink-0" />
         <div>
-          <p className="text-ink/50 text-xs tracking-[0.15em] uppercase">
-            {phase.label}
-          </p>
+          <p className="text-ink/50 text-xs tracking-[0.15em] uppercase">{phase.label}</p>
           <h2 className="text-[clamp(1.75rem,5vw,2.75rem)] leading-tight font-bold tracking-[-0.02em]">
-            {step.verb}
+            {step.name}
           </h2>
           <p className="mt-1 text-lg text-pretty">{step.purpose}</p>
         </div>
       </header>
 
-      <section className="mt-8 max-w-2xl">
-        <h3 className="text-ink/50 text-xs tracking-[0.15em] uppercase">
-          What good looks like
-        </h3>
-        <p className="mt-2 leading-relaxed text-pretty">{step.whatGoodLooksLike}</p>
-      </section>
+      {step.whatGoodLooksLike && (
+        <section className="mt-8 max-w-2xl">
+          <h3 className="text-ink/50 text-xs tracking-[0.15em] uppercase">
+            What good looks like
+          </h3>
+          <p className="mt-2 leading-relaxed text-pretty">{step.whatGoodLooksLike}</p>
+        </section>
+      )}
 
-      {/* Only steps 1 and 2 carry one. A2 asks for a quiet aside — it is not a
-          task and not a step of its own. */}
+      {/* Only the first two steps carry one. A quiet aside, not a task. */}
       {step.readiness && (
         <p className="text-ink/70 mt-6 max-w-2xl border-l-2 border-ink/20 pl-4 leading-relaxed text-pretty italic">
           {step.readiness}
         </p>
       )}
 
-      {/* Tasks and reflection carry equal weight, per the spec's core
-          principle: the early steps are relational, not logistical. */}
+      {/* Tasks and reflection carry equal weight: the early steps are
+          relational, not logistical. */}
       <div className="mt-10 grid gap-10 md:grid-cols-2">
         <section>
           <h3 className="font-bold">Suggested tasks</h3>
           <ul className="mt-4 space-y-2">
-            {state.tasks.map((task, i) => (
-              <li key={i} className="flex items-start gap-3">
+            {step.tasks.map((task) => (
+              <li key={task.id} className="flex items-start gap-3">
                 <input
                   type="checkbox"
                   checked={task.done}
-                  onChange={(e) => setTask(i, { done: e.target.checked })}
+                  onChange={(e) => onToggle(task.id, e.target.checked)}
                   className="mt-1.5 shrink-0"
-                  aria-label={task.text}
+                  aria-label={task.title}
                 />
-                <input
-                  value={task.text}
-                  onChange={(e) => setTask(i, { text: e.target.value })}
-                  className={`focus:border-ink/40 w-full border-b border-transparent bg-transparent py-1 outline-none ${
-                    task.done ? "text-ink/45 line-through" : ""
-                  }`}
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    onChange({ ...state, tasks: state.tasks.filter((_, j) => j !== i) })
-                  }
-                  aria-label={`Remove "${task.text}"`}
-                  className="text-ink/30 hover:text-red shrink-0 px-1 transition-colors"
-                >
-                  ×
-                </button>
+                <span className={task.done ? "text-ink/45 line-through" : ""}>
+                  {task.title}
+                </span>
               </li>
             ))}
           </ul>
 
-          <button
-            type="button"
-            onClick={() =>
-              onChange({ ...state, tasks: [...state.tasks, { text: "", done: false }] })
-            }
-            className="text-green mt-4 text-sm font-medium underline underline-offset-4"
+          <form
+            className="mt-4 flex gap-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const t = newTask.trim();
+              if (!t) return;
+              onAddTask(t);
+              setNewTask("");
+            }}
           >
-            Add a task
-          </button>
+            <input
+              value={newTask}
+              onChange={(e) => setNewTask(e.target.value)}
+              placeholder="Add a task"
+              aria-label="Add a task"
+              className="focus:border-green w-full border-b border-ink/25 bg-transparent py-1 text-sm outline-none"
+            />
+            <button type="submit" className="text-green text-sm font-medium">
+              Add
+            </button>
+          </form>
 
           <div
             className="mt-8 border-l-4 p-4 text-sm"
-            style={{ borderColor: STEP_COLORS[step.id], background: `${STEP_COLORS[step.id]}14` }}
+            style={{ borderColor: accent, background: `${accent}14` }}
           >
             <p className="font-bold">Watch for</p>
             <p className="mt-1 leading-relaxed text-pretty">{step.trap}</p>
           </div>
 
-          {step.id === 5 && (
+          {step.key === "design" && (
             <div className="border-ink/20 mt-6 border border-dashed p-4 text-sm">
               <p className="font-bold">Four-pillar dials and presets</p>
               <p className="text-ink/60 mt-1 leading-relaxed text-pretty">
-                Out of scope for this build — a separate component.
+                A separate component, still in design.
               </p>
             </div>
           )}
@@ -133,21 +134,17 @@ export function StepDetail({
           </label>
           <textarea
             id="note"
-            value={state.note}
-            onChange={(e) => onChange({ ...state, note: e.target.value })}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            // Saved on blur rather than per keystroke: the spec forbids a save
+            // button, and a write per character would be 39 round trips a
+            // sentence.
+            onBlur={() => note !== step.note && onSaveNote(note)}
             rows={12}
             placeholder="Take your time."
             className="focus:border-green focus:ring-green/20 mt-4 w-full border border-ink/25 bg-white/60 p-4 leading-relaxed outline-none focus:ring-2"
           />
-
-          <div className="mt-8">
-            <h3 className="font-bold">People</h3>
-            <p className="text-ink/60 mt-2 text-sm leading-relaxed text-pretty">
-              Linking people pulls from the platform contact graph. The picker
-              is not built — the contact entities are still open. See the
-              persistence proposal.
-            </p>
-          </div>
+          <p className="text-ink/40 mt-2 text-xs">Saved when you click away.</p>
         </section>
       </div>
     </div>

@@ -60,6 +60,23 @@ export async function connectionStatus(): Promise<Connection> {
 }
 
 /**
+ * Find this festival's run. Read-only on purpose: a page load must never create
+ * one. Creation is an explicit act, not a side effect of someone visiting.
+ */
+export async function findRun(
+  sourceRef: string | undefined,
+): Promise<FibreRun | null> {
+  if (!process.env.FIBRE_APP_KEY || !sourceRef) return null;
+  try {
+    const { runs } = await listRuns();
+    const match = runs?.find((r) => r.source_ref === sourceRef);
+    return match ? await getRun(match.id) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * The Festival of Trust organisation, by our own record id rather than a UUID
  * in config.
  *

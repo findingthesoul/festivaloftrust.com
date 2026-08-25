@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { connectionStatus } from "./actions";
+import { connectionStatus, findRun } from "./actions";
 import { ConnectionBanner } from "./connection-banner";
-import { Planner } from "./planner";
+import { FibrePlanner } from "./fibre-planner";
+import { LocalPlanner } from "./local-planner";
 import { TenthArea } from "./tenth-area";
 
 export const metadata: Metadata = {
@@ -10,18 +11,19 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// The connection is read per request: a key can be minted, or an app suspended,
-// without this page being rebuilt.
+// Read per request: a key can be minted, or a run started, without a rebuild.
 export const dynamic = "force-dynamic";
 
 export default async function Page() {
   const connection = await connectionStatus();
+  // Read-only. A page load must never start a festival.
+  const run = await findRun(process.env.FIBRE_FESTIVAL_ID);
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
-      <Planner />
+      {run ? <FibrePlanner run={run} /> : <LocalPlanner />}
       <TenthArea />
-      <ConnectionBanner connection={connection} />
+      <ConnectionBanner connection={connection} hasRun={!!run} />
     </main>
   );
 }

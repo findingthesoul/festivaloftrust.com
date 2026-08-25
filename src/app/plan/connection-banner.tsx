@@ -5,7 +5,13 @@ import type { Connection } from "./actions";
  * honest thing is to show it rather than let a working-looking screen imply a
  * plan is stored somewhere it is not.
  */
-export function ConnectionBanner({ connection }: { connection: Connection }) {
+export function ConnectionBanner({
+  connection,
+  hasRun,
+}: {
+  connection: Connection;
+  hasRun: boolean;
+}) {
   if (connection.configured && connection.ok) {
     return (
       <aside className="mt-16 border-t border-ink/15 pt-6 text-sm">
@@ -13,6 +19,9 @@ export function ConnectionBanner({ connection }: { connection: Connection }) {
           <span className="text-green font-medium">Connected to The Fibre</span>{" "}
           <span className="text-ink/60">
             — workspace {connection.workspaceId.slice(0, 8)}…, {connection.scopes.length} scopes.
+          {hasRun
+            ? " The nine steps come from Flow; changes save to the platform."
+            : " No run found for this festival, so the steps below come from this repository."}
           </span>
         </p>
       </aside>
