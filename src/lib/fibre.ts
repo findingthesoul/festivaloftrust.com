@@ -173,10 +173,17 @@ export const setNote = (runId: string, stepKey: string, body: string) =>
 export const link = (input: {
   app_entity: "festival_organiser" | "festival_host";
   app_record_id: string;
-  match: Record<string, string>;
+  /** Email is the handle for persons; domain, then name, for organisations. */
+  match_on: Record<string, string>;
   create_if_missing?: boolean;
 }) =>
-  call<{ platform_id: string; created: boolean }>(`/apps/${SLUG}/links`, {
+  call<{
+    ok: boolean;
+    app_record_id: string;
+    platform_id: string;
+    platform_entity: string;
+    action: "linked" | "created";
+  }>(`/apps/${SLUG}/links`, {
     method: "POST",
     body: { create_if_missing: false, ...input },
   });
