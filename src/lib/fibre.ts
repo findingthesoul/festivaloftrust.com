@@ -108,16 +108,27 @@ async function call<T>(
 export const whoami = () =>
   call<{ app_slug: string; workspace_id: string; scopes: string[] }>("/apps/whoami");
 
+export type FibreFlow = {
+  id: string;
+  name: string;
+  description: string | null;
+  lifecycle: string;
+  /** 'open' is what the planner needs: every step live, no due dates written. */
+  progression: "gated" | "open";
+  system_key: string | null;
+  current_version_id: string | null;
+};
+
+/** Note the response key is `flows`, not `items`. */
 export const listFlows = () =>
-  call<{ items: { id: string; name: string; system_key: string | null }[] }>(
-    `/apps/${SLUG}/flow/flows`,
-  );
+  call<{ flows: FibreFlow[] }>(`/apps/${SLUG}/flow/flows`);
 
 export const getRun = (runId: string) =>
   call<FibreRun>(`/apps/${SLUG}/flow/runs/${runId}`);
 
+/** Note the response key is `runs`, not `items`. */
 export const listRuns = () =>
-  call<{ items: FibreRun[] }>(`/apps/${SLUG}/flow/runs`);
+  call<{ runs: FibreRun[] }>(`/apps/${SLUG}/flow/runs`);
 
 /**
  * Start a plan. A festival is a legitimate subject — no person required.

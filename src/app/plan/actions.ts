@@ -25,6 +25,12 @@ import {
   type FibreRun,
 } from "@/lib/fibre";
 
+/**
+ * The festival flow is identified by system_key, following the pulse_pipeline
+ * precedent. Set it when seeding the flow in Flow.
+ */
+const FESTIVAL_FLOW_KEY = process.env.FIBRE_FLOW_SYSTEM_KEY ?? "fot_festival";
+
 export type Connection =
   | { configured: false }
   | { configured: true; ok: true; workspaceId: string; scopes: string[] }
@@ -65,14 +71,27 @@ export async function openRun(input: {
   if (!process.env.FIBRE_APP_KEY) return { error: "not configured" };
   try {
     const mine = await listRuns();
-    const existing = mine.items?.find((r) => r.source_ref === input.sourceRef);
+    const existing = mine.runs?.find((r) => r.source_ref === input.sourceRef);
     if (existing) return { run: await getRun(existing.id) };
 
-    // Only one workspace flow is expected; if the flow is not seeded yet there
-    // is nothing to run and saying so beats starting a run against the wrong one.
-    const flows = await listFlows();
-    const flow = flows.items?.[0];
-    if (!flow) return { error: "no flow is available to this app yet" };
+    // Pick the festival flow by system_key, never by position. The key can see
+    // every workspace flow — today that is a leadership programme and Pulse's
+    // sales pipeline — and taking the first would quietly file festival plans
+    // against an unrelated flow.
+    const { flows } = await listFlows();
+    const flow = flows?.find((f) => f.system_key === FESTIVAL_FLOW_KEY);
+    if (!flow) {
+      return {
+        error: `no flow with system_key "${FESTIVAL_FLOW_KEY}" — seed the nine steps in Flow first`,
+      };
+    }
+    if (flow.progression !== "open") {
+      // A gated flow locks later steps and materialises due dates. The planner's
+      // spec forbids both, so refusing beats silently becoming a taskmaster.
+      return {
+        error: `flow "${flow.name}" is ${flow.progression}; the planner needs an open flow`,
+      };
+    }
 
     const created = await startRun(flow.id, {
       subject_label: input.subjectLabel,
