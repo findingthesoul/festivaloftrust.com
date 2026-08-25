@@ -150,8 +150,9 @@ export const setTaskStatus = (taskId: string, status: TaskStatus) =>
     body: { status },
   });
 
+/** Returns only the new id and where it was filed, not the whole task. */
 export const addTask = (runId: string, title: string, stepKey?: string) =>
-  call<FibreTask & { step_key: string | null }>(`/apps/${SLUG}/flow/runs/${runId}/tasks`, {
+  call<{ id: string; step_key: string | null }>(`/apps/${SLUG}/flow/runs/${runId}/tasks`, {
     method: "POST",
     body: { title, ...(stepKey ? { step_key: stepKey } : {}) },
   });
