@@ -1,0 +1,436 @@
+{
+  "steps": [
+    {
+      "key": "listen",
+      "name": "Listen",
+      "description": "Discover the need. Find out what trust looks like, and where it is thin, in this specific place, before planning anything.",
+      "kind": "entry",
+      "group_key": "orientation",
+      "group_label": "Orientation",
+      "meta": {
+        "purpose": "Discover the need. Find out what trust looks like, and where it is thin, in this specific place, before planning anything.",
+        "trap": "Arriving with the answer. If you already know what the festival will be before you have listened, you have skipped the step. Listening that only confirms your plan is not listening.",
+        "reflection": "What surprised you about how trust lives here?",
+        "what_good_looks_like": "You can describe the community in its own words, not yours. You know who is gathering and what holds them together. You have heard, from real people, where trust already lives and where it strains.",
+        "readiness": "This step also tests you. Can you sit with a community's account without correcting it. If listening feels like a delay before the real work, pause. The listening is the real work."
+      },
+      "canvas_x": 0,
+      "canvas_y": 0
+    },
+    {
+      "key": "gather",
+      "name": "Gather",
+      "description": "Form the core group. Bring together a small, diverse group who will steward the festival. Stewards, not staff.",
+      "kind": "normal",
+      "group_key": "orientation",
+      "group_label": "Orientation",
+      "meta": {
+        "purpose": "Form the core group. Bring together a small, diverse group who will steward the festival. Stewards, not staff.",
+        "trap": "Gathering people who agree with you and are easy to work with. A core group that shares one perspective will design a festival for people like themselves.",
+        "reflection": "Whose perspective is still missing from this group?",
+        "what_good_looks_like": "A handful of people who care, from different backgrounds, generations, and vantage points. They own the festival together. No single person carries it alone.",
+        "readiness": "Here you learn what you carry and what others must. If you cannot let others shape the festival, notice that now, while it is still small."
+      },
+      "canvas_x": 260,
+      "canvas_y": 0
+    },
+    {
+      "key": "align",
+      "name": "Align",
+      "description": "Clarify purpose and vision. Agree why here, why now, and what people should carry home. This becomes the test for every later choice.",
+      "kind": "normal",
+      "group_key": "orientation",
+      "group_label": "Orientation",
+      "meta": {
+        "purpose": "Clarify purpose and vision. Agree why here, why now, and what people should carry home. This becomes the test for every later choice.",
+        "trap": null,
+        "reflection": "Does our purpose help us say no to something?",
+        "what_good_looks_like": "The core group can say, in a sentence or two, why this festival exists and what it hopes people leave with. When a later decision is hard, you return to this and it helps."
+      },
+      "canvas_x": 520,
+      "canvas_y": 0
+    },
+    {
+      "key": "connect",
+      "name": "Connect",
+      "description": "Build partnerships. Invite organisations, schools, artists, businesses, and local leaders to strengthen the social fabric with you.",
+      "kind": "normal",
+      "group_key": "doing",
+      "group_label": "Doing",
+      "meta": {
+        "purpose": "Build partnerships. Invite organisations, schools, artists, businesses, and local leaders to strengthen the social fabric with you.",
+        "trap": "Treating partnership as fundraising. The moment the conversation is only about money, you have lost the point. Partners join the work; sponsors buy a logo.",
+        "reflection": "Who did we invite to give, when we should have invited them to join?",
+        "what_good_looks_like": "You have partners, not sponsors. People and groups who see the festival as theirs too, who contribute more than money: space, reach, trust, hands."
+      },
+      "canvas_x": 0,
+      "canvas_y": 200
+    },
+    {
+      "key": "design",
+      "name": "Design",
+      "description": "Shape the festival journey. Choose the movements, formats, and artistic elements that carry people from experience to their own sense of agency.",
+      "kind": "normal",
+      "group_key": "doing",
+      "group_label": "Doing",
+      "meta": {
+        "purpose": "Shape the festival journey. Choose the movements, formats, and artistic elements that carry people from experience to their own sense of agency.",
+        "trap": "Designing a programme instead of a journey. A good festival is not a full timetable. Empty space, a shared meal, an unhurried conversation often do more than another session.",
+        "reflection": "Where in the day does a stranger first feel they belong?",
+        "what_good_looks_like": "A day that moves. Not a stack of sessions, but a sequence that deepens: people arrive as strangers and leave having met. The design fits this community, tuned to it, not copied from elsewhere."
+      },
+      "canvas_x": 260,
+      "canvas_y": 200
+    },
+    {
+      "key": "invite",
+      "name": "Invite",
+      "description": "Bring the community together. Reach people personally first, publicly second. Aim to gather people who would not usually meet.",
+      "kind": "normal",
+      "group_key": "doing",
+      "group_label": "Doing",
+      "meta": {
+        "purpose": "Bring the community together. Reach people personally first, publicly second. Aim to gather people who would not usually meet.",
+        "trap": "Relying on marketing. People rarely join a conversation about trust because of an advert. They come because they were asked, by name, by someone who matters to them.",
+        "reflection": "Who in the room would surprise the rest of the room?",
+        "what_good_looks_like": "The room holds a mix that does not happen by accident. People came because someone they trust asked them, not because they saw a poster."
+      },
+      "canvas_x": 520,
+      "canvas_y": 200
+    },
+    {
+      "key": "host",
+      "name": "Host",
+      "description": "Facilitate meaningful encounters. Hold the space so that trust can grow. Do not control the outcome.",
+      "kind": "normal",
+      "group_key": "culmination",
+      "group_label": "Culmination",
+      "meta": {
+        "purpose": "Facilitate meaningful encounters. Hold the space so that trust can grow. Do not control the outcome.",
+        "trap": "Over-programming the day out of nervousness. Silence and open space feel risky to a host and often feel rich to a participant. Trust the room.",
+        "reflection": "What happened that we did not plan, and was better for it?",
+        "what_good_looks_like": "People relax. Strangers talk. The team is present but not central. The day belongs to the participants, and the hosts make that possible without making it about themselves."
+      },
+      "canvas_x": 0,
+      "canvas_y": 400
+    },
+    {
+      "key": "harvest",
+      "name": "Harvest",
+      "description": "Capture stories and learning. Turn one day into shared community knowledge.",
+      "kind": "normal",
+      "group_key": "culmination",
+      "group_label": "Culmination",
+      "meta": {
+        "purpose": "Capture stories and learning. Turn one day into shared community knowledge.",
+        "trap": "Measuring the wrong thing. Attendance and satisfaction are easy to count and say little about trust. Look instead for what people intend to carry on.",
+        "reflection": "What did the community learn about itself today?",
+        "what_good_looks_like": "The festival leaves a trace. Stories told, relationships named, commitments made, ideas surfaced. Not a report filed and forgotten, but something the community can hold and use."
+      },
+      "canvas_x": 260,
+      "canvas_y": 400
+    },
+    {
+      "key": "grow",
+      "name": "Grow",
+      "description": "Sustain the web. Support participants to keep going, start their own initiatives, and become organisers themselves.",
+      "kind": "end_positive",
+      "group_key": "culmination",
+      "group_label": "Culmination",
+      "meta": {
+        "purpose": "Sustain the web. Support participants to keep going, start their own initiatives, and become organisers themselves.",
+        "trap": "Treating the festival as the finish line. If everything ends when the room empties, the pockets stay scattered. The threads form only if someone tends them after.",
+        "reflection": "What is now possible here that was not possible before?",
+        "what_good_looks_like": "The festival was a beginning. Conversations continue. New pockets of trust form. Some participants become the next organisers. The web is denser than it was."
+      },
+      "canvas_x": 520,
+      "canvas_y": 400
+    }
+  ],
+  "transitions": [
+    {
+      "from": "listen",
+      "to": "gather",
+      "label": "Next",
+      "gate_logic": "all"
+    },
+    {
+      "from": "gather",
+      "to": "align",
+      "label": "Next",
+      "gate_logic": "all"
+    },
+    {
+      "from": "align",
+      "to": "connect",
+      "label": "Next",
+      "gate_logic": "all"
+    },
+    {
+      "from": "connect",
+      "to": "design",
+      "label": "Next",
+      "gate_logic": "all"
+    },
+    {
+      "from": "design",
+      "to": "invite",
+      "label": "Next",
+      "gate_logic": "all"
+    },
+    {
+      "from": "invite",
+      "to": "host",
+      "label": "Next",
+      "gate_logic": "all"
+    },
+    {
+      "from": "host",
+      "to": "harvest",
+      "label": "Next",
+      "gate_logic": "all"
+    },
+    {
+      "from": "harvest",
+      "to": "grow",
+      "label": "Next",
+      "gate_logic": "all"
+    }
+  ],
+  "step_default_tasks": [
+    {
+      "step_key": "listen",
+      "title": "Have unhurried conversations with people in the community",
+      "actor_type": "personal",
+      "ordinal": 0
+    },
+    {
+      "step_key": "listen",
+      "title": "Ask how trust grows here, who people rely on, what is missing",
+      "actor_type": "personal",
+      "ordinal": 1
+    },
+    {
+      "step_key": "listen",
+      "title": "Name who is gathering, and what holds them together",
+      "actor_type": "personal",
+      "ordinal": 2
+    },
+    {
+      "step_key": "listen",
+      "title": "Listen for the pockets of trust that already exist",
+      "actor_type": "personal",
+      "ordinal": 3
+    },
+    {
+      "step_key": "listen",
+      "title": "Resist pitching a festival, you are learning, not recruiting",
+      "actor_type": "personal",
+      "ordinal": 4
+    },
+    {
+      "step_key": "gather",
+      "title": "Invite people whose presence widens the group's view, not just its workload",
+      "actor_type": "personal",
+      "ordinal": 0
+    },
+    {
+      "step_key": "gather",
+      "title": "Seek difference: someone who knows the elders, someone who knows the young",
+      "actor_type": "personal",
+      "ordinal": 1
+    },
+    {
+      "step_key": "gather",
+      "title": "Include at least one person from outside your usual circle",
+      "actor_type": "personal",
+      "ordinal": 2
+    },
+    {
+      "step_key": "gather",
+      "title": "Agree how you will work together before you agree what to do",
+      "actor_type": "personal",
+      "ordinal": 3
+    },
+    {
+      "step_key": "align",
+      "title": "Answer together: why are we doing this",
+      "actor_type": "personal",
+      "ordinal": 0
+    },
+    {
+      "step_key": "align",
+      "title": "Answer together: who do we hope will come",
+      "actor_type": "personal",
+      "ordinal": 1
+    },
+    {
+      "step_key": "align",
+      "title": "Answer together: what do we want people to carry home",
+      "actor_type": "personal",
+      "ordinal": 2
+    },
+    {
+      "step_key": "align",
+      "title": "Write the purpose plainly and keep it where the group can see it",
+      "actor_type": "personal",
+      "ordinal": 3
+    },
+    {
+      "step_key": "connect",
+      "title": "List organisations, schools, artists, businesses, local leaders",
+      "actor_type": "personal",
+      "ordinal": 0
+    },
+    {
+      "step_key": "connect",
+      "title": "Approach each with an invitation to build, not a request to fund",
+      "actor_type": "personal",
+      "ordinal": 1
+    },
+    {
+      "step_key": "connect",
+      "title": "Be clear about the shared aim",
+      "actor_type": "personal",
+      "ordinal": 2
+    },
+    {
+      "step_key": "connect",
+      "title": "Let partners shape their own contribution",
+      "actor_type": "personal",
+      "ordinal": 3
+    },
+    {
+      "step_key": "design",
+      "title": "Work with the five movements as the spine",
+      "actor_type": "personal",
+      "ordinal": 0
+    },
+    {
+      "step_key": "design",
+      "title": "Set the four pillars for this community using the dials",
+      "actor_type": "personal",
+      "ordinal": 1
+    },
+    {
+      "step_key": "design",
+      "title": "Start from a named preset if this is your first time",
+      "actor_type": "personal",
+      "ordinal": 2
+    },
+    {
+      "step_key": "design",
+      "title": "Choose formats, conversations, and art that serve the movements",
+      "actor_type": "personal",
+      "ordinal": 3
+    },
+    {
+      "step_key": "design",
+      "title": "Leave empty space: a shared meal, an unhurried conversation",
+      "actor_type": "personal",
+      "ordinal": 4
+    },
+    {
+      "step_key": "invite",
+      "title": "Make personal invitations the core of your outreach",
+      "actor_type": "personal",
+      "ordinal": 0
+    },
+    {
+      "step_key": "invite",
+      "title": "Ask partners and the core group to invite people directly",
+      "actor_type": "personal",
+      "ordinal": 1
+    },
+    {
+      "step_key": "invite",
+      "title": "Use public reach to widen, not replace, the personal ask",
+      "actor_type": "personal",
+      "ordinal": 2
+    },
+    {
+      "step_key": "invite",
+      "title": "Notice who is not coming, and go to them",
+      "actor_type": "personal",
+      "ordinal": 3
+    },
+    {
+      "step_key": "host",
+      "title": "Attend to welcome, hospitality, facilitation, inclusion, reflection",
+      "actor_type": "personal",
+      "ordinal": 0
+    },
+    {
+      "step_key": "host",
+      "title": "Prepare facilitators well",
+      "actor_type": "personal",
+      "ordinal": 1
+    },
+    {
+      "step_key": "host",
+      "title": "Watch the room and adjust",
+      "actor_type": "personal",
+      "ordinal": 2
+    },
+    {
+      "step_key": "host",
+      "title": "Protect the quiet moments as carefully as the loud ones",
+      "actor_type": "personal",
+      "ordinal": 3
+    },
+    {
+      "step_key": "harvest",
+      "title": "Gather stories, insights, relationships formed, commitments made",
+      "actor_type": "personal",
+      "ordinal": 0
+    },
+    {
+      "step_key": "harvest",
+      "title": "Capture with consent and care, never by extraction",
+      "actor_type": "personal",
+      "ordinal": 1
+    },
+    {
+      "step_key": "harvest",
+      "title": "Let people say what mattered to them",
+      "actor_type": "personal",
+      "ordinal": 2
+    },
+    {
+      "step_key": "harvest",
+      "title": "Keep it in a form the community owns, not only the organisers",
+      "actor_type": "personal",
+      "ordinal": 3
+    },
+    {
+      "step_key": "grow",
+      "title": "Before people leave, open a path to what comes next",
+      "actor_type": "personal",
+      "ordinal": 0
+    },
+    {
+      "step_key": "grow",
+      "title": "Offer further conversations, learning circles, small initiatives, future gatherings",
+      "actor_type": "personal",
+      "ordinal": 1
+    },
+    {
+      "step_key": "grow",
+      "title": "Stay in light contact",
+      "actor_type": "personal",
+      "ordinal": 2
+    },
+    {
+      "step_key": "grow",
+      "title": "Connect this festival's web to others",
+      "actor_type": "personal",
+      "ordinal": 3
+    },
+    {
+      "step_key": "grow",
+      "title": "Hand the work onward rather than holding it",
+      "actor_type": "personal",
+      "ordinal": 4
+    }
+  ]
+}
