@@ -37,13 +37,29 @@ begin
     return;
   end if;
 
-  select u.id into v_owner
-    from public."user" u
-   where u.workspace_id = v_ws and u.is_super_admin = true
-   order by u.created_at asc
+  -- The flow's owner must be an admin *of this workspace*. Copying Pulse's
+  -- migration here was wrong: it selects on user.is_super_admin, which is the
+  -- platform-wide flag, and a workspace's own admin does not have it. Two
+  -- different pivots wearing the same word.
+  select wm.user_id into v_owner
+    from public.workspace_member wm
+   where wm.workspace_id = v_ws
+     and wm.workspace_role in ('super_admin', 'admin')
+   order by wm.joined_at asc
    limit 1;
+
+  -- Fall back to the workspace's earliest user, so a workspace that predates
+  -- the membership backfill can still be seeded.
   if v_owner is null then
-    raise exception 'no super admin found in workspace %', v_ws;
+    select u.id into v_owner
+      from public."user" u
+     where u.workspace_id = v_ws
+     order by u.created_at asc
+     limit 1;
+  end if;
+
+  if v_owner is null then
+    raise exception 'no user found in workspace % to own the flow', v_ws;
   end if;
 
   insert into public.flow_definition
