@@ -42,6 +42,11 @@ begin
    where flow_run_id in (select id from public.flow_run where flow_id = v_flow);
   delete from public.flow_run where flow_id = v_flow;
 
+  -- flow_definition.current_version_id references flow_version, so the version
+  -- cannot go while the definition still points at it. Release the pointer
+  -- first; the seed sets it, and deleting has to undo that.
+  update public.flow_definition set current_version_id = null where id = v_flow;
+
   -- Steps, transitions and default tasks hang off the version and cascade.
   delete from public.flow_version where flow_id = v_flow;
   delete from public.flow_definition where id = v_flow;
