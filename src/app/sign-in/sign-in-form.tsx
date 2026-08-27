@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { browserSupabase } from "@/lib/supabase/client";
 
@@ -16,6 +17,7 @@ const field =
  * than starting again there.
  */
 export function SignInForm() {
+  const router = useRouter();
   const [stage, setStage] = useState<Stage>("enter-email");
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -58,9 +60,11 @@ export function SignInForm() {
       setBusy(false);
       return;
     }
-    // Full navigation, not a router push: the callback must run on the server
-    // so the session cookie is written before anything reads it.
-    window.location.href = "/auth/callback";
+    // verifyOtp has already written the session cookie, so this can navigate
+    // straight in. /auth/callback exists for the other path — clicking the link
+    // in the email — where the exchange has to happen server-side.
+    router.replace("/festivals");
+    router.refresh();
   }
 
   if (stage === "enter-code") {
