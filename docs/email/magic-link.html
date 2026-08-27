@@ -6,7 +6,19 @@
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;padding:48px 32px;">
         <tr><td align="center">
 
-          <img src="https://www.festivaloftrust.com/brand/festival-of-trust.png" alt="Festival of Trust" width="200" style="display:block;margin:0 auto 40px;border:0;height:auto;" />
+          <!-- The lockup as two images in a table rather than one composed file:
+               Outlook ignores flex and inline-block alignment, but a table row
+               it will always get right. Equal heights, as on the artwork. -->
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 40px;">
+            <tr>
+              <td style="padding-right:14px;vertical-align:middle;">
+                <img src="https://www.festivaloftrust.com/brand/shapes.png" alt="" width="58" style="display:block;border:0;height:auto;" />
+              </td>
+              <td style="vertical-align:middle;">
+                <img src="https://www.festivaloftrust.com/brand/festival-of-trust.png" alt="Festival of Trust" width="116" style="display:block;border:0;height:auto;" />
+              </td>
+            </tr>
+          </table>
 
           <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em;color:#181717;">Your sign-in code</h1>
           <p style="margin:20px 0 0;color:#4a443f;font-size:15px;line-height:1.6;">For planning your Festival of Trust.</p>
