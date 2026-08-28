@@ -122,7 +122,12 @@ export async function ensureFirstFestival(profile: {
     marker,
     ...(profile.organisation?.trim() ? { hostOrganisation: profile.organisation.trim() } : {}),
   });
-  return "error" in made ? null : made.festival;
+  if ("error" in made) {
+    // Silence here is how the first festival went missing without a trace.
+    console.error("[festivals] could not create the first festival", made.error);
+    return null;
+  }
+  return made.festival;
 }
 
 /** Markers already in use, so suggestions can avoid them. */
@@ -166,6 +171,27 @@ export async function createFestival(input: {
   if (error) {
     // 23505 is the unique index on marker.
     if (error.code === "23505") return { error: "that address is already taken" };
+
+    // 42501 is the insert policy: owner_id = auth.uid() and an approved
+    // organiser and status 'draft'. The message names none of them, so say
+    // which one actually failed rather than making someone read the schema.
+    if (error.code === "42501") {
+      const { data: row } = await supabase
+        .from("organiser")
+        .select("id, status")
+        .eq("id", user.user.id)
+        .maybeSingle();
+      const me = row as { id: string; status: string } | null;
+      if (!me) {
+        return {
+          error: `signed in as ${user.user.email} (${user.user.id}) but there is no organiser record for that account — the approved one belongs to a different account with the same address`,
+        };
+      }
+      if (me.status !== "approved") {
+        return { error: `this account is ${me.status}, not approved` };
+      }
+      return { error: `refused by the database for ${user.user.email} (${user.user.id})` };
+    }
     return { error: error.message };
   }
   const festival = row as Festival;
