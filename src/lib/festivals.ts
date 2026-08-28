@@ -82,6 +82,49 @@ export async function festivalByMarker(marker: string): Promise<Festival | null>
   return (data as Festival) ?? null;
 }
 
+/**
+ * The first festival, made the moment an approved organiser has none.
+ *
+ * Approval is the answer to "may I run a Festival of Trust", so the next thing
+ * they see should be their festival, not an empty page and a button. Created
+ * as them rather than at approval time, because the insert policy requires
+ * owner_id = auth.uid() — an admin cannot write a festival for someone else,
+ * and should not be able to.
+ *
+ * Runs once: the moment they own one, this does nothing forever after.
+ */
+export async function ensureFirstFestival(profile: {
+  fullName: string | null;
+  organisation: string | null;
+}): Promise<Festival | null> {
+  const mine = await listFestivals();
+  if (mine.length > 0) return null;
+
+  const source = profile.organisation?.trim() || profile.fullName?.trim() || "";
+  const base =
+    source
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "festival-of-trust";
+  // The check constraint wants at least three characters, first and last
+  // alphanumeric.
+  const seed = base.length >= 3 ? base : `${base}-festival`;
+
+  const taken = new Set(await takenMarkers());
+  let marker = seed;
+  for (let n = 2; taken.has(marker); n++) marker = `${seed}-${n}`;
+
+  const made = await createFestival({
+    name: profile.organisation?.trim()
+      ? `Festival of Trust — ${profile.organisation.trim()}`
+      : "Festival of Trust",
+    marker,
+    ...(profile.organisation?.trim() ? { hostOrganisation: profile.organisation.trim() } : {}),
+  });
+  return "error" in made ? null : made.festival;
+}
+
 /** Markers already in use, so suggestions can avoid them. */
 export async function takenMarkers(): Promise<string[]> {
   const supabase = await serverSupabase();

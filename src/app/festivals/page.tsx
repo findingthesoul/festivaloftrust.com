@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { listFestivals } from "@/lib/festivals";
+import { ensureFirstFestival, listFestivals } from "@/lib/festivals";
 import { claimInvites, standing } from "@/lib/organiser";
 import { FestivalCard } from "./festival-card";
 import { NewFestivalDialog } from "./new-festival-dialog";
@@ -51,6 +51,14 @@ export default async function Page() {
       </main>
     );
   }
+
+  // Approved and nothing to work in yet: make the first one, so approval lands
+  // someone in their festival rather than in front of an empty page.
+  const first = await ensureFirstFestival({
+    fullName: s.organiser.full_name,
+    organisation: s.organiser.organisation,
+  });
+  if (first) redirect(`/plan/${first.marker}`);
 
   return (
     <Festivals
