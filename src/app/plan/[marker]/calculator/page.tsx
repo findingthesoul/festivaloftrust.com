@@ -21,7 +21,14 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
         beside the nine rather than among them — the nine are the method and run
         on Flow, this is the money and does not.
       </p>
-      <CalculatorFrame marker={marker} />
+      <CalculatorFrame
+        marker={marker}
+        prefill={{
+          fName: festival.name,
+          fDate: festival.starts_on ?? "",
+          oPlace: festival.place ?? "",
+        }}
+      />
     </main>
   );
 }

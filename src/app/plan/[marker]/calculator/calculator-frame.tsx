@@ -9,15 +9,22 @@ type Saved = "idle" | "saving" | "saved" | "error";
  * The calculator, kept per festival.
  *
  * The tool is a standalone document in a frame, so this does not reach into
- * its markup. It uses the two functions the tool already exposes for its own
- * open/save buttons — `snapshot()` and `restore()` — which are top-level
- * declarations and therefore on the frame's window. Same origin, because
- * /planner is a rewrite on this domain.
+ * its markup for values. It uses the two functions the tool already exposes
+ * for its own open/save buttons — `snapshot()` and `restore()` — which are
+ * top-level declarations and therefore on the frame's window. Same origin,
+ * because /planner is a rewrite on this domain.
  *
- * That seam is the whole point: a new export of the tool changes its fields
- * freely and this keeps working, as long as those two functions remain.
+ * That seam is the point: a new export of the tool can change every field and
+ * this keeps working, as long as those two functions remain.
  */
-export function CalculatorFrame({ marker }: { marker: string }) {
+export function CalculatorFrame({
+  marker,
+  prefill,
+}: {
+  marker: string;
+  /** Field id to value, for what the festival already knows. */
+  prefill: Record<string, string>;
+}) {
   const frame = useRef<HTMLIFrameElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [state, setState] = useState<Saved>("idle");
@@ -43,10 +50,7 @@ export function CalculatorFrame({ marker }: { marker: string }) {
 
   const onLoad = useCallback(async () => {
     const win = frame.current?.contentWindow as
-      | (Window & {
-          restore?: (o: unknown) => void;
-          say?: (msg: string) => void;
-        })
+      | (Window & { restore?: (o: unknown) => void })
       | null
       | undefined;
     const doc = frame.current?.contentDocument;
@@ -59,12 +63,39 @@ export function CalculatorFrame({ marker }: { marker: string }) {
       try {
         restore.call(win, saved);
       } catch {
-        // An older snapshot the current tool cannot read. Better to show the
-        // tool's own defaults than to fail the page — nothing is lost, the
-        // stored figures are still there until the next save overwrites them.
+        // An older snapshot this version of the tool cannot read. Better to
+        // show the tool's own defaults than to fail the page — nothing is
+        // lost, the stored figures stay until the next save overwrites them.
         setNote("Saved figures could not be read by this version of the tool.");
       }
     }
+
+    // Open and Save are the tool's file buttons: one downloads a .fot.json,
+    // the other reads one back. Inside a festival the figures belong to the
+    // festival and keep themselves, so both offer a second, weaker copy of
+    // something already done — and Save means the wrong thing entirely.
+    //
+    // Hidden here rather than cut from the export, so a new drop-in export
+    // still carries them for standalone use at /planner.
+    for (const id of ["btnOpen", "btnSave"]) {
+      const el = doc.getElementById(id);
+      if (el) el.style.setProperty("display", "none");
+    }
+
+    // The Organiser panel asks for the festival's name, date, place and who is
+    // running it. All of that is the festival's own and belongs in Settings,
+    // which The Thread feeds — asking again invites two answers to one
+    // question.
+    //
+    // Filled from what the festival knows and then hidden, rather than only
+    // hidden, so the figures still carry the right name wherever the tool
+    // prints them. After the restore, so a stale snapshot cannot win.
+    for (const [id, value] of Object.entries(prefill)) {
+      const el = doc.getElementById(id) as HTMLInputElement | null;
+      if (el && value) el.value = value;
+    }
+    const panel = doc.getElementById("fName")?.closest(".panel") as HTMLElement | null;
+    panel?.style.setProperty("display", "none");
 
     // Save on any change, coalesced. The tool has no change event of its own,
     // so this listens on its document, where every input bubbles to.
@@ -74,35 +105,23 @@ export function CalculatorFrame({ marker }: { marker: string }) {
     };
     doc.addEventListener("input", schedule);
     doc.addEventListener("change", schedule);
-    // Clicks cover the tool's own buttons — adding an artist, a funder, a tier
-    // — which change the snapshot without ever firing input.
+    // Clicks cover the tool's own buttons — adding an artist, a funder,
+    // switching tier — which change the snapshot without firing input.
     doc.addEventListener("click", schedule);
 
-    // Opening a file restores asynchronously, long after the click and change
-    // events that led to it, so neither would carry the imported figures.
-    // Wrapping restore catches every path into it, including future ones.
+    // Any other route into restore() lands its figures asynchronously, after
+    // the events that led to it. Wrapping it catches all of them.
+    //
+    // Reflect.set, because the immutability lint reads any assignment through
+    // a ref as mutating our own state. This is another document's window,
+    // which is the one thing we are here to talk to.
     if (typeof restore === "function") {
-      // Reflect.set, because the immutability lint reads any assignment
-      // through a ref as mutating our own state. This is another document's
-      // window, which is the one thing we are here to talk to.
       Reflect.set(win, "restore", (o: unknown) => {
         restore.call(win, o);
         schedule();
       });
     }
-
-    // The tool's own Save downloads a .fot.json. In a festival that is the
-    // wrong meaning of the word — the figures belong to this festival, and
-    // already save themselves. Rebound rather than hidden, because a Save
-    // button that does nothing is worse than one that does the right thing.
-    const btnSave = doc.getElementById("btnSave") as HTMLButtonElement | null;
-    if (btnSave) {
-      btnSave.onclick = () => {
-        void save();
-        win.say?.("Saved to this festival");
-      };
-    }
-  }, [marker, save]);
+  }, [marker, prefill, save]);
 
   useEffect(() => {
     return () => {
