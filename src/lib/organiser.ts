@@ -98,8 +98,8 @@ export async function claimInvites(): Promise<number> {
   const ids = (rows ?? []).map((m: { festival_id: string }) => m.festival_id);
   if (!ids.length) return claimed;
 
-  // Only a festival that has a page can name anyone on one. The rest get their
-  // hosts when they publish.
+  // Only a festival that has a page can name anyone on one, so a festival
+  // still in draft is skipped rather than retried into a 404.
   const { data: pages } = await supabase
     .from("festival")
     .select("id, thread_id")

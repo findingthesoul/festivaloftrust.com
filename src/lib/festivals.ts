@@ -12,6 +12,7 @@
 import { serverSupabase } from "@/lib/supabase/server";
 import {
   startRun,
+  getThread,
   listFlows,
   listEnrolments,
   publishThread,
@@ -19,6 +20,7 @@ import {
   FibreError,
 } from "@/lib/fibre";
 import {
+  creditOnThread,
   joinOrganisation,
   linkHostOrganisation,
   linkOrganiser,
@@ -554,6 +556,32 @@ export async function publicFestival(
 }
 
 /**
+ * Where someone registers, if anywhere yet.
+ *
+ * Asked of the platform at view time rather than stored, because the answer
+ * moves without us: the thread goes active on the cron's clock or from The
+ * Thread's own UI, and a stored copy would say "closed" while the doors stood
+ * open. One request per view is what force-dynamic already costs.
+ */
+export async function registrationFor(
+  festival: Festival,
+): Promise<{ url: string; open: boolean } | null> {
+  if (!festival.thread_id || !process.env.FIBRE_APP_KEY) return null;
+  try {
+    const thread = await getThread(festival.thread_id);
+    if (!thread.public_url) return null;
+    return { url: thread.public_url, open: thread.status === "active" };
+  } catch (e) {
+    // The page must render without the platform; the button just is not there.
+    console.error("[festivals] could not read the thread for registration", {
+      marker: festival.marker,
+      detail: e instanceof FibreError ? e.detail : String(e),
+    });
+    return null;
+  }
+}
+
+/**
  * Publish the festival as a public page in The Thread.
  *
  * Created in draft: approval here means "this may exist publicly", not "open
@@ -647,6 +675,17 @@ export async function publishToThread(
         published_at: new Date().toISOString(),
       })
       .eq("id", festival.id);
+
+    // Hosts who joined while this was a draft could not be named on a page
+    // that did not exist. Now it does. Idempotent per (page, person), so the
+    // next publish or claim repairs any that fail here.
+    const { data: memberRows } = await supabase
+      .from("festival_member")
+      .select("user_id")
+      .eq("festival_id", festival.id);
+    for (const m of (memberRows ?? []) as { user_id: string }[]) {
+      await creditOnThread({ personRecordId: `host:${m.user_id}`, threadId: thread.id });
+    }
 
     await noteActivity({
       type: "fot_planner_festival_published",

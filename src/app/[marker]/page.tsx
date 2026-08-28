@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ShapeGrid } from "@/components/ShapeGrid";
 import { Wordmark } from "@/components/Wordmark";
-import { publicFestival } from "@/lib/festivals";
+import { publicFestival, registrationFor } from "@/lib/festivals";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +47,7 @@ export default async function Page({
   const found = await publicFestival(marker);
   if (!found) notFound();
   const { festival, preview } = found;
+  const registration = await registrationFor(festival);
 
   return (
     <main className="flex-1">
@@ -98,11 +99,22 @@ export default async function Page({
           </p>
         )}
 
-        {/* Enrolment arrives with The Thread; saying so beats a button that
-            does nothing. */}
-        <p className="text-ink/60 mt-14 border-t border-ink/15 pt-8 text-sm">
-          Registration opens closer to the day.
-        </p>
+        {/* The page in The Thread is where enrolment actually happens — this
+            page introduces the festival and hands over. When the doors are not
+            open, saying when they are not is better than a button that does
+            nothing. */}
+        <div className="border-ink/15 mt-14 border-t pt-8">
+          {registration?.open ? (
+            <a
+              href={registration.url}
+              className="bg-green text-cream inline-block rounded-lg px-7 py-3.5 font-medium transition-opacity hover:opacity-90"
+            >
+              Register
+            </a>
+          ) : (
+            <p className="text-ink/60 text-sm">Registration opens closer to the day.</p>
+          )}
+        </div>
       </section>
     </main>
   );
