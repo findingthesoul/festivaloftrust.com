@@ -18,7 +18,12 @@ import {
   patchThread,
   FibreError,
 } from "@/lib/fibre";
-import { linkHostOrganisation, linkOrganiser, noteActivity } from "@/lib/contact-graph";
+import {
+  joinOrganisation,
+  linkHostOrganisation,
+  linkOrganiser,
+  noteActivity,
+} from "@/lib/contact-graph";
 
 export type FestivalStatus = "draft" | "submitted" | "live";
 
@@ -233,6 +238,17 @@ export async function createFestival(input: {
   let hostOrgId = input.hostOrgId ?? null;
   if (!hostOrgId && orgName) {
     hostOrgId = (await linkHostOrganisation(festival.id, orgName)).personId;
+  }
+
+  // Both ends exist now, so draw the edge between them. Until this, the
+  // workspace knew the organiser and knew the host organisation and could not
+  // say the organiser was of that organisation.
+  if (personId && hostOrgId) {
+    await joinOrganisation({
+      personRecordId: `organiser:${user.user.id}`,
+      festivalId: festival.id,
+      title: "Organiser",
+    });
   }
 
   try {

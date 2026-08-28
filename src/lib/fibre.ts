@@ -203,6 +203,24 @@ export const link = (input: {
     body: { create_if_missing: false, ...input },
   });
 
+/**
+ * Connect a person to an organisation.
+ *
+ * Both sides are named by our own record ids, already linked — the platform
+ * resolves them. Idempotent: an existing membership comes back with
+ * `created: false` rather than a second one.
+ */
+export const recordMembership = (input: {
+  person: { app_entity: string; app_record_id: string };
+  organisation: { app_entity: string; app_record_id: string };
+  title?: string;
+  is_primary?: boolean;
+}) =>
+  call<{ id: string; person_id: string; org_id: string; created: boolean }>(
+    `/apps/${SLUG}/memberships`,
+    { method: "POST", body: input },
+  );
+
 export type FibreOrganisation = { id: string; name: string; domain: string | null };
 
 /**

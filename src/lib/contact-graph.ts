@@ -15,7 +15,7 @@
  * are.
  */
 
-import { FibreError, link, recordActivity } from "@/lib/fibre";
+import { FibreError, link, recordActivity, recordMembership } from "@/lib/fibre";
 
 type Result = { personId: string | null; created: boolean; error?: string };
 
@@ -40,6 +40,41 @@ async function linkPerson(appRecordId: string, email: string, name: string | nul
     const detail = e instanceof FibreError ? e.detail : String(e);
     console.error("[contact-graph] could not link person", { appRecordId, detail });
     return { personId: null, created: false, error: detail };
+  }
+}
+
+/**
+ * Put a person into the organisation hosting their festival.
+ *
+ * This is the edge that makes the contact graph a graph. Without it the
+ * workspace knows the organiser and knows the host organisation and cannot say
+ * that one belongs to the other — so "the contacts we had through this
+ * organisation" has nothing to answer from.
+ *
+ * Quiet like the rest of this file: a festival should not fail because an edge
+ * could not be drawn.
+ */
+export async function joinOrganisation(input: {
+  personRecordId: string;
+  festivalId: string;
+  title?: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  if (!process.env.FIBRE_APP_KEY) return { ok: false };
+  try {
+    await recordMembership({
+      person: { app_entity: "festival_organiser", app_record_id: input.personRecordId },
+      organisation: { app_entity: "festival_host", app_record_id: `festival:${input.festivalId}` },
+      ...(input.title ? { title: input.title } : {}),
+      is_primary: true,
+    });
+    return { ok: true };
+  } catch (e) {
+    const detail = e instanceof FibreError ? e.detail : String(e);
+    console.error("[contact-graph] could not record the membership", {
+      festivalId: input.festivalId,
+      detail,
+    });
+    return { ok: false, error: detail };
   }
 }
 
