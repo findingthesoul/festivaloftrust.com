@@ -115,6 +115,11 @@ export async function createFestival(input: {
     .select("full_name, organisation, fibre_person_id")
     .eq("id", user.user.id)
     .maybeSingle();
+  if (profile.error) {
+    // A missing column here used to fail silently and take the whole contact
+    // link with it, leaving a festival with nobody attached.
+    console.error("[festivals] could not read the organiser profile", profile.error.message);
+  }
   const me = profile.data as
     | { full_name: string | null; organisation: string | null; fibre_person_id: string | null }
     | null;

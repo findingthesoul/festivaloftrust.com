@@ -33,11 +33,13 @@ async function linkPerson(appRecordId: string, email: string, name: string | nul
     });
     return { personId: r.platform_id, created: r.action === "created" };
   } catch (e) {
-    return {
-      personId: null,
-      created: false,
-      error: e instanceof FibreError ? e.detail : String(e),
-    };
+    // Quiet for the caller, loud in the logs. Swallowing this entirely meant a
+    // festival could be created with nobody attached and nothing anywhere
+    // saying why — which then blocked publishing, with a second misleading
+    // message.
+    const detail = e instanceof FibreError ? e.detail : String(e);
+    console.error("[contact-graph] could not link person", { appRecordId, detail });
+    return { personId: null, created: false, error: detail };
   }
 }
 
@@ -76,11 +78,9 @@ export async function linkHostOrganisation(
     });
     return { personId: r.platform_id, created: r.action === "created" };
   } catch (e) {
-    return {
-      personId: null,
-      created: false,
-      error: e instanceof FibreError ? e.detail : String(e),
-    };
+    const detail = e instanceof FibreError ? e.detail : String(e);
+    console.error("[contact-graph] could not link organisation", { festivalId, detail });
+    return { personId: null, created: false, error: detail };
   }
 }
 
