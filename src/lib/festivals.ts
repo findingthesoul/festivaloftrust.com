@@ -42,10 +42,24 @@ export type Festival = {
   thread_slug: string | null;
   owner_id: string;
   created_at: string;
+
+  // The event's own settings. Mirrored from The Thread's columns and pushed
+  // there on save, because a festival is planned before it has a page to hold
+  // them.
+  timezone: string;
+  language: "en" | "nl" | "es" | "pt" | "de";
+  requires_approval: boolean;
+  public_interaction: "page" | "popup";
+  share_participants_public: boolean;
+  share_participants_participants: boolean;
+  capacity: number | null;
+  is_public_listed: boolean;
 };
 
+// One string literal, not a concatenation: supabase-js reads this at type
+// level to shape the row, and it can only do that for a literal.
 const COLUMNS =
-  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at";
+  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed";
 
 /**
  * The festivals this person actually works on.
@@ -313,6 +327,64 @@ export async function accessTo(festival: Festival): Promise<Access | null> {
   return { role, canSeeMoney: role === "organiser" };
 }
 
+export type EventSettings = {
+  name: string;
+  summary: string | null;
+  place: string | null;
+  starts_on: string | null;
+  timezone: string;
+  language: Festival["language"];
+  requires_approval: boolean;
+  public_interaction: Festival["public_interaction"];
+  share_participants_public: boolean;
+  share_participants_participants: boolean;
+  capacity: number | null;
+  is_public_listed: boolean;
+};
+
+/**
+ * Save the event's settings, here and on its public page.
+ *
+ * Written locally first, because the festival is the record and the thread is
+ * a projection of it. If the push fails the settings are still saved and the
+ * next save retries — better than refusing an edit because a second system was
+ * briefly unhappy, and better than the silent version, which is how the whole
+ * Thread integration went unnoticed for ten days.
+ */
+export async function saveEventSettings(
+  festival: Festival,
+  input: EventSettings,
+): Promise<{ error?: string }> {
+  const supabase = await serverSupabase();
+  const { error } = await supabase.from("festival").update(input).eq("id", festival.id);
+  if (error) return { error: error.message };
+
+  if (!festival.thread_id || !process.env.FIBRE_APP_KEY) return {};
+
+  try {
+    await patchThread(festival.thread_id, {
+      title: input.name,
+      intention: input.summary,
+      starts_on: input.starts_on,
+      // A Festival of Trust is one day. The Thread wants both ends, so the end
+      // is the start rather than a second question nobody should be asked.
+      ends_on: input.starts_on,
+      timezone: input.timezone,
+      language: input.language,
+      requires_approval: input.requires_approval,
+      public_interaction: input.public_interaction,
+      share_participants_public: input.share_participants_public,
+      share_participants_participants: input.share_participants_participants,
+      capacity: input.capacity,
+      is_public_listed: input.is_public_listed,
+    });
+  } catch (e) {
+    const detail = e instanceof FibreError ? e.detail : String(e);
+    return { error: `saved here, but the public page said: ${detail}` };
+  }
+  return {};
+}
+
 /** Submit a draft for review. Going live is the admin's to grant. */
 export async function submitForReview(id: string): Promise<{ error?: string }> {
   const supabase = await serverSupabase();
@@ -503,11 +575,20 @@ export async function publishToThread(
       source_ref: festival.id,
     });
 
-    // Listed, so the two paths end in the same state. Listed is not the same
-    // as open for registration — capacity and enrolment are decided separately.
-    if (!thread.is_public_listed) {
-      await patchThread(thread.id, { is_public_listed: true });
-    }
+    // Carry the settings the organiser chose while it was a draft. They are
+    // held on the festival precisely because there was no thread to hold them
+    // then; this is the moment there is one.
+    await patchThread(thread.id, {
+      ends_on: festival.starts_on,
+      timezone: festival.timezone,
+      language: festival.language,
+      requires_approval: festival.requires_approval,
+      public_interaction: festival.public_interaction,
+      share_participants_public: festival.share_participants_public,
+      share_participants_participants: festival.share_participants_participants,
+      capacity: festival.capacity,
+      is_public_listed: festival.is_public_listed,
+    });
 
     await supabase
       .from("festival")

@@ -306,16 +306,31 @@ export const getThread = (id: string) =>
 export const listThreads = () =>
   call<{ threads: FibreThread[] }>(`/apps/${SLUG}/thread/threads`);
 
+/**
+ * The fields shipped in v0.18.12 alongside the ones that were always here.
+ * Each mirrors its column: a NOT NULL column is optional but not nullable, so
+ * a null is refused by the platform rather than reaching Postgres.
+ *
+ * `registration_fields` is deliberately absent. It shapes what is asked of a
+ * registrant, and the data wall exists so an app does not reach into that.
+ */
 export const patchThread = (
   id: string,
   patch: Partial<{
     title: string;
     intention: string | null;
     starts_on: string | null;
+    ends_on: string | null;
     cover_url: string | null;
     is_public_listed: boolean;
     capacity: number | null;
     status: "draft" | "active" | "completed" | "archived";
+    timezone: string;
+    language: "en" | "nl" | "es" | "pt" | "de";
+    requires_approval: boolean;
+    public_interaction: "page" | "popup";
+    share_participants_public: boolean;
+    share_participants_participants: boolean;
   }>,
 ) =>
   call<FibreThread>(`/apps/${SLUG}/thread/threads/${id}`, {

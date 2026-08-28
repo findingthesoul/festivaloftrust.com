@@ -7,6 +7,7 @@ import {
   accessTo,
   invite,
   removeMember,
+  saveEventSettings,
   submitForReview,
   withdrawInvite,
 } from "@/lib/festivals";
@@ -91,4 +92,63 @@ export async function submit(marker: string) {
   if (!festival) return;
   await submitForReview(festival.id);
   revalidatePath(`/plan/${marker}/settings`);
+}
+
+/**
+ * The event's settings, from the form.
+ *
+ * Read out of FormData explicitly rather than passed as an object: a form is
+ * user input arriving at a public endpoint, and the shape it claims to have is
+ * not evidence. An unchecked checkbox sends nothing at all, which is why every
+ * boolean is read as "was it present".
+ */
+export async function saveSettings(
+  marker: string,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const festival = await organiserOf(marker);
+  if (!festival) return { error: "not yours to change" };
+
+  const text = (key: string) => {
+    const v = String(formData.get(key) ?? "").trim();
+    return v === "" ? null : v;
+  };
+  const on = (key: string) => formData.get(key) !== null;
+
+  const name = text("name");
+  if (!name) return { error: "a festival needs a title" };
+
+  const capacityRaw = text("capacity");
+  const capacity = capacityRaw === null ? null : Number(capacityRaw);
+  if (capacity !== null && (!Number.isInteger(capacity) || capacity < 1)) {
+    return { error: "places must be a whole number, or empty for no limit" };
+  }
+
+  const language = String(formData.get("language") ?? "en");
+  if (!["en", "nl", "es", "pt", "de"].includes(language)) {
+    return { error: "that language is not one The Thread knows" };
+  }
+  const interaction = String(formData.get("public_interaction") ?? "page");
+  if (!["page", "popup"].includes(interaction)) {
+    return { error: "that is not a way of opening an event" };
+  }
+
+  const result = await saveEventSettings(festival, {
+    name,
+    summary: text("summary"),
+    place: text("place"),
+    starts_on: text("starts_on"),
+    timezone: text("timezone") ?? "Europe/Amsterdam",
+    language: language as "en" | "nl" | "es" | "pt" | "de",
+    requires_approval: on("requires_approval"),
+    public_interaction: interaction as "page" | "popup",
+    share_participants_public: on("share_participants_public"),
+    share_participants_participants: on("share_participants_participants"),
+    capacity,
+    is_public_listed: on("is_public_listed"),
+  });
+
+  revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/${marker}`);
+  return result;
 }

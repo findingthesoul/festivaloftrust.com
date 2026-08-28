@@ -5,6 +5,7 @@ import { currentUser } from "@/lib/supabase/server";
 import { FestivalHeader } from "../festival-header";
 import { festivalFor } from "../guard";
 import { Collaborators } from "./collaborators";
+import { EventSettings } from "./event-settings";
 import { CoverUpload } from "./cover-upload";
 
 export const metadata: Metadata = { title: "Settings", robots: { index: false } };
@@ -31,6 +32,7 @@ export default async function Page({
       <FestivalHeader festival={festival} access={access} active="settings" />
 
       <div className="mt-10 space-y-14">
+        <EventSettings festival={festival} />
         <CoverUpload festivalId={festival.id} current={festival.cover_url} />
         <Collaborators
           marker={marker}
