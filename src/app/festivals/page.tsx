@@ -16,7 +16,20 @@ export const dynamic = "force-dynamic";
 export default async function Page() {
   const s = await standing();
   if (s.state === "signed-out") redirect("/sign-in?next=/festivals");
-  if (s.state === "no-application") redirect("/apply");
+
+  // Claim first, gate second. This ran below the gates, so someone invited to
+  // collaborate was sent to /apply — a full application to organise a festival
+  // of their own — before their invitation had been looked at.
+  await claimInvites();
+  const festivals = await listFestivals();
+
+  // Invited, not applying. Being a host on somebody's festival is not the same
+  // as being cleared to start one, so this does not create an organiser record
+  // and does not get the "new festival" button.
+  if (s.state === "no-application") {
+    if (festivals.length === 0) redirect("/apply");
+    return <Festivals festivals={festivals} canCreate={false} isAdmin={false} />;
+  }
 
   if (s.state === "pending" || s.state === "declined") {
     const declined = s.state === "declined";
@@ -39,10 +52,24 @@ export default async function Page() {
     );
   }
 
-  // Approved. Any invitation waiting for this address becomes a membership now.
-  await claimInvites();
-  const festivals = await listFestivals();
+  return (
+    <Festivals
+      festivals={festivals}
+      canCreate
+      isAdmin={s.organiser.is_admin}
+    />
+  );
+}
 
+function Festivals({
+  festivals,
+  canCreate,
+  isAdmin,
+}: {
+  festivals: Awaited<ReturnType<typeof listFestivals>>;
+  canCreate: boolean;
+  isAdmin: boolean;
+}) {
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -57,7 +84,7 @@ export default async function Page() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          {s.organiser.is_admin && (
+          {isAdmin && (
             <Link
               href="/admin"
               className="text-sm underline decoration-2 underline-offset-4 hover:opacity-70"
@@ -65,7 +92,7 @@ export default async function Page() {
               Review
             </Link>
           )}
-          <NewFestivalDialog />
+          {canCreate && <NewFestivalDialog />}
         </div>
       </div>
 

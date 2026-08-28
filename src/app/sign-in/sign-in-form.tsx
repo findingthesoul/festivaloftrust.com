@@ -16,7 +16,7 @@ const field =
  * a phone can type the code on the laptop they were already working on rather
  * than starting again there.
  */
-export function SignInForm() {
+export function SignInForm({ next }: { next?: string }) {
   const router = useRouter();
   const [stage, setStage] = useState<Stage>("enter-email");
   const [email, setEmail] = useState("");
@@ -32,7 +32,9 @@ export function SignInForm() {
     const { error } = await browserSupabase().auth.signInWithOtp({
       email: email.trim(),
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback${
+          next ? `?next=${encodeURIComponent(next)}` : ""
+        }`,
         // Organisers are invited by being approved, not by self-registering.
         shouldCreateUser: true,
       },
@@ -63,7 +65,7 @@ export function SignInForm() {
     // verifyOtp has already written the session cookie, so this can navigate
     // straight in. /auth/callback exists for the other path — clicking the link
     // in the email — where the exchange has to happen server-side.
-    router.replace("/festivals");
+    router.replace(next ?? "/festivals");
     router.refresh();
   }
 

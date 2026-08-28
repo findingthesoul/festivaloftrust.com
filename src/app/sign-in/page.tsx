@@ -13,10 +13,14 @@ export const dynamic = "force-dynamic";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string }>;
 }) {
   if (await currentUser()) redirect("/festivals");
-  const { error } = await searchParams;
+  const { error, next } = await searchParams;
+
+  // Only same-site paths. `next` arrives in a URL anyone can craft, and an
+  // absolute one would turn the sign-in screen into an open redirect.
+  const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : undefined;
 
   const message =
     error === "link_expired"
@@ -38,7 +42,7 @@ export default async function Page({
           {message}
         </p>
       )}
-      <SignInForm />
+      <SignInForm next={safeNext} />
     </main>
   );
 }
