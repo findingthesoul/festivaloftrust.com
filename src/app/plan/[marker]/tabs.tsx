@@ -53,10 +53,7 @@ export function FestivalTabs({
   ];
 
   return (
-    <nav
-      aria-label="This festival"
-      className="bg-background/85 border-ink/10 sticky top-[57px] z-20 -mx-6 mt-6 flex gap-1 overflow-x-auto border-b px-6 backdrop-blur sm:-mx-10 sm:px-10"
-    >
+    <nav aria-label="This festival" className="border-ink/10 mt-6 flex gap-1 overflow-x-auto border-b">
       {tabs
         .filter((t) => t.show)
         .map((t) => (

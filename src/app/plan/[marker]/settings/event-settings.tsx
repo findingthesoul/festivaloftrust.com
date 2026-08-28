@@ -2,11 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { saveSettings } from "./actions";
+import { ActionBar, Field, Toggle, input, primary, quiet } from "@/components/ui";
 import type { Festival } from "@/lib/festivals";
-
-const field =
-  "mt-2 w-full border border-ink/25 bg-white/60 px-3 py-2.5 text-base outline-none focus:border-green focus:ring-2 focus:ring-green/25";
-const label = "block text-sm font-medium";
 
 /**
  * The event, as the public will meet it.
@@ -17,167 +14,143 @@ const label = "block text-sm font-medium";
  */
 export function EventSettings({ festival }: { festival: Festival }) {
   const [pending, start] = useTransition();
-  const [note, setNote] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
 
   return (
     <form
-      // Any change anywhere in the form counts. Comparing every field against
-      // its default would be more precise and would also be a second copy of
-      // the form's shape, kept in step by hand.
+      // Any change anywhere counts. Comparing every field against its default
+      // would be more precise and would also be a second copy of the form's
+      // shape, kept in step by hand.
       onInput={() => setDirty(true)}
       onChange={() => setDirty(true)}
       onReset={() => {
         setDirty(false);
-        setNote(null);
         setError(null);
       }}
       action={(formData) =>
         start(async () => {
           const result = await saveSettings(festival.marker, formData);
           setError(result.error ?? null);
-          setNote(result.error ? null : "Saved");
-          if (!result.error) setDirty(false);
+          if (!result.error) {
+            setDirty(false);
+            setSaved(true);
+          }
         })
       }
     >
       <h2 className="text-xl font-bold">The event</h2>
-      <p className="text-ink/60 mt-1 text-sm">
+      <p className="text-ink/55 mt-1 text-sm">
         {festival.thread_id
           ? "Changes here also change the public page."
           : "Kept until the festival is published, then carried to its public page."}
       </p>
 
-      <div className="mt-6 grid gap-5 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <label className={label} htmlFor="name">
-            Title
-          </label>
-          <input id="name" name="name" required defaultValue={festival.name} className={field} />
-        </div>
+      <div className="mt-7 grid gap-6 sm:grid-cols-2">
+        <Field label="Title" htmlFor="name" className="sm:col-span-2">
+          <input id="name" name="name" required defaultValue={festival.name} className={input} />
+        </Field>
 
-        <div className="sm:col-span-2">
-          <label className={label} htmlFor="summary">
-            Description
-          </label>
+        <Field label="Description" htmlFor="summary" className="sm:col-span-2">
           <textarea
             id="summary"
             name="summary"
             rows={4}
             defaultValue={festival.summary ?? ""}
-            className={field}
+            className={input}
             placeholder="What this festival is, in a few lines."
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className={label} htmlFor="starts_on">
-            Date
-          </label>
-          {/* One day. The Thread is told the end is the start rather than
-              asking a question a Festival of Trust never has two answers to. */}
+        {/* One day. The Thread is told the end is the start, rather than asking
+            a question a Festival of Trust never has two answers to. */}
+        <Field label="Date" htmlFor="starts_on">
           <input
             id="starts_on"
             name="starts_on"
             type="date"
             defaultValue={festival.starts_on ?? ""}
-            className={field}
+            className={input}
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className={label} htmlFor="place">
-            Place
-          </label>
+        <Field label="Place" htmlFor="place">
           <input
             id="place"
             name="place"
             defaultValue={festival.place ?? ""}
-            className={field}
+            className={input}
             placeholder="City"
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className={label} htmlFor="timezone">
-            Timezone
-          </label>
+        <Field label="Timezone" htmlFor="timezone">
           <input
             id="timezone"
             name="timezone"
             defaultValue={festival.timezone}
-            className={field}
+            className={input}
             placeholder="Europe/Amsterdam"
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className={label} htmlFor="language">
-            Language
-          </label>
-          <select id="language" name="language" defaultValue={festival.language} className={field}>
+        <Field label="Language" htmlFor="language">
+          <select id="language" name="language" defaultValue={festival.language} className={input}>
             <option value="en">English</option>
             <option value="nl">Nederlands</option>
             <option value="de">Deutsch</option>
             <option value="es">Español</option>
             <option value="pt">Português</option>
           </select>
-        </div>
+        </Field>
 
-        <div>
-          <label className={label} htmlFor="capacity">
-            Places
-          </label>
+        <Field label="Places" htmlFor="capacity" hint="Leave empty for no limit.">
           <input
             id="capacity"
             name="capacity"
             type="number"
             min={1}
             defaultValue={festival.capacity ?? ""}
-            className={field}
-            placeholder="No limit"
+            className={input}
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className={label} htmlFor="public_interaction">
-            Opening it
-          </label>
+        <Field label="Opening it" htmlFor="public_interaction">
           <select
             id="public_interaction"
             name="public_interaction"
             defaultValue={festival.public_interaction}
-            className={field}
+            className={input}
           >
             <option value="page">Its own page</option>
             <option value="popup">A popup, with enrolment</option>
           </select>
-        </div>
+        </Field>
       </div>
 
-      <fieldset className="mt-8">
-        <legend className="text-sm font-medium">Registration</legend>
-        <div className="mt-3 space-y-3">
-          <Check
+      <fieldset className="border-ink/12 mt-8 border-t pt-2">
+        <legend className="sr-only">Registration</legend>
+        <div className="divide-ink/10 divide-y">
+          <Toggle
             name="requires_approval"
             defaultChecked={festival.requires_approval}
             title="People apply, and we admit them"
             hint="Off means anyone can enrol straight away."
           />
-          <Check
+          <Toggle
             name="is_public_listed"
             defaultChecked={festival.is_public_listed}
             title="List it publicly"
             hint="Unlisted festivals stay reachable by their direct link."
           />
-          <Check
+          <Toggle
             name="share_participants_public"
             defaultChecked={festival.share_participants_public}
             title="Show who is coming, publicly"
             hint="Visitors' names on the public page."
           />
-          <Check
+          <Toggle
             name="share_participants_participants"
             defaultChecked={festival.share_participants_participants}
             title="Let participants see each other"
@@ -186,68 +159,17 @@ export function EventSettings({ festival }: { festival: Festival }) {
         </div>
       </fieldset>
 
-      {/*
-        A bar that arrives when there is something to save, rather than a
-        button that is always there and usually does nothing. Sticky to the
-        bottom, because this form is longer than a screen and the answer to
-        "where is Save" should never be "scroll".
-      */}
-      <div
-        className={
-          dirty || pending
-            ? "bg-background/90 border-ink/15 sticky bottom-0 z-10 -mx-6 mt-8 flex items-center gap-4 border-t px-6 py-4 backdrop-blur sm:-mx-8 sm:px-8"
-            : "mt-8 flex min-h-12 items-center gap-4"
-        }
-      >
-        {dirty || pending ? (
-          <>
-            <button
-              type="submit"
-              disabled={pending}
-              className="bg-green text-cream px-5 py-2.5 text-sm font-medium disabled:opacity-50"
-            >
-              {pending ? "Saving…" : "Save changes"}
-            </button>
-            <button
-              type="reset"
-              disabled={pending}
-              className="text-ink/60 hover:text-ink px-2 py-2.5 text-sm transition-colors disabled:opacity-50"
-            >
-              Cancel
-            </button>
-          </>
-        ) : (
-          note && <span className="text-green text-sm font-medium">{note}</span>
-        )}
-      </div>
-      {error && <p className="mt-3 max-w-xl text-sm text-red-700">{error}</p>}
-    </form>
-  );
-}
+      {saved && !dirty && <p className="text-green mt-6 text-sm font-medium">Saved</p>}
+      {error && <p className="mt-6 max-w-xl text-sm text-red-700">{error}</p>}
 
-function Check({
-  name,
-  defaultChecked,
-  title,
-  hint,
-}: {
-  name: string;
-  defaultChecked: boolean;
-  title: string;
-  hint: string;
-}) {
-  return (
-    <label className="flex items-start gap-3">
-      <input
-        type="checkbox"
-        name={name}
-        defaultChecked={defaultChecked}
-        className="accent-green mt-1 size-4 shrink-0"
-      />
-      <span>
-        <span className="block text-sm font-medium">{title}</span>
-        <span className="text-ink/60 block text-sm">{hint}</span>
-      </span>
-    </label>
+      <ActionBar show={dirty || pending}>
+        <button type="reset" disabled={pending} className={quiet}>
+          Cancel
+        </button>
+        <button type="submit" disabled={pending} className={primary}>
+          {pending ? "Saving…" : "Save"}
+        </button>
+      </ActionBar>
+    </form>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { browserSupabase } from "@/lib/supabase/client";
@@ -26,7 +27,7 @@ export function AccountMenu({ email }: { email: string }) {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className="bg-ink text-cream flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold"
+        className="bg-ink text-cream flex size-8 items-center justify-center rounded-full text-sm font-bold transition-opacity hover:opacity-85"
       >
         {initial}
         <span className="sr-only">Account</span>
@@ -44,15 +45,32 @@ export function AccountMenu({ email }: { email: string }) {
           />
           <div
             role="menu"
-            className="border-ink/15 bg-cream absolute right-0 z-20 mt-2 w-56 border p-3 text-sm shadow-sm"
+            className="border-ink/12 bg-cream absolute right-0 z-20 mt-2 w-60 rounded-xl border p-2 text-sm shadow-lg"
           >
-            <p className="text-ink/60 truncate px-1 pb-2">{email}</p>
+            <p className="text-ink/55 truncate px-2.5 py-2 text-xs">{email}</p>
+            <Link
+              href="/account"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="hover:bg-ink/5 block rounded-lg px-2.5 py-2"
+            >
+              Your profile
+            </Link>
+            <Link
+              href="/festivals"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="hover:bg-ink/5 block rounded-lg px-2.5 py-2"
+            >
+              Your festivals
+            </Link>
+            <div className="bg-ink/10 my-1.5 h-px" />
             <button
               type="button"
               role="menuitem"
               onClick={signOut}
               disabled={busy}
-              className="hover:bg-ink/5 w-full px-1 py-1.5 text-left disabled:opacity-50"
+              className="hover:bg-ink/5 w-full rounded-lg px-2.5 py-2 text-left disabled:opacity-50"
             >
               {busy ? "Signing out…" : "Sign out"}
             </button>

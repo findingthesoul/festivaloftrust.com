@@ -38,15 +38,7 @@ export async function SiteNav() {
           <Link href="/festivals" className="text-sm font-bold tracking-[-0.01em]">
             Festival of Trust
           </Link>
-          <div className="flex items-center gap-5 text-sm">
-            <Link
-              href="/festivals"
-              className="decoration-2 underline-offset-4 transition-opacity hover:underline hover:opacity-70"
-            >
-              Festivals
-            </Link>
-            <AccountMenu email={user.email ?? ""} />
-          </div>
+          <AccountMenu email={user.email ?? ""} />
         </div>
       </nav>
     );

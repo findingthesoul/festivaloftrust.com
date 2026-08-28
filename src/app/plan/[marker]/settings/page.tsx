@@ -6,6 +6,7 @@ import { FestivalHeader } from "../festival-header";
 import { festivalFor } from "../guard";
 import { Collaborators } from "./collaborators";
 import { EventSettings } from "./event-settings";
+import { card } from "@/components/ui";
 import { CoverUpload } from "./cover-upload";
 
 export const metadata: Metadata = { title: "Settings", robots: { index: false } };
@@ -31,15 +32,21 @@ export default async function Page({
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
       <FestivalHeader festival={festival} access={access} active="settings" />
 
-      <div className="mt-10 space-y-14">
-        <EventSettings festival={festival} />
-        <CoverUpload festivalId={festival.id} current={festival.cover_url} />
-        <Collaborators
-          marker={marker}
-          members={members}
-          invites={invites}
-          meId={user.id}
-        />
+      <div className="mt-8 space-y-6">
+        <section className={`${card} p-5 sm:p-7`}>
+          <EventSettings festival={festival} />
+        </section>
+        <section className={`${card} p-5 sm:p-7`}>
+          <CoverUpload festivalId={festival.id} current={festival.cover_url} />
+        </section>
+        <section className={`${card} p-5 sm:p-7`}>
+          <Collaborators
+            marker={marker}
+            members={members}
+            invites={invites}
+            meId={user.id}
+          />
+        </section>
       </div>
     </main>
   );
