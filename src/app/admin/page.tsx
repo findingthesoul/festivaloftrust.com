@@ -115,11 +115,11 @@ export default async function Page() {
                   </p>
                   {!f.thread_id && (
                     <p className="mt-1 text-sm text-red-700">
-                      No page in The Thread — put it live again to retry.
+                      No page in The Thread yet.
                     </p>
                   )}
                 </div>
-                <FestivalButtons id={f.id} live />
+                <FestivalButtons id={f.id} live needsPage={!f.thread_id} />
               </li>
             ))}
           </ul>

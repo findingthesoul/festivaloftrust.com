@@ -32,7 +32,15 @@ export function OrganiserButtons({ id }: { id: string }) {
  * public has nothing to approve, and "Send back" would read as if it were still
  * waiting — which is how a live festival ended up with no control at all.
  */
-export function FestivalButtons({ id, live = false }: { id: string; live?: boolean }) {
+export function FestivalButtons({
+  id,
+  live = false,
+  needsPage = false,
+}: {
+  id: string;
+  live?: boolean;
+  needsPage?: boolean;
+}) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -46,14 +54,28 @@ export function FestivalButtons({ id, live = false }: { id: string; live?: boole
     <div className="flex shrink-0 flex-col items-end gap-2">
       <div className="flex gap-2">
         {live ? (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => decide("draft")}
-            className="border-ink/25 hover:border-ink/50 border px-3 py-1.5 text-sm disabled:opacity-50"
-          >
-            Take offline
-          </button>
+          <>
+            {/* Approval already ran; only the Thread page failed. Re-running
+                the live decision retries just that part. */}
+            {needsPage && (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => decide("live")}
+                className="bg-green text-cream px-3 py-1.5 text-sm font-medium disabled:opacity-50"
+              >
+                Retry page
+              </button>
+            )}
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => decide("draft")}
+              className="border-ink/25 hover:border-ink/50 border px-3 py-1.5 text-sm disabled:opacity-50"
+            >
+              Take offline
+            </button>
+          </>
         ) : (
           <>
             <button
