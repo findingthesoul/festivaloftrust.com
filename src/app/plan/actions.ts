@@ -73,7 +73,14 @@ export async function findRun(
     const { runs } = await listRuns();
     const match = runs?.find((r) => r.source_ref === sourceRef);
     return match ? await getRun(match.id) : null;
-  } catch {
+  } catch (e) {
+    // Null is also the honest answer for "no run yet", so without the log a
+    // platform outage and a missing run look identical — the shape of every
+    // hard bug this app has had.
+    console.error("[plan] could not read the run", {
+      sourceRef,
+      detail: e instanceof FibreError ? e.detail : String(e),
+    });
     return null;
   }
 }

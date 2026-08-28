@@ -726,7 +726,11 @@ export async function unpublishFromThread(
   }
 
   const supabase = await serverSupabase();
-  await supabase.from("festival").update({ published_at: null }).eq("id", festival.id);
+  const { error } = await supabase
+    .from("festival")
+    .update({ published_at: null })
+    .eq("id", festival.id);
+  if (error) console.error("[festivals] unpublish could not clear published_at", error.message);
   return { ok: true };
 }
 
@@ -829,7 +833,13 @@ export async function registrations(festival: Festival) {
   try {
     const { enrolments } = await listEnrolments(festival.thread_id);
     return enrolments ?? [];
-  } catch {
+  } catch (e) {
+    // Empty is also what "nobody yet" returns, so log it or an outage reads
+    // as an empty guest list.
+    console.error("[festivals] could not read enrolments", {
+      marker: festival.marker,
+      detail: e instanceof FibreError ? e.detail : String(e),
+    });
     return [];
   }
 }
