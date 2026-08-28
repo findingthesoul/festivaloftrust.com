@@ -1,5 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ShapeGrid } from "@/components/ShapeGrid";
+import closeUp from "@/assets/close-up.jpg";
 import { Wordmark } from "@/components/Wordmark";
 
 const WAYS = [
@@ -18,17 +19,41 @@ const WAYS = [
 export default function Home() {
   return (
     <>
-      {/* Poster: shapes holding the space, wordmark in the corner. */}
-      <section className="mx-auto flex min-h-[calc(100dvh-4.5rem)] w-full max-w-5xl flex-col px-6 pb-6 sm:px-10">
-        <div className="flex flex-1 items-center justify-center py-10">
-          <ShapeGrid className="w-full max-w-[min(80vw,26rem)]" />
+      {/* The close-up poster, read in the order it is read on paper: the title
+          across the top, then the photograph running the full width of the
+          sheet with nothing in the margins beside it. */}
+      <section className="w-full">
+        <div className="mx-auto flex w-full max-w-5xl justify-center px-6 pt-2 pb-10 sm:px-10 sm:pt-6 sm:pb-14">
+          <h1>
+            <Wordmark className="w-[min(72vw,17rem)] sm:w-[24rem] md:w-[30rem]" />
+          </h1>
         </div>
 
-        <div className="flex justify-end">
-          <Wordmark className="h-14 w-auto sm:h-16 md:h-20" />
+        {/* Full bleed without 100vw. This div is a child of the body rather
+            than of the max-w-5xl container, so its width is already the page
+            minus the scrollbar — 100vw would count the scrollbar in and give
+            the body a sideways scroll on every desktop browser that reserves
+            one.
+
+            The ratios step from the poster's portrait close-up on a phone,
+            through the photograph's own 3:2 on a tablet, to a band on a wide
+            screen — so the two crops that do happen cut the axis with the most
+            to spare. Capped at one screenful because a hero taller than the
+            window hides that there is a page under it. */}
+        <div className="relative aspect-[4/5] max-h-dvh w-full sm:aspect-[3/2] lg:aspect-[2/1]">
+          <Image
+            src={closeUp}
+            alt="A child in bright pink sunglasses, standing close among others at a festival."
+            fill
+            preload
+            sizes="100vw"
+            // Held above centre: the faces sit in the top third of the frame,
+            // and a plain centre crop takes the tops of their heads off.
+            className="object-[center_30%] object-cover"
+          />
         </div>
 
-        <div className="flex justify-center pt-10">
+        <div className="flex justify-center py-10">
           <a
             href="#story"
             aria-label="Scroll down to read more"
@@ -57,8 +82,6 @@ export default function Home() {
       >
         {/* Narrative */}
         <section className="mx-auto max-w-2xl space-y-6 border-t border-ink/15 py-20 text-[clamp(1.05rem,1.6vw,1.3rem)] leading-relaxed text-pretty sm:py-28">
-          <h1 className="sr-only">Festival of Trust</h1>
-
           {/* Opening spread of the brochure: sets up the turn the rest of the
               page depends on, so it reads as display type, not body copy. */}
           <p className="text-[clamp(1.6rem,4.5vw,2.75rem)] leading-[1.15] font-bold tracking-[-0.02em] text-balance">
