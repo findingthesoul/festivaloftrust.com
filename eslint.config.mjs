@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Subagents get whole working copies under here; linting them doubles
+    // every finding and drowns the real ones.
+    ".claude/**",
   ]),
 ]);
 
