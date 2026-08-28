@@ -42,12 +42,31 @@ export type Festival = {
 const COLUMNS =
   "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at";
 
+/**
+ * The festivals this person actually works on.
+ *
+ * Filtered here rather than left to RLS. `can_see_festival` is true for every
+ * live festival, because the public page reads through the same policy — so
+ * selecting the table plainly returns everybody's published festivals, and
+ * "Your festivals" listed one you had no part in and could not open.
+ */
 export async function listFestivals(): Promise<Festival[]> {
   const supabase = await serverSupabase();
-  const { data, error } = await supabase
-    .from("festival")
-    .select(COLUMNS)
-    .order("created_at", { ascending: false });
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return [];
+
+  const { data: memberships } = await supabase
+    .from("festival_member")
+    .select("festival_id")
+    .eq("user_id", auth.user.id);
+  const ids = (memberships ?? []).map((m: { festival_id: string }) => m.festival_id);
+
+  let query = supabase.from("festival").select(COLUMNS);
+  query = ids.length
+    ? query.or(`owner_id.eq.${auth.user.id},id.in.(${ids.join(",")})`)
+    : query.eq("owner_id", auth.user.id);
+
+  const { data, error } = await query.order("created_at", { ascending: false });
   if (error) return [];
   return (data ?? []) as Festival[];
 }

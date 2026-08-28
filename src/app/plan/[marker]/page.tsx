@@ -32,7 +32,12 @@ export default async function Page({
   // Organiser or host. A host helps run the festival and does not see the
   // money, so the tenth area is theirs only if they own the commercial side.
   const access = await accessTo(festival);
-  if (!access) notFound();
+  // Not yours to plan. If it is live, it is not missing either — it is the
+  // public page, which is what someone following a link actually wanted.
+  if (!access) {
+    if (festival.status === "live") redirect(`/${marker}`);
+    notFound();
+  }
 
   const connection = await connectionStatus();
   // The run is found by the festival's own id, never by its marker — the marker
