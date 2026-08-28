@@ -43,27 +43,6 @@ async function linkPerson(appRecordId: string, email: string, name: string | nul
   }
 }
 
-/**
- * The person the workspace publishes under.
- *
- * The Thread will only accept an organiser who has a Fibre account and a Thread
- * organiser profile — deliberately, so a public page always has a real human
- * behind it. A community organiser using this planner has neither: they sign in
- * to this app, not to Fibre.
- *
- * So Festival of Trust publishes, which is also true of how this works — we
- * vet the festival and put our name to the page; the community runs it. Their
- * own person record stays attached to the festival either way.
- *
- * Resolved by email rather than a UUID in config, for the same reason as
- * everything else here: the app should not hold platform ids.
- */
-export async function publisherPerson(): Promise<Result> {
-  const email = process.env.FIBRE_PUBLISHER_EMAIL;
-  if (!email) return { personId: null, created: false, error: "FIBRE_PUBLISHER_EMAIL is not set" };
-  return linkPerson(`publisher:${email}`, email, null);
-}
-
 /** The organiser of a festival, as a contact. */
 export async function linkOrganiser(input: {
   userId: string;

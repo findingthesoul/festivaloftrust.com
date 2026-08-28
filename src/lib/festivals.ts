@@ -18,12 +18,7 @@ import {
   patchThread,
   FibreError,
 } from "@/lib/fibre";
-import {
-  linkHostOrganisation,
-  linkOrganiser,
-  noteActivity,
-  publisherPerson,
-} from "@/lib/contact-graph";
+import { linkHostOrganisation, linkOrganiser, noteActivity } from "@/lib/contact-graph";
 
 export type FestivalStatus = "draft" | "submitted" | "live";
 
@@ -374,14 +369,10 @@ export async function publishToThread(
     | null;
   if (!org) return { error: "the festival has no organiser record" };
 
-  // The Thread wants a person, not a user — publishing is done on behalf of a
-  // human who exists in the contact graph.
-  //
-  // Link on demand rather than requiring it to have happened earlier. An
-  // organiser who signed up before the app started writing to the contact graph
-  // has no person yet, and the alternative is stamping ids into the database by
-  // hand — which is a step someone has to remember, for every organiser,
-  // forever.
+  // Make sure the organiser is in the contact graph, so the activity below
+  // lands on their timeline. Not a precondition of publishing: the page is the
+  // workspace's, and refusing to publish because a contact could not be linked
+  // would block the festival for a reason that has nothing to do with it.
   let personId = org.fibre_person_id;
   if (!personId) {
     const linked = await linkOrganiser({
@@ -389,55 +380,24 @@ export async function publishToThread(
       email: org.email,
       name: org.full_name,
     });
-    if (!linked.personId) {
-      return {
-        error: linked.error
-          ? `could not link the organiser to a Fibre person: ${linked.error}`
-          : "could not link the organiser to a Fibre person",
-      };
-    }
     personId = linked.personId;
-    await supabase
-      .from("organiser")
-      .update({ fibre_person_id: personId, fibre_linked_at: new Date().toISOString() })
-      .eq("id", org.id);
+    if (personId) {
+      await supabase
+        .from("organiser")
+        .update({ fibre_person_id: personId, fibre_linked_at: new Date().toISOString() })
+        .eq("id", org.id);
+    }
   }
 
-  const attempt = (organiserPersonId: string) =>
-    publishThread({
+  try {
+    const thread = await publishThread({
       title: festival.name,
       format: "event",
       slug: festival.marker,
-      organiser_person_id: organiserPersonId,
       intention: festival.summary,
       starts_on: festival.starts_on,
       source_ref: festival.id,
     });
-
-  try {
-    let thread;
-    try {
-      thread = await attempt(personId);
-    } catch (e) {
-      // The Thread only accepts an organiser who has a Fibre account and a
-      // Thread organiser profile. A community organiser has neither — they
-      // sign in here, not to Fibre — so fall back to publishing under the
-      // workspace's own person. Only for that refusal: any other failure is
-      // a real problem and should surface as itself.
-      const cannotBeOrganiser =
-        e instanceof FibreError &&
-        e.status === 400 &&
-        /no Fibre account|Thread organiser profile/i.test(e.detail);
-      if (!cannotBeOrganiser) throw e;
-
-      const publisher = await publisherPerson();
-      if (!publisher.personId) {
-        return {
-          error: `${e.detail} — and no publisher to fall back to (${publisher.error ?? "unknown"})`,
-        };
-      }
-      thread = await attempt(publisher.personId);
-    }
 
     // Listed, so the two paths end in the same state. Listed is not the same
     // as open for registration — capacity and enrolment are decided separately.

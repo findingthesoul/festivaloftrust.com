@@ -260,15 +260,19 @@ export type FibreThread = {
 };
 
 /**
- * `organiser_person_id` is a Fibre person, not a user — the app links its
- * organiser to a person already, and should not have to learn about platform
- * user rows to publish.
+ * No `organiser_person_id`: the workspace publishes under its own organiser,
+ * which the platform derives from whoever administers it.
+ *
+ * A festival's organiser could never be named here anyway — they sign in to
+ * this app's database, so they have no Fibre account, and The Thread requires
+ * one so that a public page always has a real human behind it. Festival of
+ * Trust is that human: we vet the festival and put our name to the page. Who
+ * actually runs it is on the festival, in the run and on their timeline.
  */
 export const publishThread = (input: {
   title: string;
   format: "event" | "journey";
   slug: string;
-  organiser_person_id: string;
   intention?: string | null;
   starts_on?: string | null;
   source_ref: string;
