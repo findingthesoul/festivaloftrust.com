@@ -160,3 +160,112 @@ export async function submitForReview(id: string): Promise<{ error?: string }> {
     .eq("id", id);
   return error ? { error: error.message } : {};
 }
+
+export type Member = {
+  user_id: string;
+  role: "organiser" | "host";
+  email: string | null;
+};
+
+export type Invite = {
+  id: string;
+  email: string;
+  role: "organiser" | "host";
+  invited_at: string;
+};
+
+/** Who is on a festival, and who has been asked but not yet arrived. */
+export async function collaborators(
+  festivalId: string,
+): Promise<{ members: Member[]; invites: Invite[] }> {
+  const supabase = await serverSupabase();
+  const [{ data: members }, { data: invites }] = await Promise.all([
+    supabase
+      .from("festival_member")
+      .select("user_id, role, organiser:organiser!inner(email)")
+      .eq("festival_id", festivalId),
+    supabase
+      .from("festival_invite")
+      .select("id, email, role, invited_at")
+      .eq("festival_id", festivalId)
+      .is("claimed_at", null)
+      .order("invited_at"),
+  ]);
+
+  return {
+    members: (members ?? []).map((m) => {
+      const row = m as unknown as {
+        user_id: string;
+        role: "organiser" | "host";
+        organiser: { email: string } | { email: string }[] | null;
+      };
+      const org = Array.isArray(row.organiser) ? row.organiser[0] : row.organiser;
+      return { user_id: row.user_id, role: row.role, email: org?.email ?? null };
+    }),
+    invites: (invites ?? []) as Invite[],
+  };
+}
+
+/**
+ * Invite someone by email.
+ *
+ * Addressed to an address rather than a user, because the people worth inviting
+ * are usually the ones who have not signed in yet. It becomes a membership the
+ * first time that address does.
+ */
+export async function invite(
+  festivalId: string,
+  email: string,
+  role: "organiser" | "host",
+): Promise<{ error?: string }> {
+  const supabase = await serverSupabase();
+  const { data: auth } = await supabase.auth.getUser();
+  const { error } = await supabase.from("festival_invite").insert({
+    festival_id: festivalId,
+    email: email.trim().toLowerCase(),
+    role,
+    invited_by: auth.user?.id,
+  });
+  if (error) {
+    if (error.code === "23505") return { error: "already invited" };
+    return { error: error.message };
+  }
+  return {};
+}
+
+export async function withdrawInvite(id: string): Promise<{ error?: string }> {
+  const supabase = await serverSupabase();
+  const { error } = await supabase.from("festival_invite").delete().eq("id", id);
+  return error ? { error: error.message } : {};
+}
+
+export async function removeMember(
+  festivalId: string,
+  userId: string,
+): Promise<{ error?: string }> {
+  const supabase = await serverSupabase();
+  const { error } = await supabase
+    .from("festival_member")
+    .delete()
+    .eq("festival_id", festivalId)
+    .eq("user_id", userId);
+  return error ? { error: error.message } : {};
+}
+
+/**
+ * A festival's public face.
+ *
+ * Only live ones. A draft returns nothing, so an unpublished marker is
+ * indistinguishable from one that was never taken — which is what stops the
+ * public page being used to discover what is being planned.
+ */
+export async function liveFestival(marker: string): Promise<Festival | null> {
+  const supabase = await serverSupabase();
+  const { data } = await supabase
+    .from("festival")
+    .select(COLUMNS)
+    .eq("marker", marker)
+    .eq("status", "live")
+    .maybeSingle();
+  return (data as Festival) ?? null;
+}

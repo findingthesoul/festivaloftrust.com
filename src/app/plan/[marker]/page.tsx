@@ -41,12 +41,22 @@ export default async function Page({
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
-      <Link
-        href="/festivals"
-        className="text-ink/60 hover:text-ink text-sm transition-colors"
-      >
-        ← Your festivals
-      </Link>
+      <div className="flex items-center justify-between gap-4">
+        <Link
+          href="/festivals"
+          className="text-ink/60 hover:text-ink text-sm transition-colors"
+        >
+          ← Your festivals
+        </Link>
+        {access.role === "organiser" && (
+          <Link
+            href={`/plan/${marker}/settings`}
+            className="text-ink/60 hover:text-ink text-sm underline decoration-2 underline-offset-4 transition-colors"
+          >
+            Settings
+          </Link>
+        )}
+      </div>
 
       <div className="mt-6">
         {run ? (
