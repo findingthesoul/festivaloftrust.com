@@ -120,6 +120,10 @@ export function Collaborators({
         {state.status === "error" && (
           <p className="text-red mt-2 text-sm">{state.message}</p>
         )}
+        <p className="text-ink/50 mt-2 text-sm leading-relaxed text-pretty">
+          They receive a sign-in link. Signing in is what puts them on the
+          festival — until then the invitation waits.
+        </p>
         <dl className="text-ink/60 mt-4 space-y-1 text-sm">
           {(Object.keys(ROLE_NOTE) as Member["role"][]).map((r) => (
             <div key={r} className="flex gap-2">

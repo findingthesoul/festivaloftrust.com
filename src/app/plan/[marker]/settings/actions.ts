@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { serverSupabase } from "@/lib/supabase/server";
 import {
   festivalByMarker,
   accessTo,
@@ -41,7 +42,34 @@ export async function inviteCollaborator(
 
   const r = await invite(festival.id, email, role);
   if (r.error) return { status: "error", message: r.error };
+
+  // The invitation is an email address until that address signs in, so the
+  // invitation *is* a sign-in link. Sent through Supabase, which already sends
+  // through Resend — rather than a second sender with its own key and its own
+  // deliverability to earn.
+  //
+  // The link lands them on the festival they were invited to; signing in is
+  // what turns the invitation into a membership.
+  const supabase = await serverSupabase();
+  const site =
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.festivaloftrust.com";
+  const { error: mailError } = await supabase.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: `${site}/auth/callback?next=/plan/${marker}`,
+      shouldCreateUser: true,
+    },
+  });
+
   revalidatePath(`/plan/${marker}/settings`);
+  if (mailError) {
+    // They are still invited — the row exists and will be claimed whenever
+    // they sign in. Only the nudge failed, and saying so beats silence.
+    return {
+      status: "error",
+      message: `Invited, but the email could not be sent (${mailError.message}). They can still sign in themselves.`,
+    };
+  }
   return { status: "idle" };
 }
 
