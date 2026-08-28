@@ -19,14 +19,26 @@ export function EventSettings({ festival }: { festival: Festival }) {
   const [pending, start] = useTransition();
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
 
   return (
     <form
+      // Any change anywhere in the form counts. Comparing every field against
+      // its default would be more precise and would also be a second copy of
+      // the form's shape, kept in step by hand.
+      onInput={() => setDirty(true)}
+      onChange={() => setDirty(true)}
+      onReset={() => {
+        setDirty(false);
+        setNote(null);
+        setError(null);
+      }}
       action={(formData) =>
         start(async () => {
           const result = await saveSettings(festival.marker, formData);
           setError(result.error ?? null);
           setNote(result.error ? null : "Saved");
+          if (!result.error) setDirty(false);
         })
       }
     >
@@ -174,15 +186,39 @@ export function EventSettings({ festival }: { festival: Festival }) {
         </div>
       </fieldset>
 
-      <div className="mt-8 flex items-center gap-4">
-        <button
-          type="submit"
-          disabled={pending}
-          className="bg-green text-cream px-5 py-2.5 text-sm font-medium disabled:opacity-50"
-        >
-          {pending ? "Saving…" : "Save"}
-        </button>
-        {note && <span className="text-ink/60 text-sm">{note}</span>}
+      {/*
+        A bar that arrives when there is something to save, rather than a
+        button that is always there and usually does nothing. Sticky to the
+        bottom, because this form is longer than a screen and the answer to
+        "where is Save" should never be "scroll".
+      */}
+      <div
+        className={
+          dirty || pending
+            ? "bg-background/90 border-ink/15 sticky bottom-0 z-10 -mx-6 mt-8 flex items-center gap-4 border-t px-6 py-4 backdrop-blur sm:-mx-8 sm:px-8"
+            : "mt-8 flex min-h-12 items-center gap-4"
+        }
+      >
+        {dirty || pending ? (
+          <>
+            <button
+              type="submit"
+              disabled={pending}
+              className="bg-green text-cream px-5 py-2.5 text-sm font-medium disabled:opacity-50"
+            >
+              {pending ? "Saving…" : "Save changes"}
+            </button>
+            <button
+              type="reset"
+              disabled={pending}
+              className="text-ink/60 hover:text-ink px-2 py-2.5 text-sm transition-colors disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </>
+        ) : (
+          note && <span className="text-green text-sm font-medium">{note}</span>
+        )}
       </div>
       {error && <p className="mt-3 max-w-xl text-sm text-red-700">{error}</p>}
     </form>
