@@ -46,8 +46,6 @@ export type Festival = {
   // The event's own settings. Mirrored from The Thread's columns and pushed
   // there on save, because a festival is planned before it has a page to hold
   // them.
-  /** When enrolment opens. Null until somebody decides. */
-  registration_opens_at: string | null;
   timezone: string;
   language: "en" | "nl" | "es" | "pt" | "de";
   requires_approval: boolean;
@@ -61,7 +59,7 @@ export type Festival = {
 // One string literal, not a concatenation: supabase-js reads this at type
 // level to shape the row, and it can only do that for a literal.
 const COLUMNS =
-  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, registration_opens_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed";
+  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed";
 
 /**
  * The festivals this person actually works on.
@@ -692,6 +690,29 @@ export async function unpublishFromThread(
 }
 
 /**
+ * When this festival's enrolment opens, or null.
+ *
+ * Its own query, apart from COLUMNS, so the column from 0010_registration can
+ * be missing without taking every festival page down with it — which is
+ * exactly what happened the night this was split out: the shared column list
+ * asked for a column production did not have, and every festival 404'd.
+ */
+export async function registrationOpensAt(festivalId: string): Promise<string | null> {
+  const supabase = await serverSupabase();
+  const { data, error } = await supabase
+    .from("festival")
+    .select("registration_opens_at")
+    .eq("id", festivalId)
+    .maybeSingle();
+  if (error) {
+    // 42703: the migration has not run. The feature is off; the page is not.
+    console.error("[festivals] registration_opens_at unreadable — run 0010_registration.sql?", error.message);
+    return null;
+  }
+  return (data as { registration_opens_at: string | null } | null)?.registration_opens_at ?? null;
+}
+
+/**
  * Open enrolment, now or at a time.
  *
  * A thread going `active` is the one moment its page is live and people may
@@ -718,7 +739,13 @@ export async function openRegistration(
     .from("festival")
     .update({ registration_opens_at: opensAt.toISOString() })
     .eq("id", festival.id);
-  if (error) return { error: error.message };
+  if (error) {
+    return {
+      error: error.message.includes("registration_opens_at")
+        ? "the database is missing 0010_registration.sql — run it, then try again"
+        : error.message,
+    };
+  }
 
   if (later) return {};
   return activateThread(festival);

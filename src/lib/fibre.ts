@@ -339,6 +339,34 @@ export const patchThread = (
   });
 
 /**
+ * Credit someone who helps run a festival on its public page — the Hosts &
+ * Facilitators list.
+ *
+ * The person is named by our own record id, already linked through `link()`;
+ * the platform resolves it, which is why nothing here handles a platform UUID.
+ * A person we never linked is a 404, not a silent no-op.
+ *
+ * Idempotent on (thread, person): a repeat call moves them to the role given
+ * rather than listing them twice.
+ *
+ * `role` is what the column allows and not what the brief promised. There is
+ * no 'co_organiser' — it was widened to 'host' and 'facilitator', and sending
+ * the word from the brief is a 400.
+ */
+export const addThreadHost = (
+  threadId: string,
+  input: {
+    person: { app_entity: string; app_record_id: string };
+    /** Defaults to 'host' when left off. */
+    role?: "host" | "facilitator";
+  },
+) =>
+  call<{ id: string; person_id: string; role: string }>(
+    `/apps/${SLUG}/thread/threads/${threadId}/hosts`,
+    { method: "POST", body: input },
+  );
+
+/**
  * Who registered.
  *
  * The response carries the person and their payment status and nothing else —

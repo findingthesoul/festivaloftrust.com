@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { festivalFor } from "../guard";
+import { registrationOpensAt } from "@/lib/festivals";
 import { FestivalHeader } from "../festival-header";
 import { PublishControls } from "./publish-controls";
 import { RegistrationControls } from "./registration-controls";
@@ -11,6 +12,7 @@ export const dynamic = "force-dynamic";
 export default async function Page({ params }: { params: Promise<{ marker: string }> }) {
   const { marker } = await params;
   const { festival, access } = await festivalFor(marker, { organiserOnly: true });
+  const opensAt = festival.status === "live" ? await registrationOpensAt(festival.id) : null;
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
@@ -24,10 +26,8 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
           <h2 className="text-xl font-bold">Registration</h2>
           <RegistrationControls
             festival={festival}
-            open={
-              festival.registration_opens_at !== null &&
-              new Date(festival.registration_opens_at) <= new Date()
-            }
+            opensAtIso={opensAt}
+            open={opensAt !== null && new Date(opensAt) <= new Date()}
           />
         </section>
       )}

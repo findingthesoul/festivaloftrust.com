@@ -15,7 +15,13 @@
  * are.
  */
 
-import { FibreError, link, recordActivity, recordMembership } from "@/lib/fibre";
+import {
+  FibreError,
+  addThreadHost,
+  link,
+  recordActivity,
+  recordMembership,
+} from "@/lib/fibre";
 
 type Result = { personId: string | null; created: boolean; error?: string };
 
@@ -72,6 +78,41 @@ export async function joinOrganisation(input: {
     const detail = e instanceof FibreError ? e.detail : String(e);
     console.error("[contact-graph] could not record the membership", {
       festivalId: input.festivalId,
+      detail,
+    });
+    return { ok: false, error: detail };
+  }
+}
+
+/**
+ * Name a host on the festival's public page.
+ *
+ * Someone who accepts an invitation is on the work, and the page said only
+ * Festival of Trust published it. This is the line that puts their name where
+ * a visitor can see it.
+ *
+ * The person has to be linked as `host:<user id>` first — the platform is
+ * given our record id and 404s while it points at nobody.
+ *
+ * Quiet like the rest of this file: nobody should fail to join a festival
+ * because The Thread would not list them.
+ */
+export async function creditOnThread(input: {
+  personRecordId: string;
+  threadId: string;
+}): Promise<{ ok: boolean; error?: string }> {
+  if (!process.env.FIBRE_APP_KEY) return { ok: false };
+  try {
+    await addThreadHost(input.threadId, {
+      person: { app_entity: "festival_organiser", app_record_id: input.personRecordId },
+      // 'host' and 'facilitator' are the only two the platform's column takes.
+      role: "host",
+    });
+    return { ok: true };
+  } catch (e) {
+    const detail = e instanceof FibreError ? e.detail : String(e);
+    console.error("[contact-graph] could not credit the host on the page", {
+      threadId: input.threadId,
       detail,
     });
     return { ok: false, error: detail };

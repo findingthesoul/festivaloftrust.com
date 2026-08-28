@@ -20,9 +20,13 @@ const when = new Intl.DateTimeFormat("en-GB", {
  */
 export function RegistrationControls({
   festival,
+  opensAtIso,
   open,
 }: {
   festival: Festival;
+  /** Fetched apart from the festival, so a missing 0010 turns the feature off
+      rather than the page. */
+  opensAtIso: string | null;
   /**
    * Decided on the server. Reading the clock in render is impure and would
    * also hydrate to a different answer than it rendered with, a minute either
@@ -35,9 +39,7 @@ export function RegistrationControls({
   const [at, setAt] = useState("");
   const [scheduling, setScheduling] = useState(false);
 
-  const opensAt = festival.registration_opens_at
-    ? new Date(festival.registration_opens_at)
-    : null;
+  const opensAt = opensAtIso ? new Date(opensAtIso) : null;
   const promised = opensAt !== null && !open;
 
   const run = (fn: () => Promise<{ error?: string }>) =>
