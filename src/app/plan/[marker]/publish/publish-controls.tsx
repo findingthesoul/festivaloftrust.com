@@ -18,7 +18,7 @@ export function PublishControls({
     start(async () => setError((await fn(marker)).error ?? null));
 
   return (
-    <div className="mt-10">
+    <div>
       {status === "live" && (
         <>
           <h2 className="text-xl font-bold">Published</h2>

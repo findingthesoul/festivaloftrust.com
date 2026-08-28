@@ -46,6 +46,8 @@ export type Festival = {
   // The event's own settings. Mirrored from The Thread's columns and pushed
   // there on save, because a festival is planned before it has a page to hold
   // them.
+  /** When enrolment opens. Null until somebody decides. */
+  registration_opens_at: string | null;
   timezone: string;
   language: "en" | "nl" | "es" | "pt" | "de";
   requires_approval: boolean;
@@ -59,7 +61,7 @@ export type Festival = {
 // One string literal, not a concatenation: supabase-js reads this at type
 // level to shape the row, and it can only do that for a literal.
 const COLUMNS =
-  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed";
+  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, registration_opens_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed";
 
 /**
  * The festivals this person actually works on.
@@ -687,6 +689,70 @@ export async function unpublishFromThread(
   const supabase = await serverSupabase();
   await supabase.from("festival").update({ published_at: null }).eq("id", festival.id);
   return { ok: true };
+}
+
+/**
+ * Open enrolment, now or at a time.
+ *
+ * A thread going `active` is the one moment its page is live and people may
+ * sign up. So opening now is that patch; opening later is a promise recorded
+ * here, which the opener keeps.
+ *
+ * Refused before there is a page. Enrolment cannot open onto nothing, and an
+ * organiser who pressed this and saw "opens Tuesday" would believe it.
+ */
+export async function openRegistration(
+  festival: Festival,
+  at: string | null,
+): Promise<{ error?: string }> {
+  if (!festival.thread_id) {
+    return { error: "this festival has no public page yet — it has to be published first" };
+  }
+
+  const supabase = await serverSupabase();
+  const now = new Date();
+  const opensAt = at ? new Date(at) : now;
+  const later = opensAt.getTime() > now.getTime();
+
+  const { error } = await supabase
+    .from("festival")
+    .update({ registration_opens_at: opensAt.toISOString() })
+    .eq("id", festival.id);
+  if (error) return { error: error.message };
+
+  if (later) return {};
+  return activateThread(festival);
+}
+
+/** Stop taking registrations. The page stays; the doors close. */
+export async function closeRegistration(festival: Festival): Promise<{ error?: string }> {
+  const supabase = await serverSupabase();
+  const { error } = await supabase
+    .from("festival")
+    .update({ registration_opens_at: null })
+    .eq("id", festival.id);
+  if (error) return { error: error.message };
+
+  if (!festival.thread_id || !process.env.FIBRE_APP_KEY) return {};
+  try {
+    await patchThread(festival.thread_id, { status: "draft" });
+  } catch (e) {
+    return { error: e instanceof FibreError ? e.detail : String(e) };
+  }
+  return {};
+}
+
+/** The patch that opens the doors. Shared by the button and the opener. */
+export async function activateThread(
+  festival: Pick<Festival, "thread_id">,
+): Promise<{ error?: string }> {
+  if (!festival.thread_id || !process.env.FIBRE_APP_KEY) return {};
+  try {
+    await patchThread(festival.thread_id, { status: "active" });
+  } catch (e) {
+    return { error: e instanceof FibreError ? e.detail : String(e) };
+  }
+  return {};
 }
 
 /** Who has registered. Empty until The Thread's page is opened for enrolment. */
