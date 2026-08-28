@@ -15,6 +15,8 @@ export async function submitApplication(
   const result = await apply({
     fullName,
     organisation: String(formData.get("organisation") ?? "").trim(),
+    phone: String(formData.get("phone") ?? "").trim(),
+    address: String(formData.get("address") ?? "").trim(),
     reason: String(formData.get("reason") ?? "").trim(),
   });
   if ("error" in result) return { status: "error", message: result.error };

@@ -9,6 +9,7 @@
  */
 
 import { serverSupabase } from "@/lib/supabase/server";
+import { linkHost } from "@/lib/contact-graph";
 
 export type Organiser = {
   id: string;
@@ -44,16 +45,49 @@ export async function standing(): Promise<Standing> {
   return { state: organiser.status, organiser } as Standing;
 }
 
-/** Turn any invitations addressed to this email into memberships. */
+/**
+ * Turn any invitations addressed to this email into memberships.
+ *
+ * Someone who arrives this way is a real collaborator on a real festival, so
+ * this is also where they enter the contact graph — the same moment they stop
+ * being an email address and become a person on the work.
+ */
 export async function claimInvites(): Promise<number> {
   const supabase = await serverSupabase();
   const { data } = await supabase.rpc("claim_festival_invites");
-  return typeof data === "number" ? data : 0;
+  const claimed = typeof data === "number" ? data : 0;
+  if (claimed === 0) return 0;
+
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) return claimed;
+
+  const { data: row } = await supabase
+    .from("organiser")
+    .select("full_name, fibre_person_id")
+    .eq("id", auth.user.id)
+    .maybeSingle();
+  const me = row as { full_name: string | null; fibre_person_id: string | null } | null;
+  if (me?.fibre_person_id) return claimed;
+
+  const linked = await linkHost({
+    userId: auth.user.id,
+    email: auth.user.email ?? "",
+    name: me?.full_name ?? null,
+  });
+  if (linked.personId) {
+    await supabase
+      .from("organiser")
+      .update({ fibre_person_id: linked.personId, fibre_linked_at: new Date().toISOString() })
+      .eq("id", auth.user.id);
+  }
+  return claimed;
 }
 
 export async function apply(input: {
   fullName: string;
   organisation?: string;
+  phone?: string;
+  address?: string;
   reason?: string;
 }): Promise<{ ok: true } | { error: string }> {
   const supabase = await serverSupabase();
@@ -65,6 +99,8 @@ export async function apply(input: {
     email: auth.user.email,
     full_name: input.fullName,
     organisation: input.organisation || null,
+    phone: input.phone || null,
+    address: input.address || null,
     reason: input.reason || null,
   });
   if (error) return { error: error.message };

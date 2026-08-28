@@ -11,6 +11,7 @@
 
 import { serverSupabase } from "@/lib/supabase/server";
 import { startRun, listFlows, FibreError } from "@/lib/fibre";
+import { linkHostOrganisation, linkOrganiser, noteActivity } from "@/lib/contact-graph";
 
 export type FestivalStatus = "draft" | "submitted" | "live";
 
@@ -73,6 +74,7 @@ export async function createFestival(input: {
   name: string;
   marker: string;
   place?: string;
+  hostOrganisation?: string;
   hostOrgId?: string;
 }): Promise<{ festival: Festival } | { error: string }> {
   const supabase = await serverSupabase();
@@ -97,6 +99,40 @@ export async function createFestival(input: {
   }
   const festival = row as Festival;
 
+  // Put the people into the contact graph before the run, so the run can carry
+  // the organisation and the timeline entry has someone to belong to. None of
+  // this is allowed to stop a festival being created.
+  const profile = await supabase
+    .from("organiser")
+    .select("full_name, organisation, fibre_person_id")
+    .eq("id", user.user.id)
+    .maybeSingle();
+  const me = profile.data as
+    | { full_name: string | null; organisation: string | null; fibre_person_id: string | null }
+    | null;
+
+  let personId = me?.fibre_person_id ?? null;
+  if (!personId) {
+    const linked = await linkOrganiser({
+      userId: user.user.id,
+      email: user.user.email ?? "",
+      name: me?.full_name ?? null,
+    });
+    personId = linked.personId;
+    if (personId) {
+      await supabase
+        .from("organiser")
+        .update({ fibre_person_id: personId, fibre_linked_at: new Date().toISOString() })
+        .eq("id", user.user.id);
+    }
+  }
+
+  const orgName = input.hostOrganisation ?? me?.organisation ?? null;
+  let hostOrgId = input.hostOrgId ?? null;
+  if (!hostOrgId && orgName) {
+    hostOrgId = (await linkHostOrganisation(festival.id, orgName)).personId;
+  }
+
   try {
     const { flows } = await listFlows();
     const flow = flows?.find((f) => f.system_key === "fot_festival");
@@ -105,12 +141,20 @@ export async function createFestival(input: {
     const run = await startRun(flow.id, {
       subject_label: input.name,
       source_ref: festival.id,
-      ...(input.hostOrgId ? { organisation_id: input.hostOrgId } : {}),
+      ...(hostOrgId ? { organisation_id: hostOrgId } : {}),
+      ...(personId ? { person_id: personId } : {}),
+    });
+
+    await noteActivity({
+      type: "fot_planner_plan_created",
+      subject: `Started planning ${input.name}`,
+      ...(personId ? { personId } : {}),
+      ...(hostOrgId ? { organisationId: hostOrgId } : {}),
     });
 
     const { data: updated } = await supabase
       .from("festival")
-      .update({ fibre_run_id: run.id, host_org_id: input.hostOrgId ?? null })
+      .update({ fibre_run_id: run.id, host_org_id: hostOrgId })
       .eq("id", festival.id)
       .select(COLUMNS)
       .single();

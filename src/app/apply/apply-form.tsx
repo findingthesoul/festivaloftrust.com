@@ -26,6 +26,20 @@ export function ApplyForm() {
         <input id="organisation" name="organisation" className={field} />
       </div>
       <div>
+        <label htmlFor="phone" className="font-medium">
+          Telephone{" "}
+          <span className="text-ink/50 font-normal">(optional)</span>
+        </label>
+        <input id="phone" name="phone" type="tel" autoComplete="tel" className={field} />
+      </div>
+      <div>
+        <label htmlFor="address" className="font-medium">
+          Address{" "}
+          <span className="text-ink/50 font-normal">(optional)</span>
+        </label>
+        <textarea id="address" name="address" rows={3} autoComplete="street-address" className={field} />
+      </div>
+      <div>
         <label htmlFor="reason" className="font-medium">
           Where would you host it, and why there?{" "}
           <span className="text-ink/50 font-normal">(optional)</span>
