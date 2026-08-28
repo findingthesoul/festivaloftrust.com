@@ -74,6 +74,14 @@ export function SignInForm() {
           We sent a code to <span className="font-medium">{email}</span>. Enter
           it below, or open the link in that email.
         </p>
+        {/* Worth saying plainly: this is a young sending domain, and iCloud in
+            particular files it as junk until it has some history. Someone who
+            never finds their code just gives up. */}
+        <p className="text-ink/60 mt-3 text-sm leading-relaxed text-pretty">
+          If it is not there in a minute, look in your junk or spam folder —
+          especially on iCloud, Hotmail or Outlook. Marking it as not junk means
+          the next one arrives properly.
+        </p>
         <label htmlFor="code" className="mt-6 block font-medium">
           Code from the email
         </label>
