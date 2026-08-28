@@ -28,10 +28,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <SiteNav />
         {children}
         <footer className="mx-auto w-full max-w-5xl border-t border-ink/15 px-6 py-10 text-sm sm:px-10">
-          {/* Displays the festival address but routes to Sjoerd's inbox: the
-              hello@ mailbox does not exist yet. Deliberate, not a typo. */}
           <a
-            href="mailto:s@soul.com"
+            href="mailto:hello@festivaloftrust.com"
             className="text-green font-medium underline decoration-2 underline-offset-4 transition-opacity hover:opacity-70"
           >
             hello@festivaloftrust.com
