@@ -92,7 +92,11 @@ export async function linkHostOrganisation(
  * the run — this is for the handful of things a workspace member should see.
  */
 export async function noteActivity(input: {
-  type: "fot_planner_plan_created" | "fot_planner_plan_updated" | "fot_planner_offer_issued";
+  type:
+    | "fot_planner_plan_created"
+    | "fot_planner_plan_updated"
+    | "fot_planner_offer_issued"
+    | "fot_planner_festival_published";
   subject: string;
   personId?: string;
   organisationId?: string;

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { serverSupabase } from "@/lib/supabase/server";
 import { standing } from "@/lib/organiser";
+import { publishToThread } from "@/lib/festivals";
 
 /**
  * Review actions.
@@ -33,8 +34,14 @@ export async function decideOrganiser(
       review_note: note || null,
     })
     .eq("id", id);
+  if (error) {
+    revalidatePath("/admin");
+    return { error: error.message };
+  }
+
+
   revalidatePath("/admin");
-  return error ? { error: error.message } : {};
+  return {};
 }
 
 export async function decideFestival(id: string, decision: "live" | "draft") {
@@ -53,6 +60,32 @@ export async function decideFestival(id: string, decision: "live" | "draft") {
         : { status: "draft", submitted_at: null },
     )
     .eq("id", id);
+  if (error) {
+    revalidatePath("/admin");
+    return { error: error.message };
+  }
+
+  // Going live is also when the festival gets a public page — created in draft
+  // in The Thread, so approving means "this may exist publicly", not "the doors
+  // are open". Somebody still decides when registration starts.
+  if (decision === "live") {
+    const { data: row } = await supabase
+      .from("festival")
+      .select(
+        "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at",
+      )
+      .eq("id", id)
+      .maybeSingle();
+    if (row) {
+      const published = await publishToThread(row as Parameters<typeof publishToThread>[0]);
+      if ("error" in published) {
+        // The festival is live either way; the page can be retried. Better than
+        // refusing an approval because a second system was briefly unhappy.
+        console.error("[admin] publish to The Thread failed", published.error);
+      }
+    }
+  }
+
   revalidatePath("/admin");
-  return error ? { error: error.message } : {};
+  return {};
 }

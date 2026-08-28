@@ -10,7 +10,13 @@
  */
 
 import { serverSupabase } from "@/lib/supabase/server";
-import { startRun, listFlows, FibreError } from "@/lib/fibre";
+import {
+  startRun,
+  listFlows,
+  listEnrolments,
+  publishThread,
+  FibreError,
+} from "@/lib/fibre";
 import { linkHostOrganisation, linkOrganiser, noteActivity } from "@/lib/contact-graph";
 
 export type FestivalStatus = "draft" | "submitted" | "live";
@@ -26,12 +32,14 @@ export type Festival = {
   cover_url: string | null;
   fibre_run_id: string | null;
   host_org_id: string | null;
+  thread_id: string | null;
+  thread_slug: string | null;
   owner_id: string;
   created_at: string;
 };
 
 const COLUMNS =
-  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, owner_id, created_at";
+  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at";
 
 export async function listFestivals(): Promise<Festival[]> {
   const supabase = await serverSupabase();
@@ -312,4 +320,78 @@ export async function liveFestival(marker: string): Promise<Festival | null> {
     .eq("status", "live")
     .maybeSingle();
   return (data as Festival) ?? null;
+}
+
+/**
+ * Publish the festival as a public page in The Thread.
+ *
+ * Created in draft: approval here means "this may exist publicly", not "open
+ * the doors". Someone still decides when registration opens, in The Thread.
+ *
+ * Idempotent on `source_ref`, so a retried publish returns the page that
+ * already exists rather than a second one.
+ */
+export async function publishToThread(
+  festival: Festival,
+): Promise<{ threadId: string } | { error: string }> {
+  if (!process.env.FIBRE_APP_KEY) return { error: "not configured" };
+  if (festival.thread_id) return { threadId: festival.thread_id };
+
+  const supabase = await serverSupabase();
+  const { data: owner } = await supabase
+    .from("organiser")
+    .select("fibre_person_id")
+    .eq("id", festival.owner_id)
+    .maybeSingle();
+  const personId = (owner as { fibre_person_id: string | null } | null)?.fibre_person_id;
+
+  // The Thread wants a person, not a user — publishing is done on behalf of a
+  // human who exists in the contact graph. Without that link there is nobody
+  // to attribute the festival to.
+  if (!personId) {
+    return { error: "the organiser is not linked to a Fibre person yet" };
+  }
+
+  try {
+    const thread = await publishThread({
+      title: festival.name,
+      format: "event",
+      slug: festival.marker,
+      organiser_person_id: personId,
+      intention: festival.summary,
+      starts_on: festival.starts_on,
+      source_ref: festival.id,
+    });
+
+    await supabase
+      .from("festival")
+      .update({
+        thread_id: thread.id,
+        thread_slug: thread.slug,
+        published_at: new Date().toISOString(),
+      })
+      .eq("id", festival.id);
+
+    await noteActivity({
+      type: "fot_planner_festival_published",
+      subject: `Published ${festival.name}`,
+      ...(personId ? { personId } : {}),
+      ...(festival.host_org_id ? { organisationId: festival.host_org_id } : {}),
+    });
+
+    return { threadId: thread.id };
+  } catch (e) {
+    return { error: e instanceof FibreError ? e.detail : String(e) };
+  }
+}
+
+/** Who has registered. Empty until The Thread's page is opened for enrolment. */
+export async function registrations(festival: Festival) {
+  if (!festival.thread_id || !process.env.FIBRE_APP_KEY) return [];
+  try {
+    const { enrolments } = await listEnrolments(festival.thread_id);
+    return enrolments ?? [];
+  } catch {
+    return [];
+  }
 }

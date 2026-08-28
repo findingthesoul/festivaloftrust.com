@@ -231,8 +231,92 @@ export const recordActivity = (input: {
   type:
     | "fot_planner_plan_created"
     | "fot_planner_plan_updated"
-    | "fot_planner_offer_issued";
+    | "fot_planner_offer_issued"
+    | "fot_planner_festival_published";
   subject: string;
   person_id?: string;
   organisation_id?: string;
 }) => call<{ id: string }>("/activities", { method: "POST", body: input });
+
+// ---------------------------------------------------------------------------
+// The Thread — the festival's public page and who registered.
+//
+// A programme and its public page are created together because neither is
+// useful alone. Publishing is idempotent on `source_ref`, the same way runs
+// are, so a retry returns the thread that already exists.
+// ---------------------------------------------------------------------------
+
+export type FibreThread = {
+  id: string;
+  program_id: string;
+  slug: string;
+  title: string;
+  status: "draft" | "active" | "completed" | "archived";
+  starts_on: string | null;
+  cover_url: string | null;
+  is_public_listed: boolean;
+  capacity: number | null;
+  public_url: string | null;
+};
+
+/**
+ * `organiser_person_id` is a Fibre person, not a user — the app links its
+ * organiser to a person already, and should not have to learn about platform
+ * user rows to publish.
+ */
+export const publishThread = (input: {
+  title: string;
+  format: "event" | "journey";
+  slug: string;
+  organiser_person_id: string;
+  intention?: string | null;
+  starts_on?: string | null;
+  source_ref: string;
+}) =>
+  call<FibreThread & { created: boolean }>(`/apps/${SLUG}/thread/threads`, {
+    method: "POST",
+    body: input,
+  });
+
+export const getThread = (id: string) =>
+  call<FibreThread>(`/apps/${SLUG}/thread/threads/${id}`);
+
+export const listThreads = () =>
+  call<{ threads: FibreThread[] }>(`/apps/${SLUG}/thread/threads`);
+
+export const patchThread = (
+  id: string,
+  patch: Partial<{
+    title: string;
+    intention: string | null;
+    starts_on: string | null;
+    cover_url: string | null;
+    is_public_listed: boolean;
+    capacity: number | null;
+    status: "draft" | "active" | "completed" | "archived";
+  }>,
+) =>
+  call<FibreThread>(`/apps/${SLUG}/thread/threads/${id}`, {
+    method: "PATCH",
+    body: patch,
+  });
+
+/**
+ * Who registered.
+ *
+ * The response carries the person and their payment status and nothing else —
+ * the registration form answers and every payment instrument stay behind the
+ * data wall, by the platform's choice rather than ours.
+ */
+export type FibreEnrolment = {
+  id: string;
+  enrolment_id: string;
+  person_id: string;
+  payment_status: string;
+  created_at: string;
+};
+
+export const listEnrolments = (threadId: string) =>
+  call<{ enrolments: FibreEnrolment[] }>(
+    `/apps/${SLUG}/thread/threads/${threadId}/enrolments`,
+  );
