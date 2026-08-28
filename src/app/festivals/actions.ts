@@ -41,7 +41,11 @@ export async function newFestival(
     };
   }
 
-  const result = await createFestival({ name, marker });
+  const result = await createFestival({
+    name,
+    marker,
+    place: String(formData.get("place") ?? "").trim() || undefined,
+  });
   if ("error" in result) {
     return {
       status: "error",
