@@ -14,7 +14,7 @@ export default async function Page() {
   if (s.state !== "approved" || !s.organiser.is_admin) notFound();
 
   const supabase = await serverSupabase();
-  const [{ data: people }, { data: festivals }] = await Promise.all([
+  const [{ data: people }, { data: festivals }, { data: liveFestivals }] = await Promise.all([
     supabase
       .from("organiser")
       .select("id, email, full_name, organisation, reason, applied_at")
@@ -25,10 +25,19 @@ export default async function Page() {
       .select("id, name, marker, place, submitted_at")
       .eq("status", "submitted")
       .order("submitted_at"),
+    // Live festivals are listed here for one reason: this is the only screen
+    // that can take one back down, and until it showed them there was no way
+    // to undo a publish at all.
+    supabase
+      .from("festival")
+      .select("id, name, marker, place, thread_id, approved_at")
+      .eq("status", "live")
+      .order("approved_at", { ascending: false }),
   ]);
 
   const pendingPeople = people ?? [];
   const pendingFestivals = festivals ?? [];
+  const live = liveFestivals ?? [];
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
@@ -82,6 +91,35 @@ export default async function Page() {
                   </p>
                 </div>
                 <FestivalButtons id={f.id} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-14">
+        <h2 className="text-xl font-bold">
+          Live <span className="text-ink/50 font-normal">({live.length})</span>
+        </h2>
+        {live.length === 0 ? (
+          <p className="text-ink/60 mt-3 text-sm">Nothing published yet.</p>
+        ) : (
+          <ul className="mt-5 divide-y divide-ink/10 border-y border-ink/10">
+            {live.map((f) => (
+              <li key={f.id} className="flex items-start justify-between gap-6 py-5">
+                <div className="min-w-0">
+                  <p className="font-bold">{f.name}</p>
+                  <p className="text-ink/60 font-mono text-sm">
+                    /{f.marker}
+                    {f.place ? ` \u00b7 ${f.place}` : ""}
+                  </p>
+                  {!f.thread_id && (
+                    <p className="mt-1 text-sm text-red-700">
+                      No page in The Thread — put it live again to retry.
+                    </p>
+                  )}
+                </div>
+                <FestivalButtons id={f.id} live />
               </li>
             ))}
           </ul>

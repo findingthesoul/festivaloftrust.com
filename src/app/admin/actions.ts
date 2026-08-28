@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { serverSupabase } from "@/lib/supabase/server";
 import { standing } from "@/lib/organiser";
-import { publishToThread } from "@/lib/festivals";
+import { publishToThread, unpublishFromThread } from "@/lib/festivals";
 
 /**
  * Review actions.
@@ -65,27 +65,34 @@ export async function decideFestival(id: string, decision: "live" | "draft") {
     return { error: error.message };
   }
 
-  // Going live is also when the festival gets a public page — created in draft
-  // in The Thread, so approving means "this may exist publicly", not "the doors
-  // are open". Somebody still decides when registration starts.
-  if (decision === "live") {
-    const { data: row } = await supabase
-      .from("festival")
-      .select(
-        "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at",
-      )
-      .eq("id", id)
-      .maybeSingle();
-    if (row) {
-      const published = await publishToThread(row as Parameters<typeof publishToThread>[0]);
-      if ("error" in published) {
-        // The festival is live either way; the page can be retried. Better than
-        // refusing an approval because a second system was briefly unhappy.
-        console.error("[admin] publish to The Thread failed", published.error);
-      }
-    }
+  const { data: row } = await supabase
+    .from("festival")
+    .select(
+      "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at",
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  // Both directions touch The Thread, and both report failure rather than
+  // logging it. An admin who presses "Take offline" and is told nothing will
+  // reasonably believe the public page is gone; if the patch failed, it isn't.
+  let threadError: string | undefined;
+  if (row) {
+    const festival = row as Parameters<typeof publishToThread>[0];
+    // Going live is also when the festival gets a public page — created in
+    // draft in The Thread, so approving means "this may exist publicly", not
+    // "the doors are open". Somebody still decides when registration starts.
+    const result =
+      decision === "live"
+        ? await publishToThread(festival)
+        : await unpublishFromThread(festival);
+    if ("error" in result) threadError = result.error;
   }
 
   revalidatePath("/admin");
-  return {};
+  revalidatePath("/upcoming");
+  revalidatePath(`/festival/${(row as { marker?: string } | null)?.marker ?? ""}`);
+  // The status change stuck either way — the festival is live, or it is not.
+  // Only the public page is in doubt, so say which half went wrong.
+  return threadError ? { error: `saved, but The Thread said: ${threadError}` } : {};
 }

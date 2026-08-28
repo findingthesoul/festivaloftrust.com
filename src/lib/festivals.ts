@@ -15,6 +15,7 @@ import {
   listFlows,
   listEnrolments,
   publishThread,
+  patchThread,
   FibreError,
 } from "@/lib/fibre";
 import { linkHostOrganisation, linkOrganiser, noteActivity } from "@/lib/contact-graph";
@@ -340,7 +341,22 @@ export async function publishToThread(
   festival: Festival,
 ): Promise<{ threadId: string } | { error: string }> {
   if (!process.env.FIBRE_APP_KEY) return { error: "not configured" };
-  if (festival.thread_id) return { threadId: festival.thread_id };
+  // Already has a page: this is a re-publish after a take-offline, so put the
+  // listing back rather than returning a thread that is still hidden. Without
+  // this, "Take offline" would be a one-way door.
+  if (festival.thread_id) {
+    try {
+      await patchThread(festival.thread_id, { is_public_listed: true });
+    } catch (e) {
+      return { error: e instanceof FibreError ? e.detail : String(e) };
+    }
+    const db = await serverSupabase();
+    await db
+      .from("festival")
+      .update({ published_at: new Date().toISOString() })
+      .eq("id", festival.id);
+    return { threadId: festival.thread_id };
+  }
 
   const supabase = await serverSupabase();
   const { data: owner } = await supabase
@@ -368,6 +384,12 @@ export async function publishToThread(
       source_ref: festival.id,
     });
 
+    // Listed, so the two paths end in the same state. Listed is not the same
+    // as open for registration — capacity and enrolment are decided separately.
+    if (!thread.is_public_listed) {
+      await patchThread(thread.id, { is_public_listed: true });
+    }
+
     await supabase
       .from("festival")
       .update({
@@ -388,6 +410,34 @@ export async function publishToThread(
   } catch (e) {
     return { error: e instanceof FibreError ? e.detail : String(e) };
   }
+}
+
+/**
+ * Take a festival's public page back down.
+ *
+ * The thread is kept, not deleted: it holds the enrolments, and deleting it
+ * would take real registrations with it. Draft + unlisted is the reversible
+ * version of the same intent — and because `thread_id` stays, putting the
+ * festival live again reuses the page people may already have linked to.
+ */
+export async function unpublishFromThread(
+  festival: Pick<Festival, "id" | "thread_id">,
+): Promise<{ ok: true } | { error: string }> {
+  if (!festival.thread_id) return { ok: true };
+  if (!process.env.FIBRE_APP_KEY) return { error: "not configured" };
+
+  try {
+    await patchThread(festival.thread_id, {
+      status: "draft",
+      is_public_listed: false,
+    });
+  } catch (e) {
+    return { error: e instanceof FibreError ? e.detail : String(e) };
+  }
+
+  const supabase = await serverSupabase();
+  await supabase.from("festival").update({ published_at: null }).eq("id", festival.id);
+  return { ok: true };
 }
 
 /** Who has registered. Empty until The Thread's page is opened for enrolment. */
