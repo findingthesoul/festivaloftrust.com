@@ -13,6 +13,7 @@ import { serverSupabase } from "@/lib/supabase/server";
 import {
   startRun,
   getThread,
+  threadPublicUrl,
   listFlows,
   listEnrolments,
   publishThread,
@@ -569,8 +570,9 @@ export async function registrationFor(
   if (!festival.thread_id || !process.env.FIBRE_APP_KEY) return null;
   try {
     const thread = await getThread(festival.thread_id);
-    if (!thread.public_url) return null;
-    return { url: thread.public_url, open: thread.status === "active" };
+    const url = thread.public_url ?? threadPublicUrl(thread);
+    if (!url) return null;
+    return { url, open: thread.status === "active" };
   } catch (e) {
     // The page must render without the platform; the button just is not there.
     console.error("[festivals] could not read the thread for registration", {

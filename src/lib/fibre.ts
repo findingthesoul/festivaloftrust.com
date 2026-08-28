@@ -274,8 +274,25 @@ export type FibreThread = {
   cover_url: string | null;
   is_public_listed: boolean;
   capacity: number | null;
+  /** Not filled by the app surface today — see threadPublicUrl. */
   public_url: string | null;
+  /** Whose storefront the page lives under. */
+  organiser?: { slug: string; display_name: string | null };
 };
+
+/**
+ * The public enrolment page, composed rather than asked for.
+ *
+ * The app surface returns `public_url: null` — verified against the live API —
+ * while The Thread serves the page at /[organiserSlug]/[threadSlug]. The base
+ * host is config because it is deployment, not data; both slugs come from the
+ * platform's own response, so a renamed storefront keeps working.
+ */
+export function threadPublicUrl(thread: FibreThread): string | null {
+  if (!thread.organiser?.slug || !thread.slug) return null;
+  const base = process.env.FIBRE_THREAD_URL ?? "https://thread.thefibre.app";
+  return `${base}/${thread.organiser.slug}/${thread.slug}`;
+}
 
 /**
  * No `organiser_person_id`: the workspace publishes under its own organiser,
