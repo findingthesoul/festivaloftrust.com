@@ -361,16 +361,41 @@ export async function publishToThread(
   const supabase = await serverSupabase();
   const { data: owner } = await supabase
     .from("organiser")
-    .select("fibre_person_id")
+    .select("id, email, full_name, fibre_person_id")
     .eq("id", festival.owner_id)
     .maybeSingle();
-  const personId = (owner as { fibre_person_id: string | null } | null)?.fibre_person_id;
+  const org = owner as
+    | { id: string; email: string; full_name: string | null; fibre_person_id: string | null }
+    | null;
+  if (!org) return { error: "the festival has no organiser record" };
 
   // The Thread wants a person, not a user — publishing is done on behalf of a
-  // human who exists in the contact graph. Without that link there is nobody
-  // to attribute the festival to.
+  // human who exists in the contact graph.
+  //
+  // Link on demand rather than requiring it to have happened earlier. An
+  // organiser who signed up before the app started writing to the contact graph
+  // has no person yet, and the alternative is stamping ids into the database by
+  // hand — which is a step someone has to remember, for every organiser,
+  // forever.
+  let personId = org.fibre_person_id;
   if (!personId) {
-    return { error: "the organiser is not linked to a Fibre person yet" };
+    const linked = await linkOrganiser({
+      userId: org.id,
+      email: org.email,
+      name: org.full_name,
+    });
+    if (!linked.personId) {
+      return {
+        error: linked.error
+          ? `could not link the organiser to a Fibre person: ${linked.error}`
+          : "could not link the organiser to a Fibre person",
+      };
+    }
+    personId = linked.personId;
+    await supabase
+      .from("organiser")
+      .update({ fibre_person_id: personId, fibre_linked_at: new Date().toISOString() })
+      .eq("id", org.id);
   }
 
   try {
