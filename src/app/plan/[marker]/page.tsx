@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
 import { connectionStatus, findRun } from "../actions";
 import { ConnectionBanner } from "../connection-banner";
 import { FibrePlanner } from "../fibre-planner";
-import { TenthArea } from "../tenth-area";
-import { accessTo, festivalByMarker } from "@/lib/festivals";
-import { currentUser } from "@/lib/supabase/server";
+import { FestivalHeader } from "./festival-header";
+import { festivalFor } from "./guard";
 
 export const metadata: Metadata = {
   title: "The planner",
@@ -21,23 +18,7 @@ export default async function Page({
   params: Promise<{ marker: string }>;
 }) {
   const { marker } = await params;
-
-  if (!(await currentUser())) redirect(`/sign-in?next=/plan/${marker}`);
-
-  // RLS decides this, not the URL: a marker belonging to someone else returns
-  // nothing, and is indistinguishable from one that does not exist.
-  const festival = await festivalByMarker(marker);
-  if (!festival) notFound();
-
-  // Organiser or host. A host helps run the festival and does not see the
-  // money, so the tenth area is theirs only if they own the commercial side.
-  const access = await accessTo(festival);
-  // Not yours to plan. If it is live, it is not missing either — it is the
-  // public page, which is what someone following a link actually wanted.
-  if (!access) {
-    if (festival.status === "live") redirect(`/${marker}`);
-    notFound();
-  }
+  const { festival, access } = await festivalFor(marker);
 
   const connection = await connectionStatus();
   // The run is found by the festival's own id, never by its marker — the marker
@@ -46,40 +27,19 @@ export default async function Page({
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
-      <div className="flex items-center justify-between gap-4">
-        <Link
-          href="/festivals"
-          className="text-ink/60 hover:text-ink text-sm transition-colors"
-        >
-          ← Your festivals
-        </Link>
-        {access.role === "organiser" && (
-          <Link
-            href={`/plan/${marker}/settings`}
-            className="text-ink/60 hover:text-ink text-sm underline decoration-2 underline-offset-4 transition-colors"
-          >
-            Settings
-          </Link>
-        )}
-      </div>
+      <FestivalHeader festival={festival} access={access} active="planner" />
 
-      <div className="mt-6">
+      <div className="mt-8">
         {run ? (
           <FibrePlanner run={run} />
         ) : (
-          <div className="py-16">
-            <h1 className="text-[clamp(2rem,6vw,3.25rem)] leading-[1.05] font-bold tracking-[-0.02em]">
-              {festival.name}
-            </h1>
-            <p className="text-ink/70 mt-4 max-w-xl leading-relaxed text-pretty">
-              This festival has no plan behind it yet. That happens when the
-              platform could not be reached at the moment it was created.
-            </p>
-          </div>
+          <p className="text-ink/70 max-w-xl leading-relaxed text-pretty">
+            This festival has no plan behind it yet. That happens when the
+            platform could not be reached at the moment it was created.
+          </p>
         )}
       </div>
 
-      {access.canSeeMoney && <TenthArea />}
       <ConnectionBanner connection={connection} hasRun={!!run} />
     </main>
   );
