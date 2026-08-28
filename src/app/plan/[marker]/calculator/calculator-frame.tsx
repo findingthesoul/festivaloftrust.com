@@ -43,16 +43,21 @@ export function CalculatorFrame({ marker }: { marker: string }) {
 
   const onLoad = useCallback(async () => {
     const win = frame.current?.contentWindow as
-      | (Window & { restore?: (o: unknown) => void })
+      | (Window & {
+          restore?: (o: unknown) => void;
+          say?: (msg: string) => void;
+        })
       | null
       | undefined;
     const doc = frame.current?.contentDocument;
     if (!win || !doc) return;
 
+    const restore = win.restore;
+
     const saved = await loadCalculator(marker);
-    if (saved && typeof win.restore === "function") {
+    if (saved && typeof restore === "function") {
       try {
-        win.restore(saved);
+        restore.call(win, saved);
       } catch {
         // An older snapshot the current tool cannot read. Better to show the
         // tool's own defaults than to fail the page — nothing is lost, the
@@ -72,6 +77,31 @@ export function CalculatorFrame({ marker }: { marker: string }) {
     // Clicks cover the tool's own buttons — adding an artist, a funder, a tier
     // — which change the snapshot without ever firing input.
     doc.addEventListener("click", schedule);
+
+    // Opening a file restores asynchronously, long after the click and change
+    // events that led to it, so neither would carry the imported figures.
+    // Wrapping restore catches every path into it, including future ones.
+    if (typeof restore === "function") {
+      // Reflect.set, because the immutability lint reads any assignment
+      // through a ref as mutating our own state. This is another document's
+      // window, which is the one thing we are here to talk to.
+      Reflect.set(win, "restore", (o: unknown) => {
+        restore.call(win, o);
+        schedule();
+      });
+    }
+
+    // The tool's own Save downloads a .fot.json. In a festival that is the
+    // wrong meaning of the word — the figures belong to this festival, and
+    // already save themselves. Rebound rather than hidden, because a Save
+    // button that does nothing is worse than one that does the right thing.
+    const btnSave = doc.getElementById("btnSave") as HTMLButtonElement | null;
+    if (btnSave) {
+      btnSave.onclick = () => {
+        void save();
+        win.say?.("Saved to this festival");
+      };
+    }
   }, [marker, save]);
 
   useEffect(() => {
