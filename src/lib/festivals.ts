@@ -505,6 +505,30 @@ export async function liveFestival(marker: string): Promise<Festival | null> {
 }
 
 /**
+ * The public page, or a preview of it.
+ *
+ * A draft stays nothing to everyone — that is what stops this page being used
+ * to find out what is being planned. But its own organiser and hosts should be
+ * able to look at what they are about to publish, and the only honest way to
+ * check a public page is to see the public page.
+ *
+ * So: live for anyone, and otherwise whatever RLS already lets this caller
+ * see. No new permission — accessTo decides, exactly as it does in the
+ * planner.
+ */
+export async function publicFestival(
+  marker: string,
+): Promise<{ festival: Festival; preview: boolean } | null> {
+  const live = await liveFestival(marker);
+  if (live) return { festival: live, preview: false };
+
+  const festival = await festivalByMarker(marker);
+  if (!festival) return null;
+  const access = await accessTo(festival);
+  return access ? { festival, preview: true } : null;
+}
+
+/**
  * Publish the festival as a public page in The Thread.
  *
  * Created in draft: approval here means "this may exist publicly", not "open

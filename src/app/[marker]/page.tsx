@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ShapeGrid } from "@/components/ShapeGrid";
 import { Wordmark } from "@/components/Wordmark";
-import { liveFestival } from "@/lib/festivals";
+import { publicFestival } from "@/lib/festivals";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +13,14 @@ export async function generateMetadata({
   params: Promise<{ marker: string }>;
 }): Promise<Metadata> {
   const { marker } = await params;
-  const festival = await liveFestival(marker);
-  if (!festival) return { title: "Not found" };
+  const found = await publicFestival(marker);
+  if (!found) return { title: "Not found" };
+  const { festival, preview } = found;
   return {
-    title: festival.name,
+    title: preview ? `Draft — ${festival.name}` : festival.name,
+    // A draft is visible to its own people and to nobody else. Keeping it out
+    // of search results is the other half of that.
+    robots: preview ? { index: false, follow: false } : undefined,
     description: festival.summary ?? undefined,
     openGraph: {
       title: festival.name,
@@ -38,13 +42,19 @@ export default async function Page({
   params: Promise<{ marker: string }>;
 }) {
   const { marker } = await params;
-  const festival = await liveFestival(marker);
-  // A draft is not "forbidden", it is nothing. Anything else would let this
-  // page be used to find out what is being planned.
-  if (!festival) notFound();
+  // A draft is not "forbidden", it is nothing — to anyone but its own
+  // organiser and hosts, who are previewing what they are about to publish.
+  const found = await publicFestival(marker);
+  if (!found) notFound();
+  const { festival, preview } = found;
 
   return (
     <main className="flex-1">
+      {preview && (
+        <p className="bg-ink text-cream px-6 py-2.5 text-center text-sm">
+          Draft — only the people working on this festival can see this page.
+        </p>
+      )}
       <section className="mx-auto w-full max-w-4xl px-6 py-16 sm:px-10 sm:py-24">
         <p className="text-green text-center text-[clamp(1.1rem,3.5vw,2rem)] font-bold tracking-[-0.01em] text-balance uppercase">
           {festival.place ?? "Festival of Trust"}
