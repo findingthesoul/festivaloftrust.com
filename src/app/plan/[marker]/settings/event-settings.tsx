@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { saveSettings } from "./actions";
 import { ActionBar, Field, Toggle, input, primary, quiet } from "@/components/ui";
+import { MarkerField } from "./marker-field";
 import type { Festival } from "@/lib/festivals";
 
 /**
@@ -17,6 +18,9 @@ export function EventSettings({ festival }: { festival: Festival }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  // Held so the address can suggest alternatives from the title being typed,
+  // rather than the one that was saved.
+  const [title, setTitle] = useState(festival.name);
 
   return (
     <form
@@ -49,8 +53,17 @@ export function EventSettings({ festival }: { festival: Festival }) {
 
       <div className="mt-7 grid gap-6 sm:grid-cols-2">
         <Field label="Title" htmlFor="name" className="sm:col-span-2">
-          <input id="name" name="name" required defaultValue={festival.name} className={input} />
+          <input
+            id="name"
+            name="name"
+            required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={input}
+          />
         </Field>
+
+        <MarkerField current={festival.marker} title={title} />
 
         <Field label="Description" htmlFor="summary" className="sm:col-span-2">
           <textarea

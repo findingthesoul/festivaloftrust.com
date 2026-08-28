@@ -1,13 +1,17 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { isValidMarker, slugify, suggestMarkers } from "@/lib/marker";
 import { serverSupabase } from "@/lib/supabase/server";
 import {
   festivalByMarker,
   accessTo,
   invite,
   removeMember,
+  changeMarker,
   saveEventSettings,
+  takenMarkers,
   submitForReview,
   withdrawInvite,
 } from "@/lib/festivals";
@@ -118,6 +122,15 @@ export async function saveSettings(
   const name = text("name");
   if (!name) return { error: "a festival needs a title" };
 
+  // The address, if it moved. Validated here as well as in the checker: that
+  // one runs in the browser as a courtesy, this one is the gate.
+  const wanted = slugify(String(formData.get("marker") ?? ""));
+  if (wanted && wanted !== festival.marker) {
+    if (!isValidMarker(wanted)) return { error: "that address cannot be used" };
+    const moved = await changeMarker(festival, wanted);
+    if (moved.error) return moved;
+  }
+
   const capacityRaw = text("capacity");
   const capacity = capacityRaw === null ? null : Number(capacityRaw);
   if (capacity !== null && (!Number.isInteger(capacity) || capacity < 1)) {
@@ -150,5 +163,44 @@ export async function saveSettings(
 
   revalidatePath(`/plan/${marker}/settings`);
   revalidatePath(`/${marker}`);
+  if (wanted && wanted !== festival.marker) {
+    // The page it was just saved on no longer exists under that name.
+    redirect(`/plan/${wanted}/settings`);
+  }
   return result;
+}
+
+/**
+ * Is this address free, and if not, what is?
+ *
+ * Taken markers are read through RLS, which shows a signed-in organiser every
+ * live festival plus their own — so a marker held by someone else's draft
+ * looks free here and is refused by the unique index on save. That is the
+ * right way round: the check is a courtesy, the index is the rule, and the
+ * alternative would be publishing the existence of other people's drafts.
+ */
+export async function checkMarker(
+  marker: string,
+  currentMarker: string,
+  title: string,
+): Promise<{ ok: boolean; reason?: string; suggestions: string[] }> {
+  const festival = await organiserOf(currentMarker);
+  if (!festival) return { ok: false, reason: "not yours to change", suggestions: [] };
+
+  const wanted = slugify(marker);
+  if (wanted === festival.marker) return { ok: true, suggestions: [] };
+
+  const taken = new Set((await takenMarkers()).filter((m) => m !== festival.marker));
+  const suggestions = suggestMarkers(title || festival.name, taken, new Date().getFullYear());
+
+  if (!wanted) return { ok: false, reason: "an address cannot be empty", suggestions };
+  if (!isValidMarker(wanted)) {
+    return {
+      ok: false,
+      reason: "letters, numbers and hyphens only, and not a name the site already uses",
+      suggestions,
+    };
+  }
+  if (taken.has(wanted)) return { ok: false, reason: "already taken", suggestions };
+  return { ok: true, suggestions: [] };
 }

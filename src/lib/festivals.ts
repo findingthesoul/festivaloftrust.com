@@ -327,6 +327,31 @@ export async function accessTo(festival: Festival): Promise<Access | null> {
   return { role, canSeeMoney: role === "organiser" };
 }
 
+/**
+ * Move a festival to a new address.
+ *
+ * The marker is an address, not an identity: the run, the thread and every
+ * activity are keyed to the festival's id, so this changes where people find
+ * it and nothing else.
+ *
+ * Two things it does not do. The old address stops working — there is no
+ * redirect table, and inventing one for a festival nobody has linked to yet
+ * would be building for a problem that has not happened. And The Thread's own
+ * slug does not move: its PATCH does not accept one, so the public page there
+ * keeps the address it was published under.
+ */
+export async function changeMarker(
+  festival: Festival,
+  marker: string,
+): Promise<{ error?: string }> {
+  const supabase = await serverSupabase();
+  const { error } = await supabase.from("festival").update({ marker }).eq("id", festival.id);
+  if (!error) return {};
+  // 23505 is the unique index — someone else holds it, possibly on a draft
+  // this organiser cannot see.
+  return { error: error.code === "23505" ? "that address is already taken" : error.message };
+}
+
 export type EventSettings = {
   name: string;
   summary: string | null;
