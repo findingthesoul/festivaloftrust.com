@@ -14,6 +14,9 @@ import {
   takenMarkers,
   submitForReview,
   withdrawInvite,
+  addAgendaItem,
+  updateAgendaItem,
+  deleteAgendaItem,
 } from "@/lib/festivals";
 
 /**
@@ -159,6 +162,7 @@ export async function saveSettings(
     share_participants_participants: on("share_participants_participants"),
     capacity,
     is_public_listed: on("is_public_listed"),
+    show_public_agenda: on("show_public_agenda"),
   });
 
   revalidatePath(`/plan/${marker}/settings`);
@@ -203,4 +207,57 @@ export async function checkMarker(
   }
   if (taken.has(wanted)) return { ok: false, reason: "already taken", suggestions };
   return { ok: true, suggestions: [] };
+}
+
+/**
+ * The agenda actions gate on the organiser like everything above; the row
+ * policies close the remaining gap, so an item id from another festival dies
+ * at the database rather than needing a lookup here.
+ */
+export async function addAgenda(
+  marker: string,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const festival = await organiserOf(marker);
+  if (!festival) return { error: "not yours to change" };
+
+  const title = String(formData.get("title") ?? "").trim();
+  if (!title) return { error: "an agenda item needs a title" };
+  const description = String(formData.get("description") ?? "").trim() || null;
+
+  const r = await addAgendaItem(festival.id, title, description);
+  revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/${marker}`);
+  return r;
+}
+
+export async function saveAgenda(
+  marker: string,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const festival = await organiserOf(marker);
+  if (!festival) return { error: "not yours to change" };
+
+  const id = String(formData.get("id") ?? "");
+  const title = String(formData.get("title") ?? "").trim();
+  if (!id || !title) return { error: "an agenda item needs a title" };
+  const description = String(formData.get("description") ?? "").trim() || null;
+
+  const r = await updateAgendaItem(id, title, description);
+  revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/${marker}`);
+  return r;
+}
+
+export async function removeAgenda(
+  marker: string,
+  id: string,
+): Promise<{ error?: string }> {
+  const festival = await organiserOf(marker);
+  if (!festival) return { error: "not yours to change" };
+
+  const r = await deleteAgendaItem(id);
+  revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/${marker}`);
+  return r;
 }

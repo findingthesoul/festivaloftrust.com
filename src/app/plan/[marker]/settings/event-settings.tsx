@@ -158,6 +158,12 @@ export function EventSettings({ festival }: { festival: Festival }) {
             hint="Unlisted festivals stay reachable by their direct link."
           />
           <Toggle
+            name="show_public_agenda"
+            defaultChecked={festival.show_public_agenda}
+            title="Show the public agenda"
+            hint="The programme from the agenda section below, on the event page."
+          />
+          <Toggle
             name="share_participants_public"
             defaultChecked={festival.share_participants_public}
             title="Show who is coming, publicly"

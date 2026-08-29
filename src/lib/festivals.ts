@@ -57,12 +57,13 @@ export type Festival = {
   share_participants_participants: boolean;
   capacity: number | null;
   is_public_listed: boolean;
+  show_public_agenda: boolean;
 };
 
 // One string literal, not a concatenation: supabase-js reads this at type
 // level to shape the row, and it can only do that for a literal.
 const COLUMNS =
-  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed";
+  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed, show_public_agenda";
 
 /**
  * The festivals this person actually works on.
@@ -368,6 +369,7 @@ export type EventSettings = {
   share_participants_participants: boolean;
   capacity: number | null;
   is_public_listed: boolean;
+  show_public_agenda: boolean;
 };
 
 /**
@@ -405,12 +407,89 @@ export async function saveEventSettings(
       share_participants_participants: input.share_participants_participants,
       capacity: input.capacity,
       is_public_listed: input.is_public_listed,
+      // show_public_agenda stays here: The Thread's agenda is still being
+      // built, so there is no column over there to mirror it into yet.
     });
   } catch (e) {
     const detail = e instanceof FibreError ? e.detail : String(e);
     return { error: `saved here, but the public page said: ${detail}` };
   }
   return {};
+}
+
+export type AgendaItem = {
+  id: string;
+  festival_id: string;
+  title: string;
+  description: string | null;
+  position: number;
+};
+
+/**
+ * The programme, in the organiser's order. Readable by whoever may see the
+ * festival — which makes it public exactly when the festival is, previewable
+ * by its own people before that.
+ */
+export async function agendaFor(festivalId: string): Promise<AgendaItem[]> {
+  const supabase = await serverSupabase();
+  const { data, error } = await supabase
+    .from("festival_agenda_item")
+    .select("id, festival_id, title, description, position")
+    .eq("festival_id", festivalId)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+  if (error) {
+    // Empty is also what "no programme yet" returns, so log it or an outage
+    // reads as a festival without a plan for the day.
+    console.error("[festivals] could not read the agenda", error.message);
+    return [];
+  }
+  return (data ?? []) as AgendaItem[];
+}
+
+/** New items land at the end: one past the highest position there is. */
+export async function addAgendaItem(
+  festivalId: string,
+  title: string,
+  description: string | null,
+): Promise<{ error?: string }> {
+  const supabase = await serverSupabase();
+  const { data: last } = await supabase
+    .from("festival_agenda_item")
+    .select("position")
+    .eq("festival_id", festivalId)
+    .order("position", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const { error } = await supabase.from("festival_agenda_item").insert({
+    festival_id: festivalId,
+    title,
+    description,
+    position: ((last as { position: number } | null)?.position ?? -1) + 1,
+  });
+  return error ? { error: error.message } : {};
+}
+
+export async function updateAgendaItem(
+  id: string,
+  title: string,
+  description: string | null,
+): Promise<{ error?: string }> {
+  const supabase = await serverSupabase();
+  const { error } = await supabase
+    .from("festival_agenda_item")
+    .update({ title, description })
+    .eq("id", id);
+  return error ? { error: error.message } : {};
+}
+
+export async function deleteAgendaItem(id: string): Promise<{ error?: string }> {
+  const supabase = await serverSupabase();
+  const { error } = await supabase
+    .from("festival_agenda_item")
+    .delete()
+    .eq("id", id);
+  return error ? { error: error.message } : {};
 }
 
 /** Submit a draft for review. Going live is the admin's to grant. */

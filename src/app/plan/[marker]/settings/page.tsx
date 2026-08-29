@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { collaborators } from "@/lib/festivals";
+import { agendaFor, collaborators } from "@/lib/festivals";
 import { currentUser } from "@/lib/supabase/server";
 import { FestivalHeader } from "../festival-header";
 import { festivalFor } from "../guard";
+import { Agenda } from "./agenda";
 import { Collaborators } from "./collaborators";
 import { EventSettings } from "./event-settings";
 import { card } from "@/components/ui";
@@ -22,6 +23,7 @@ export default async function Page({
   const { festival, access } = await festivalFor(marker, { organiserOnly: true });
 
   const { members, invites } = await collaborators(festival.id);
+  const agenda = await agendaFor(festival.id);
   // Who "you" is in the collaborator list. festivalFor has already proved a
   // signed-in organiser, so this is narrowing rather than a real check — but
   // a non-null assertion here would outlive the reason for it.
@@ -35,6 +37,13 @@ export default async function Page({
       <div className="mt-8 space-y-6">
         <section className={`${card} p-5 sm:p-7`}>
           <EventSettings festival={festival} />
+        </section>
+        <section className={`${card} p-5 sm:p-7`}>
+          <Agenda
+            marker={marker}
+            items={agenda}
+            shown={festival.show_public_agenda}
+          />
         </section>
         <section className={`${card} p-5 sm:p-7`}>
           <CoverUpload festivalId={festival.id} current={festival.cover_url} />

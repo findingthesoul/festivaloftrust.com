@@ -3,7 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { BrandLockup } from "@/components/BrandLockup";
 import { ShapeGrid } from "@/components/ShapeGrid";
-import { publicFestival, registrationFor } from "@/lib/festivals";
+import { agendaFor, publicFestival, registrationFor } from "@/lib/festivals";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +48,7 @@ export default async function Page({
   if (!found) notFound();
   const { festival, preview } = found;
   const registration = await registrationFor(festival);
+  const agenda = festival.show_public_agenda ? await agendaFor(festival.id) : [];
 
   return (
     <main className="flex-1">
@@ -111,6 +112,28 @@ export default async function Page({
           <p className="mt-6 max-w-2xl text-[clamp(1.05rem,1.6vw,1.3rem)] leading-relaxed text-pretty">
             {festival.summary}
           </p>
+        )}
+
+        {/* The day, when the organiser has chosen to show it. An empty agenda
+            with the switch on shows nothing rather than an empty heading. */}
+        {agenda.length > 0 && (
+          <div className="border-ink/15 mt-14 border-t pt-8">
+            <h2 className="text-2xl font-bold tracking-[-0.01em] sm:text-3xl">
+              Agenda
+            </h2>
+            <ul className="divide-ink/10 mt-6 max-w-2xl divide-y">
+              {agenda.map((item) => (
+                <li key={item.id} className="py-5 first:pt-0">
+                  <h3 className="text-lg font-bold">{item.title}</h3>
+                  {item.description && (
+                    <p className="mt-1.5 leading-relaxed text-pretty">
+                      {item.description}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
 
         {/* The page in The Thread is where enrolment actually happens — this
