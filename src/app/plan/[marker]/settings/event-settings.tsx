@@ -141,7 +141,25 @@ export function EventSettings({
           afterwards would duplicate them or do nothing, so the honest thing is
           not to offer it. The page above says what was chosen once it is set.
         */}
-        {templates.length > 0 && (
+        {/*
+          Once the festival has a page the structure is settled — a template
+          lays down items when the page is created, so it cannot be re-applied.
+          Say what it was built from rather than showing nothing and leaving
+          someone to wonder where the field went.
+        */}
+        {festival.thread_id && templates.length > 0 && (
+          <Field label="Structure">
+            <p className="text-ink/70 py-2 text-sm">
+              {templates.find((t) => t.id === festival.thread_template_id)?.title ??
+                "Started from an empty page"}
+              <span className="text-ink/45 block text-xs">
+                Settled when the page was created, so it cannot be changed now.
+              </span>
+            </p>
+          </Field>
+        )}
+
+        {!festival.thread_id && templates.length > 0 && (
           <Field
             label="Structure"
             htmlFor="thread_template_id"

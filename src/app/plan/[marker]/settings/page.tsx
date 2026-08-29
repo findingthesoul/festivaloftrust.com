@@ -29,14 +29,18 @@ export default async function Page({
   const user = await currentUser();
   if (!user) notFound();
 
-  // The structures a festival can be built from. Only offered while the page
-  // does not exist yet — a template seeds a thread's items when it is created,
-  // so applying one afterwards would duplicate them or do nothing.
+  // The structures a festival can be built from.
+  //
+  // Fetched whether or not the festival is published. It is only CHOOSABLE
+  // before publishing — a template seeds a thread's items when the page is
+  // created, so applying one later would duplicate them — but a published
+  // festival should still say what it was built from rather than showing an
+  // absent field and no reason for it.
   //
   // Never fatal: if Fibre is unreachable or unconfigured the settings screen
   // still has to open. An empty list simply means no choice is shown.
   let templates: FibreThreadTemplate[] = [];
-  if (!festival.thread_id && process.env.FIBRE_APP_KEY) {
+  if (process.env.FIBRE_APP_KEY) {
     try {
       templates = (await listThreadTemplates()).templates;
     } catch {
