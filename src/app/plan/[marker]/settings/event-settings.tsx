@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { saveSettings } from "./actions";
 import { ActionBar, Field, Toggle, input, primary, quiet } from "@/components/ui";
 import { MarkerField } from "./marker-field";
@@ -21,6 +22,7 @@ export function EventSettings({
   festival: Festival;
   templates: FibreThreadTemplate[];
 }) {
+  const router = useRouter();
   const [pending, start] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +49,14 @@ export function EventSettings({
           if (!result.error) {
             setDirty(false);
             setSaved(true);
+            // The server action runs inside this closure rather than being the
+            // form's action directly, so Next does not re-render the route on
+            // its own — revalidatePath marks the cache stale and nothing asks
+            // for it again. Without this the form keeps showing the values it
+            // first loaded with, and a save that worked looks like one that
+            // did not. Every other form here already does this; this one was
+            // the exception.
+            router.refresh();
           }
         })
       }
@@ -140,16 +150,19 @@ export function EventSettings({
             <select
               id="thread_template_id"
               name="thread_template_id"
-              defaultValue={festival.thread_template_id ?? ""}
+              // A festival should start from a structure, so the first one is
+              // the default rather than an empty page. Starting empty stays
+              // possible, at the bottom, where an unusual choice belongs.
+              defaultValue={festival.thread_template_id ?? templates[0]?.id ?? ""}
               className={input}
             >
-              <option value="">Start empty</option>
               {templates.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.title} — {t.item_count} item{t.item_count === 1 ? "" : "s"}
                   {t.sends_messages ? ", sends messages" : ""}
                 </option>
               ))}
+              <option value="">Start empty</option>
             </select>
           </Field>
         )}
