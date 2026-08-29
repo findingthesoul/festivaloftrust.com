@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 import closeUp from "@/assets/close-up.jpg";
 import wordmark from "@/assets/festival-of-trust.png";
+import { POSTER_FORMS as FORMS, POSTER_MARK as MARK, POSTER_RATIO } from "./composition";
 
 /**
  * The poster, animated. The photo fills the whole screen, nav included; the
@@ -14,32 +15,6 @@ import wordmark from "@/assets/festival-of-trust.png";
  * time the bar has covered 80% of the photo, staying there for the rest of
  * the page.
  */
-
-// The identity composition, one entry per form in grid order (the order they
-// take in the docked 3×3). x/y/w are fractions of the composition box, taken
-// from the identity artwork: forms live on an 80-grid, only double or halve
-// in size, and each leans on at least one other form — keep that grammar
-// when tuning numbers here.
-const FORMS: {
-  file: string;
-  x: number;
-  y: number;
-  w: number;
-  accent?: boolean;
-}[] = [
-  { file: "forms-01", x: 0.07, y: 0.228, w: 0.18 },
-  { file: "forms-02", x: 0.25, y: 0.084, w: 0.25 },
-  { file: "forms-03", x: 0.5, y: 0.193, w: 0.126 },
-  { file: "forms-05", x: 0.244, y: 0.333, w: 0.089 },
-  { file: "forms-06", x: 0.333, y: 0.299, w: 0.333, accent: true },
-  { file: "forms-04", x: 0.667, y: 0.368, w: 0.083 },
-  { file: "forms-09", x: 0.202, y: 0.404, w: 0.132 },
-  { file: "forms-07", x: 0.626, y: 0.299, w: 0.084 },
-  { file: "forms-08", x: 0.709, y: 0.439, w: 0.043 },
-];
-
-// The wordmark's place inside the same composition box.
-const MARK = { x: 0.093, y: 0.602, w: 0.682 };
 
 // The accent star is brand yellow on the poster and white in the docked
 // lockup, so its colour rides the same progress as its position.
@@ -220,7 +195,7 @@ export function HeroPoster() {
       <div
         ref={boxRef}
         className="pointer-events-none absolute bottom-[8%] left-[7%] z-50 w-[clamp(280px,34vw,460px)]"
-        style={{ aspectRatio: "1290 / 1536" }}
+        style={{ aspectRatio: POSTER_RATIO }}
       >
         <h1
           ref={markRef}
