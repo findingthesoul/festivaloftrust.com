@@ -36,6 +36,20 @@ export function EventSettings({
 
   return (
     <form
+      // Remount when the saved data changes.
+      //
+      // React resets a form whose action is a function once that action
+      // resolves, so every uncontrolled field snaps back to the defaultValue
+      // it FIRST rendered with. router.refresh() fetches the new row, but an
+      // input that is already mounted never picks up a changed defaultValue —
+      // so a save that worked looked like one that reverted, and only a manual
+      // reload showed the truth.
+      //
+      // updated_at is bumped by a trigger on every write, so a new value here
+      // means genuinely new data, and the remount carries it into the fields.
+      // Keyed on that rather than on the fields themselves: listing them would
+      // be a second copy of the form's shape, kept in step by hand.
+      key={festival.updated_at}
       // Any change anywhere counts. Comparing every field against its default
       // would be more precise and would also be a second copy of the form's
       // shape, kept in step by hand.
