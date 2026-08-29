@@ -127,40 +127,44 @@ export function PublicNav({ email }: { email?: string | null }) {
           </div>
         </div>
         {panel}
+        {/* The same right-aligned row as the home page's floating bar, just
+            ink on cream and in the page's flow — the menu must not move
+            between pages. */}
         <div
           data-nav-bar
-          className="mx-auto hidden max-w-5xl flex-wrap items-center justify-center gap-x-5 gap-y-1 px-6 py-5 text-sm sm:flex sm:gap-x-7 sm:px-10"
+          className="mx-auto hidden min-h-16 max-w-7xl flex-wrap items-center justify-end gap-y-1 px-6 py-2 text-sm sm:flex sm:px-10"
         >
-          <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 sm:gap-x-7">
-            {NAV.map((item) => (
-              <li key={item.href}>
+          <ul className="flex flex-wrap items-center justify-end">
+            {NAV.map((item, i) => (
+              <li key={item.href} className="flex items-center">
+                {i > 0 && (
+                  <span aria-hidden="true" className="text-ink/25 px-2">
+                    |
+                  </span>
+                )}
                 <Link
                   href={item.href}
-                  className="decoration-2 underline-offset-4 transition-opacity hover:underline hover:opacity-70"
+                  className="transition-opacity hover:opacity-70"
                 >
                   {item.label}
                 </Link>
               </li>
             ))}
           </ul>
-          <span className="text-ink/20">|</span>
           {email ? (
-            <AccountMenu email={email} />
+            <span className="ml-5">
+              <AccountMenu email={email} />
+            </span>
           ) : (
-            <>
-              <Link
-                href="/join"
-                className="decoration-2 underline-offset-4 transition-opacity hover:underline hover:opacity-70"
-              >
-                Join
+            <span className="border-ink/15 text-indigo ml-5 rounded-sm border bg-white px-3 py-1.5 font-medium">
+              <Link href="/join" className="hover:opacity-70">
+                JOIN
+              </Link>{" "}
+              <span className="font-normal lowercase">or</span>{" "}
+              <Link href="/sign-in" className="hover:opacity-70">
+                SIGN IN
               </Link>
-              <Link
-                href="/sign-in"
-                className="text-green font-medium hover:opacity-70"
-              >
-                Sign in
-              </Link>
-            </>
+            </span>
           )}
         </div>
       </nav>

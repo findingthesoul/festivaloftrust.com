@@ -1,6 +1,27 @@
 import Link from "next/link";
 import { BrandLockup } from "./BrandLockup";
-import { NAV } from "./nav-links";
+
+// The menu, in the footer's own three-column order — hand-set rather than
+// derived from NAV, because the grouping is the point: the way in, the ways
+// to host, and everything about us.
+const MENU = [
+  [
+    { href: "/", label: "Home" },
+    { href: "/upcoming", label: "Upcoming" },
+  ],
+  [
+    { href: "/for-society", label: "Society" },
+    { href: "/for-organisations", label: "Organisations" },
+    { href: "/funding", label: "Funding" },
+  ],
+  [
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+    { href: "/privacy", label: "Privacy" },
+    { href: "/terms", label: "Terms" },
+    { href: "/cookies", label: "Cookies" },
+  ],
+];
 
 // TODO: confirm the real handles with the organisation — these are the
 // obvious guesses, not verified accounts.
@@ -28,37 +49,30 @@ export function SiteFooter() {
   return (
     <footer className="bg-ink text-cream mt-auto w-full">
       <div className="mx-auto w-full max-w-5xl px-6 py-14 sm:px-10">
-        <BrandLockup className="h-9 sm:h-10" />
+        <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-10">
+          <BrandLockup className="h-9 sm:h-10" />
 
-        <nav aria-label="Footer" className="mt-10 text-sm">
-          <ul className="flex flex-wrap gap-x-6 gap-y-2">
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="transition-opacity hover:opacity-70"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <ul className="mt-3 flex flex-wrap gap-x-6 gap-y-2 font-medium">
-            <li>
-              <Link href="/join" className="transition-opacity hover:opacity-70">
-                Join
-              </Link>
-            </li>
-            <li>
-              <Link
-                href="/sign-in"
-                className="transition-opacity hover:opacity-70"
-              >
-                Sign in
-              </Link>
-            </li>
-          </ul>
-        </nav>
+          {/* The menu in three columns on the right: the way in, the ways to
+              host, and everything about us — legal shelf included. */}
+          <nav aria-label="Footer" className="text-sm">
+            <div className="grid grid-cols-2 gap-x-10 gap-y-2 sm:grid-cols-3 sm:gap-x-14">
+              {MENU.map((column) => (
+                <ul key={column[0].label} className="space-y-2">
+                  {column.map((item) => (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        className="transition-opacity hover:opacity-70"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ))}
+            </div>
+          </nav>
+        </div>
 
         <div className="border-cream/15 mt-10 flex flex-wrap items-start justify-between gap-x-10 gap-y-6 border-t pt-8">
           <div className="max-w-md text-sm leading-relaxed">
@@ -107,23 +121,6 @@ export function SiteFooter() {
           </ul>
         </div>
 
-        <ul className="text-cream/60 mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-          <li>
-            <Link href="/terms" className="hover:text-cream transition-colors">
-              General terms
-            </Link>
-          </li>
-          <li>
-            <Link href="/privacy" className="hover:text-cream transition-colors">
-              Privacy statement
-            </Link>
-          </li>
-          <li>
-            <Link href="/cookies" className="hover:text-cream transition-colors">
-              Cookie policy
-            </Link>
-          </li>
-        </ul>
       </div>
     </footer>
   );
