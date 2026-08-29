@@ -16,14 +16,13 @@ import { NAV, PLAIN_PATHS } from "./nav-links";
 export function PublicNav() {
   const pathname = usePathname();
   const home = pathname === "/";
-  // A festival page opens on a full-screen photo too, so it gets the same
-  // floating cream nav — but in the page's flow, scrolling away with the
-  // photo instead of staying fixed.
+  // A festival page opens on a full-screen photo too, but its top stays
+  // clean: no menu over the title — the footer carries the way out.
   const event =
     !home &&
     pathname.split("/").filter(Boolean).length === 1 &&
     !PLAIN_PATHS.includes(pathname);
-  const overlay = home || event;
+  const overlay = home;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -99,6 +98,8 @@ export function PublicNav() {
     </div>
   );
 
+  if (event) return null;
+
   if (!overlay) {
     return (
       <nav aria-label="Main" className="w-full">
@@ -149,18 +150,10 @@ export function PublicNav() {
   return (
     <nav
       aria-label="Main"
-      className={`text-cream inset-x-0 top-0 z-40 transition-colors duration-300 ${
-        home ? "fixed" : "absolute"
-      } ${(home && scrolled) || open ? "bg-ink/60 backdrop-blur-md" : ""}`}
+      className={`text-cream fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
+        scrolled || open ? "bg-ink/60 backdrop-blur-md" : ""
+      }`}
     >
-      {/* The event pages carry no scrim of their own under the nav, so the
-          nav brings the soft fade that keeps cream legible on any photo. */}
-      {event && !open && (
-        <div
-          aria-hidden="true"
-          className="from-ink/50 pointer-events-none absolute inset-x-0 top-0 -z-10 h-28 bg-gradient-to-b to-transparent"
-        />
-      )}
       <div
         data-nav-bar
         className="flex h-14 items-center justify-end px-4 sm:hidden"
@@ -191,7 +184,7 @@ export function PublicNav() {
         </ul>
         <span
           className={`ml-5 rounded-sm bg-white px-3 py-1.5 font-medium ${
-            home && scrolled ? "text-yellow" : "text-indigo"
+            scrolled ? "text-yellow" : "text-indigo"
           }`}
         >
           <Link href="/join" className="hover:opacity-70">

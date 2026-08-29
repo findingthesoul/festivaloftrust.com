@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import "./globals.css";
 
@@ -27,14 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="bg-background text-foreground flex min-h-full flex-col">
         <SiteNav />
         {children}
-        <footer className="mx-auto w-full max-w-5xl border-t border-ink/15 px-6 py-10 text-sm sm:px-10">
-          <a
-            href="mailto:hello@festivaloftrust.com"
-            className="text-green font-medium underline decoration-2 underline-offset-4 transition-opacity hover:opacity-70"
-          >
-            hello@festivaloftrust.com
-          </a>
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );

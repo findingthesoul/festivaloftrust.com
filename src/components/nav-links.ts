@@ -11,7 +11,13 @@ export const NAV = [
 ];
 
 /** Public pages for the sitemap: the nav plus entry points not shown in it. */
-export const PUBLIC_PATHS = [...NAV.map((n) => n.href), "/join"];
+export const PUBLIC_PATHS = [
+  ...NAV.map((n) => n.href),
+  "/join",
+  "/terms",
+  "/privacy",
+  "/cookies",
+];
 
 /**
  * Top-level pages that take the plain centred nav. Any other single-segment
