@@ -394,8 +394,25 @@ export async function saveEventSettings(
   input: EventSettings,
 ): Promise<{ error?: string }> {
   const supabase = await serverSupabase();
-  const { error } = await supabase.from("festival").update(input).eq("id", festival.id);
+  // .select() on purpose. Without it an update that matches NO ROWS returns
+  // { error: null } — PostgREST does not treat "changed nothing" as a failure.
+  // That is indistinguishable from a save that worked, which is exactly how a
+  // setting can appear to revert with no error anywhere: the write silently
+  // touched nothing. Asking for the row back turns that into something we can
+  // say out loud.
+  const { data, error } = await supabase
+    .from("festival")
+    .update(input)
+    .eq("id", festival.id)
+    .select("id");
   if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    return {
+      error:
+        "the save did not reach the database — nothing was changed. " +
+        "This is usually a permission rule refusing the row rather than an error.",
+    };
+  }
 
   if (!festival.thread_id || !process.env.FIBRE_APP_KEY) return {};
 
