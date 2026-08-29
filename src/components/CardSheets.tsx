@@ -2,16 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useRef } from "react";
-import { POSTER_FORMS } from "./composition";
 
 /**
- * Full-screen coloured sheets, and one constellation for the whole page.
+ * Full-screen coloured sheets, and one white form for the whole page.
  *
- * The nine forms are not painted per card: a single set travels with the
- * reader. Each sheet gives the constellation a seat — a place and a size —
- * and scrolling carries the forms from seat to seat, recolouring them to
- * each sheet's own quiet texture tone on the way. The movement is entirely
- * scroll-driven: stop scrolling and everything stands still.
+ * The form does not travel: it stands in one place on the screen while the
+ * sheets scroll past behind it, and at each card boundary it becomes the
+ * next of the nine forms — a crossfade, so the white stays and only the
+ * shape changes. Scroll-driven and opacity-only: stop scrolling and
+ * everything stands still.
  *
  * Colour per sheet is set by hand, for rhythm — no two neighbours alike.
  */
@@ -34,38 +33,31 @@ export type Sheet = {
 
 // The brief's palette: the three phase colours, the wordmark's indigo, and
 // the two supporting tones. Dark text on the light panels, light on the
-// deep ones. The texture opacity differs with the pairing, so the forms
-// whisper equally on every tone.
-const TONES: Record<
-  CardTone,
-  { bg: string; text: string; textRgb: [number, number, number]; formOpacity: number }
-> = {
-  yellow: { bg: "#E9C60F", text: "#141414", textRgb: [20, 20, 20], formOpacity: 0.08 },
-  orange: { bg: "#F0921E", text: "#141414", textRgb: [20, 20, 20], formOpacity: 0.08 },
-  magenta: { bg: "#E6197F", text: "#FEECD2", textRgb: [254, 236, 210], formOpacity: 0.13 },
-  indigo: { bg: "#3B3F8F", text: "#FEECD2", textRgb: [254, 236, 210], formOpacity: 0.13 },
-  ink: { bg: "#141414", text: "#FEECD2", textRgb: [254, 236, 210], formOpacity: 0.13 },
-  blush: { bg: "#F9D6E3", text: "#141414", textRgb: [20, 20, 20], formOpacity: 0.08 },
+// deep ones.
+const TONES: Record<CardTone, { bg: string; text: string }> = {
+  yellow: { bg: "#E9C60F", text: "#141414" },
+  orange: { bg: "#F0921E", text: "#141414" },
+  magenta: { bg: "#E6197F", text: "#FEECD2" },
+  indigo: { bg: "#3B3F8F", text: "#FEECD2" },
+  ink: { bg: "#141414", text: "#FEECD2" },
+  blush: { bg: "#F9D6E3", text: "#141414" },
 };
 
-// The constellation's seat per sheet, cycled: top-left corner as fractions
-// of the viewport, height as a fraction of the viewport's. Hand-set so the
-// journey swings — right and large, left and small, centre and huge —
-// rather than sliding on a rail.
-const SEATS = [
-  { x: 0.56, y: 0.06, h: 1.02 },
-  { x: 0.03, y: 0.22, h: 0.72 },
-  { x: 0.44, y: -0.08, h: 1.32 },
-  { x: 0.63, y: 0.32, h: 0.62 },
-  { x: 0.05, y: 0.0, h: 1.12 },
-  { x: 0.5, y: 0.16, h: 0.88 },
+// The nine forms in the grid's own order, one per sheet, cycling if a page
+// carries more than nine.
+const FORM_ORDER = [
+  "forms-01",
+  "forms-02",
+  "forms-03",
+  "forms-05",
+  "forms-06",
+  "forms-04",
+  "forms-09",
+  "forms-07",
+  "forms-08",
 ];
 
-const RATIO = 1290 / 1536;
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
-const ease = (t: number) =>
-  t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
 export function CardSheets({ sheets }: { sheets: Sheet[] }) {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -77,52 +69,30 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
     const box = boxRef.current;
     if (!wrap || !box) return;
     const forms = formRefs.current;
-    const seatFor = (k: number) => SEATS[k % SEATS.length];
-    const toneFor = (k: number) => TONES[sheets[Math.min(k, sheets.length - 1)].tone];
-    // Reduced motion still gets the texture, without the journey: the
-    // constellation snaps to the nearest sheet's seat instead of tweening.
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let raf = 0;
     const frame = () => {
       raf = 0;
       const rect = wrap.getBoundingClientRect();
       const vh = window.innerHeight;
-      const vw = window.innerWidth;
       if (!vh) return;
 
-      // Off the sheets entirely (intro above, footer below): the
-      // constellation stays on its pages, not over them.
-      if (rect.top > vh || rect.bottom < 0) {
+      // Off the sheets entirely (intro above, footer below): the form stays
+      // on its pages, not over them.
+      if (rect.top > vh * 0.6 || rect.bottom < vh * 0.5) {
         box.style.opacity = "0";
         return;
       }
       box.style.opacity = "1";
 
+      // How far the sheets have scrolled, in cards. Each form is full while
+      // its own sheet fills the screen and crossfades into the next around
+      // the boundary — the white stays, the shape changes.
       const t = Math.min(sheets.length - 1, Math.max(0, -rect.top / vh));
-      const i = Math.floor(t);
-      const j = Math.min(i + 1, sheets.length - 1);
-      const f = reduced ? Math.round(t - i) : ease(clamp01(t - i));
-
-      const a = seatFor(i);
-      const b = seatFor(j);
-      const h = lerp(a.h, b.h, f) * vh;
-      box.style.transform = `translate3d(${lerp(a.x, b.x, f) * vw}px, ${
-        lerp(a.y, b.y, f) * vh
-      }px, 0)`;
-      box.style.height = `${h}px`;
-      box.style.width = `${h * RATIO}px`;
-
-      const ta = toneFor(i);
-      const tb = toneFor(j);
-      const rgb = ta.textRgb.map((c, k) => Math.round(lerp(c, tb.textRgb[k], f)));
-      const color = `rgb(${rgb.join(",")})`;
-      const opacity = String(lerp(ta.formOpacity, tb.formOpacity, f));
-      for (const el of forms) {
-        if (!el) continue;
-        el.style.backgroundColor = color;
-        el.style.opacity = opacity;
-      }
+      forms.forEach((el, k) => {
+        if (!el) return;
+        el.style.opacity = String(clamp01(1 - Math.abs(t - k) * 1.6));
+      });
     };
 
     const schedule = () => {
@@ -140,27 +110,25 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
 
   return (
     <div ref={wrapRef} className="relative">
-      {/* The one constellation, fixed to the viewport and driven by scroll.
-          Behind every sheet's copy, above every sheet's colour. */}
+      {/* The one white form, standing still while the sheets pass. Behind
+          the copy, above the colour. */}
       <div
         ref={boxRef}
         aria-hidden="true"
-        className="pointer-events-none fixed top-0 left-0 z-[5] opacity-0"
+        className="pointer-events-none fixed top-1/2 right-[5vw] z-[5] aspect-square h-[38vh] -translate-y-1/2 opacity-0 sm:h-[60vh]"
       >
-        {POSTER_FORMS.map((spec, i) => (
+        {sheets.map((sheet, k) => (
           <div
-            key={spec.file}
+            key={sheet.title}
             ref={(el) => {
-              formRefs.current[i] = el;
+              formRefs.current[k] = el;
             }}
-            className="absolute aspect-square"
+            className="absolute inset-0 bg-white"
             style={{
-              left: `${spec.x * 100}%`,
-              top: `${spec.y * 100}%`,
-              width: `${spec.w * 100}%`,
-              maskImage: `url(/brand/shapes/${spec.file}.svg)`,
+              opacity: 0,
+              maskImage: `url(/brand/shapes/${FORM_ORDER[k % FORM_ORDER.length]}.svg)`,
               maskSize: "100% 100%",
-              WebkitMaskImage: `url(/brand/shapes/${spec.file}.svg)`,
+              WebkitMaskImage: `url(/brand/shapes/${FORM_ORDER[k % FORM_ORDER.length]}.svg)`,
               WebkitMaskSize: "100% 100%",
             }}
           />
