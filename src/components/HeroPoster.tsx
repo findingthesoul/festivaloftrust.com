@@ -50,6 +50,42 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const ease = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 
+/**
+ * The read-more click drives its own scroll: the browser's smooth scroll is
+ * too quick for the lockup's flight to read as a movement, and its speed
+ * cannot be set. A wheel or touch from the reader cancels it — their hand on
+ * the page wins.
+ */
+function readOn(e: React.MouseEvent<HTMLAnchorElement>) {
+  const story = document.getElementById("story");
+  if (!story) return;
+  e.preventDefault();
+  history.pushState(null, "", "#story");
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    story.scrollIntoView();
+    return;
+  }
+  const from = window.scrollY;
+  // 80 matches the story's scroll-mt-20, so both routes land the same.
+  const to = story.getBoundingClientRect().top + from - 80;
+  const started = performance.now();
+  let cancelled = false;
+  const cancel = () => {
+    cancelled = true;
+  };
+  window.addEventListener("wheel", cancel, { once: true, passive: true });
+  window.addEventListener("touchstart", cancel, { once: true, passive: true });
+  const step = (now: number) => {
+    if (cancelled) return;
+    const t = Math.min(1, (now - started) / 1600);
+    // Ease-out: the page leaves at reading speed and settles softly, which
+    // gives the lockup's landing its weight.
+    window.scrollTo(0, lerp(from, to, 1 - Math.pow(1 - t, 3)));
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
 export function HeroPoster() {
   const heroRef = useRef<HTMLElement | null>(null);
   const boxRef = useRef<HTMLDivElement | null>(null);
@@ -231,6 +267,7 @@ export function HeroPoster() {
       <a
         href="#story"
         aria-label="Scroll down to read more"
+        onClick={readOn}
         className="text-cream absolute bottom-5 left-1/2 z-10 inline-flex -translate-x-1/2 flex-col items-center gap-1"
       >
         <span className="text-xs tracking-[0.15em] lowercase">read more</span>
