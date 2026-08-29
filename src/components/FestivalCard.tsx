@@ -4,11 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { POSTER_FORMS, POSTER_RATIO } from "./composition";
 
 /**
- * A coloured panel from the visual system. The nine step-forms sit behind
- * the copy as quiet texture, on the identity composition the home page's
- * logo uses, and drift into place when the card scrolls into view — the
- * logo assembling itself, once, then holding still. Transform and opacity
- * only, and prefers-reduced-motion shows the settled arrangement directly.
+ * A full-screen coloured panel from the visual system — each card takes the
+ * viewport the way the home poster does, so a page reads as a sequence of
+ * sheets rather than a column of boxes. The nine step-forms sit behind the
+ * copy as quiet texture, on the identity composition the home page's logo
+ * uses, and drift into place when the card scrolls into view — the logo
+ * assembling itself, once, then holding still. Transform and opacity only,
+ * and prefers-reduced-motion shows the settled arrangement directly.
  *
  * Colour is set by hand per card, for rhythm across the page — no two
  * adjacent cards should share one.
@@ -61,7 +63,7 @@ export function FestivalCard({
   title: string;
   children: React.ReactNode;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLElement>(null);
   const [settled, setSettled] = useState(false);
 
   useEffect(() => {
@@ -77,7 +79,7 @@ export function FestivalCard({
           observer.disconnect();
         }
       },
-      { threshold: 0.3 },
+      { threshold: 0.2 },
     );
     observer.observe(el);
     return () => observer.disconnect();
@@ -86,16 +88,16 @@ export function FestivalCard({
   const { bg, text, darkText } = TONES[tone];
 
   return (
-    <div
+    <section
       ref={ref}
-      className="relative overflow-hidden rounded-xl p-7 sm:p-9"
+      className="relative flex min-h-dvh w-full items-center overflow-hidden"
       style={{ backgroundColor: bg, color: text }}
     >
       {/* The nine forms, as texture behind the copy: the card's own text
           colour at whisper opacity, so the copy stays first on every tone. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 right-[-6%] h-[135%] -translate-y-1/2"
+        className="pointer-events-none absolute top-1/2 right-[-10%] h-[120%] -translate-y-1/2 sm:right-[-4%]"
         style={{ aspectRatio: POSTER_RATIO }}
       >
         {POSTER_FORMS.map((spec, i) => (
@@ -107,7 +109,7 @@ export function FestivalCard({
               top: `${spec.y * 100}%`,
               width: `${spec.w * 100}%`,
               backgroundColor: text,
-              opacity: settled ? (darkText ? 0.08 : 0.14) : 0,
+              opacity: settled ? (darkText ? 0.08 : 0.13) : 0,
               transform: settled
                 ? "translate3d(0,0,0) scale(1)"
                 : `translate3d(${DRIFT[i].dx}px, ${DRIFT[i].dy}px, 0) scale(0.82)`,
@@ -121,19 +123,19 @@ export function FestivalCard({
         ))}
       </div>
 
-      <div className="relative z-10 max-w-xl">
+      <div className="relative z-10 mx-auto w-full max-w-5xl px-6 py-20 sm:px-10 sm:py-24">
         {kicker && (
-          <p className="text-xs font-bold tracking-[0.18em] uppercase opacity-70">
+          <p className="text-sm font-bold tracking-[0.18em] uppercase opacity-70">
             {kicker}
           </p>
         )}
-        <h2 className="mt-1.5 text-2xl font-bold tracking-[-0.01em] text-balance sm:text-3xl">
+        <h2 className="mt-2 max-w-3xl text-[clamp(1.9rem,4.5vw,3.25rem)] leading-[1.08] font-bold tracking-[-0.02em] text-balance">
           {title}
         </h2>
-        <div className="mt-4 space-y-3 leading-relaxed text-pretty">
+        <div className="mt-7 max-w-2xl space-y-4 text-[clamp(1.02rem,1.5vw,1.2rem)] leading-relaxed text-pretty">
           {children}
         </div>
       </div>
-    </div>
+    </section>
   );
 }
