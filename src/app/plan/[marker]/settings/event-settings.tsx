@@ -18,9 +18,12 @@ import type { FibreThreadTemplate } from "@/lib/fibre";
 export function EventSettings({
   festival,
   templates,
+  templatesProblem,
 }: {
   festival: Festival;
   templates: FibreThreadTemplate[];
+  /** Why there is nothing to choose from, when there is nothing. */
+  templatesProblem?: string | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -155,6 +158,20 @@ export function EventSettings({
               <span className="text-ink/45 block text-xs">
                 Settled when the page was created, so it cannot be changed now.
               </span>
+            </p>
+          </Field>
+        )}
+
+        {/*
+          An absent field reads as a broken one. If there is nothing to choose
+          from, say why — most often the key is pointed at a workspace that has
+          no structures in it, which is invisible from here otherwise.
+        */}
+        {!festival.thread_id && templates.length === 0 && templatesProblem && (
+          <Field label="Structure">
+            <p className="text-ink/45 py-2 text-sm">
+              Nothing to choose from — {templatesProblem}. The event will start
+              from an empty page.
             </p>
           </Field>
         )}

@@ -40,11 +40,20 @@ export default async function Page({
   // Never fatal: if Fibre is unreachable or unconfigured the settings screen
   // still has to open. An empty list simply means no choice is shown.
   let templates: FibreThreadTemplate[] = [];
-  if (process.env.FIBRE_APP_KEY) {
+  // Why the list is empty matters. "None exist" and "we could not ask" look
+  // identical to an organiser staring at a missing field, and the second is
+  // usually a key pointed at the wrong workspace.
+  let templatesProblem: string | null = null;
+  if (!process.env.FIBRE_APP_KEY) {
+    templatesProblem = "not connected to The Fibre";
+  } else {
     try {
       templates = (await listThreadTemplates()).templates;
+      if (templates.length === 0) {
+        templatesProblem = "no structures in this workspace yet";
+      }
     } catch {
-      templates = [];
+      templatesProblem = "could not reach The Fibre just now";
     }
   }
 
@@ -54,7 +63,11 @@ export default async function Page({
 
       <div className="mt-8 space-y-6">
         <section className={`${card} p-5 sm:p-7`}>
-          <EventSettings festival={festival} templates={templates} />
+          <EventSettings
+            festival={festival}
+            templates={templates}
+            templatesProblem={templatesProblem}
+          />
         </section>
         <section className={`${card} p-5 sm:p-7`}>
           <CoverUpload festivalId={festival.id} current={festival.cover_url} />
