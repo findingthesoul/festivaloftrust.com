@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { NAV } from "./nav-links";
+import { NAV, PLAIN_PATHS } from "./nav-links";
 
 /**
  * The signed-out navigation. On the home page it floats over the full-screen
@@ -14,17 +14,26 @@ import { NAV } from "./nav-links";
  * page it always was. On phones the menu folds into a hamburger.
  */
 export function PublicNav() {
-  const overlay = usePathname() === "/";
+  const pathname = usePathname();
+  const home = pathname === "/";
+  // A festival page opens on a full-screen photo too, so it gets the same
+  // floating cream nav — but in the page's flow, scrolling away with the
+  // photo instead of staying fixed.
+  const event =
+    !home &&
+    pathname.split("/").filter(Boolean).length === 1 &&
+    !PLAIN_PATHS.includes(pathname);
+  const overlay = home || event;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!overlay) return;
+    if (!home) return;
     const read = () => setScrolled(window.scrollY > 8);
     read();
     window.addEventListener("scroll", read, { passive: true });
     return () => window.removeEventListener("scroll", read);
-  }, [overlay]);
+  }, [home]);
 
   const close = () => setOpen(false);
 
@@ -140,10 +149,18 @@ export function PublicNav() {
   return (
     <nav
       aria-label="Main"
-      className={`text-cream fixed inset-x-0 top-0 z-40 transition-colors duration-300 ${
-        scrolled || open ? "bg-ink/60 backdrop-blur-md" : ""
-      }`}
+      className={`text-cream inset-x-0 top-0 z-40 transition-colors duration-300 ${
+        home ? "fixed" : "absolute"
+      } ${(home && scrolled) || open ? "bg-ink/60 backdrop-blur-md" : ""}`}
     >
+      {/* The event pages carry no scrim of their own under the nav, so the
+          nav brings the soft fade that keeps cream legible on any photo. */}
+      {event && !open && (
+        <div
+          aria-hidden="true"
+          className="from-ink/50 pointer-events-none absolute inset-x-0 top-0 -z-10 h-28 bg-gradient-to-b to-transparent"
+        />
+      )}
       <div
         data-nav-bar
         className="flex h-14 items-center justify-end px-4 sm:hidden"
@@ -174,7 +191,7 @@ export function PublicNav() {
         </ul>
         <span
           className={`ml-5 rounded-sm bg-white px-3 py-1.5 font-medium ${
-            scrolled ? "text-yellow" : "text-indigo"
+            home && scrolled ? "text-yellow" : "text-indigo"
           }`}
         >
           <Link href="/join" className="hover:opacity-70">

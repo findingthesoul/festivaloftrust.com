@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { BrandLockup } from "@/components/BrandLockup";
 import { ShapeGrid } from "@/components/ShapeGrid";
-import { Wordmark } from "@/components/Wordmark";
 import { publicFestival, registrationFor } from "@/lib/festivals";
 
 export const dynamic = "force-dynamic";
@@ -56,8 +56,47 @@ export default async function Page({
           Draft — only the people working on this festival can see this page.
         </p>
       )}
+      {/* The event's own poster, cut like the home page's: the photo takes
+          the whole screen with the cream nav floating over it — but here the
+          title is the largest thing on the sheet, and the logo sits quietly
+          as the nine-form block beside the name, bottom right. */}
+      <section className="relative h-dvh w-full">
+        {festival.cover_url ? (
+          <Image
+            src={festival.cover_url}
+            alt=""
+            fill
+            preload
+            sizes="100vw"
+            className="object-cover"
+          />
+        ) : (
+          // No cover yet: ink instead of a photo, so the cream nav and title
+          // stay legible and the coloured mark carries the sheet.
+          <div className="bg-ink absolute inset-0 flex items-center justify-center">
+            <ShapeGrid className="w-[min(60vw,24rem)]" loading="eager" />
+          </div>
+        )}
+
+        {/* Soft fades where type sits on the photograph. */}
+        <div
+          aria-hidden="true"
+          className="from-ink/40 pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b to-transparent"
+        />
+        <div
+          aria-hidden="true"
+          className="from-ink/50 pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t to-transparent"
+        />
+
+        <h1 className="text-cream absolute top-24 right-[6%] left-[6%] z-10 text-[clamp(2.2rem,6.5vw,4.5rem)] leading-[1.05] font-bold tracking-[-0.02em] text-balance">
+          {festival.name}
+        </h1>
+
+        <BrandLockup className="absolute right-[6%] bottom-[8%] z-10 h-12 sm:h-14" />
+      </section>
+
       <section className="mx-auto w-full max-w-4xl px-6 py-16 sm:px-10 sm:py-24">
-        <p className="text-green text-center text-[clamp(1.1rem,3.5vw,2rem)] font-bold tracking-[-0.01em] text-balance uppercase">
+        <p className="text-green text-[clamp(1.1rem,3.5vw,2rem)] font-bold tracking-[-0.01em] text-balance uppercase">
           {festival.place ?? "Festival of Trust"}
           {festival.starts_on && (
             <>
@@ -67,34 +106,6 @@ export default async function Page({
             </>
           )}
         </p>
-
-        {festival.cover_url ? (
-          <div className="border-ink/10 relative mt-12 aspect-[3/2] w-full overflow-hidden border">
-            <Image
-              src={festival.cover_url}
-              alt=""
-              fill
-              preload
-              sizes="(max-width: 896px) 100vw, 896px"
-              className="object-cover"
-            />
-          </div>
-        ) : (
-          <div className="mt-12 flex justify-center">
-            {/* Eager, not preload: without a cover the headline text and this
-                mark both contend for LCP depending on viewport, and preload
-                would bet the head of the document on one of them. */}
-            <ShapeGrid className="w-full max-w-sm" loading="eager" />
-          </div>
-        )}
-
-        <div className="mt-12 flex justify-end">
-          <Wordmark className="h-14 w-auto sm:h-16 md:h-20" />
-        </div>
-
-        <h1 className="mt-14 text-[clamp(2rem,6vw,3.5rem)] leading-[1.05] font-bold tracking-[-0.02em] text-balance">
-          {festival.name}
-        </h1>
 
         {festival.summary && (
           <p className="mt-6 max-w-2xl text-[clamp(1.05rem,1.6vw,1.3rem)] leading-relaxed text-pretty">

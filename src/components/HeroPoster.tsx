@@ -77,10 +77,11 @@ function readOn(e: React.MouseEvent<HTMLAnchorElement>) {
   window.addEventListener("touchstart", cancel, { once: true, passive: true });
   const step = (now: number) => {
     if (cancelled) return;
-    const t = Math.min(1, (now - started) / 1600);
-    // Ease-out: the page leaves at reading speed and settles softly, which
-    // gives the lockup's landing its weight.
-    window.scrollTo(0, lerp(from, to, 1 - Math.pow(1 - t, 3)));
+    const t = Math.min(1, (now - started) / 2400);
+    // behavior: "instant" is load-bearing — the page's own scroll-smooth
+    // would otherwise re-smooth every frame and race ahead at the browser's
+    // quick pace, exactly the jump this handler exists to replace.
+    window.scrollTo({ top: lerp(from, to, ease(t)), behavior: "instant" });
     if (t < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
