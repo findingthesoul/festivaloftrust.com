@@ -58,12 +58,15 @@ export type Festival = {
   capacity: number | null;
   is_public_listed: boolean;
   show_public_agenda: boolean;
+
+  /** The Thread structure this festival is built from. Applied at publish. */
+  thread_template_id: string | null;
 };
 
 // One string literal, not a concatenation: supabase-js reads this at type
 // level to shape the row, and it can only do that for a literal.
 const COLUMNS =
-  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed, show_public_agenda";
+  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed, show_public_agenda, thread_template_id";
 
 /**
  * The festivals this person actually works on.
@@ -370,6 +373,13 @@ export type EventSettings = {
   capacity: number | null;
   is_public_listed: boolean;
   show_public_agenda: boolean;
+  /**
+   * Only settable while the festival is unpublished — a template seeds a
+   * page's items when it is created, so choosing a different one afterwards
+   * would either duplicate them or do nothing. The settings screen stops
+   * offering it once the page exists.
+   */
+  thread_template_id: string | null;
 };
 
 /**
@@ -386,8 +396,25 @@ export async function saveEventSettings(
   input: EventSettings,
 ): Promise<{ error?: string }> {
   const supabase = await serverSupabase();
-  const { error } = await supabase.from("festival").update(input).eq("id", festival.id);
+  // .select() on purpose. Without it an update that matches NO ROWS returns
+  // { error: null } — PostgREST does not treat "changed nothing" as a failure.
+  // That is indistinguishable from a save that worked, which is exactly how a
+  // setting can appear to revert with no error anywhere: the write silently
+  // touched nothing. Asking for the row back turns that into something we can
+  // say out loud.
+  const { data, error } = await supabase
+    .from("festival")
+    .update(input)
+    .eq("id", festival.id)
+    .select("id");
   if (error) return { error: error.message };
+  if (!data || data.length === 0) {
+    return {
+      error:
+        "the save did not reach the database — nothing was changed. " +
+        "This is usually a permission rule refusing the row rather than an error.",
+    };
+  }
 
   if (!festival.thread_id || !process.env.FIBRE_APP_KEY) return {};
 
@@ -800,6 +827,9 @@ export async function publishToThread(
       intention: festival.summary,
       starts_on: festival.starts_on,
       source_ref: festival.id,
+      // The structure the organiser chose. Only applies here, at creation:
+      // a template seeds the page's items, so it cannot be re-applied later.
+      template_id: festival.thread_template_id,
     });
 
     // Carry the settings the organiser chose while it was a draft. They are

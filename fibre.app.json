@@ -14,7 +14,8 @@
     "write:activities",
     "read:programs",
     "write:programs",
-    "read:enrolments"
+    "read:enrolments",
+    "write:messages"
   ],
   "entity_mappings": [
     {

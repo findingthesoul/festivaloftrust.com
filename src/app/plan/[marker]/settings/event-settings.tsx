@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { saveSettings } from "./actions";
 import { ActionBar, Field, Toggle, input, primary, quiet } from "@/components/ui";
 import { MarkerField } from "./marker-field";
 import type { Festival } from "@/lib/festivals";
+import type { FibreThreadTemplate } from "@/lib/fibre";
 
 /**
  * The event, as the public will meet it.
@@ -13,7 +15,17 @@ import type { Festival } from "@/lib/festivals";
  * festival as well because a festival is planned before it has a page. Saving
  * writes both.
  */
-export function EventSettings({ festival }: { festival: Festival }) {
+export function EventSettings({
+  festival,
+  templates,
+  templatesProblem,
+}: {
+  festival: Festival;
+  templates: FibreThreadTemplate[];
+  /** Why there is nothing to choose from, when there is nothing. */
+  templatesProblem?: string | null;
+}) {
+  const router = useRouter();
   const [pending, start] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,6 +52,14 @@ export function EventSettings({ festival }: { festival: Festival }) {
           if (!result.error) {
             setDirty(false);
             setSaved(true);
+            // The server action runs inside this closure rather than being the
+            // form's action directly, so Next does not re-render the route on
+            // its own — revalidatePath marks the cache stale and nothing asks
+            // for it again. Without this the form keeps showing the values it
+            // first loaded with, and a save that worked looks like one that
+            // did not. Every other form here already does this; this one was
+            // the exception.
+            router.refresh();
           }
         })
       }
@@ -117,6 +137,70 @@ export function EventSettings({ festival }: { festival: Festival }) {
             <option value="pt">Português</option>
           </select>
         </Field>
+
+        {/*
+          Offered only before the festival has a page. A template lays down the
+          event's items when the page is created; choosing a different one
+          afterwards would duplicate them or do nothing, so the honest thing is
+          not to offer it. The page above says what was chosen once it is set.
+        */}
+        {/*
+          Once the festival has a page the structure is settled — a template
+          lays down items when the page is created, so it cannot be re-applied.
+          Say what it was built from rather than showing nothing and leaving
+          someone to wonder where the field went.
+        */}
+        {festival.thread_id && templates.length > 0 && (
+          <Field label="Structure">
+            <p className="text-ink/70 py-2 text-sm">
+              {templates.find((t) => t.id === festival.thread_template_id)?.title ??
+                "Started from an empty page"}
+              <span className="text-ink/45 block text-xs">
+                Settled when the page was created, so it cannot be changed now.
+              </span>
+            </p>
+          </Field>
+        )}
+
+        {/*
+          An absent field reads as a broken one. If there is nothing to choose
+          from, say why — most often the key is pointed at a workspace that has
+          no structures in it, which is invisible from here otherwise.
+        */}
+        {!festival.thread_id && templates.length === 0 && templatesProblem && (
+          <Field label="Structure">
+            <p className="text-ink/45 py-2 text-sm">
+              Nothing to choose from — {templatesProblem}. The event will start
+              from an empty page.
+            </p>
+          </Field>
+        )}
+
+        {!festival.thread_id && templates.length > 0 && (
+          <Field
+            label="Structure"
+            htmlFor="thread_template_id"
+            hint="The shape the event starts from. You fill in the content afterwards."
+          >
+            <select
+              id="thread_template_id"
+              name="thread_template_id"
+              // A festival should start from a structure, so the first one is
+              // the default rather than an empty page. Starting empty stays
+              // possible, at the bottom, where an unusual choice belongs.
+              defaultValue={festival.thread_template_id ?? templates[0]?.id ?? ""}
+              className={input}
+            >
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.title} — {t.item_count} item{t.item_count === 1 ? "" : "s"}
+                  {t.sends_messages ? ", sends messages" : ""}
+                </option>
+              ))}
+              <option value="">Start empty</option>
+            </select>
+          </Field>
+        )}
 
         <Field label="Places" htmlFor="capacity" hint="Leave empty for no limit.">
           <input

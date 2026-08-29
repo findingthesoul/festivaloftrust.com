@@ -149,6 +149,12 @@ export async function saveSettings(
     return { error: "that is not a way of opening an event" };
   }
 
+  // Only meaningful before the page exists — after that a template would
+  // duplicate the items it already laid down. Ignored rather than refused: the
+  // field is not on the form once published, so a value here is stale, not an
+  // error the organiser could act on.
+  const templateId = festival.thread_id ? festival.thread_template_id : text("thread_template_id");
+
   const result = await saveEventSettings(festival, {
     name,
     summary: text("summary"),
@@ -163,6 +169,7 @@ export async function saveSettings(
     capacity,
     is_public_listed: on("is_public_listed"),
     show_public_agenda: on("show_public_agenda"),
+    thread_template_id: templateId,
   });
 
   revalidatePath(`/plan/${marker}/settings`);

@@ -311,11 +311,40 @@ export const publishThread = (input: {
   intention?: string | null;
   starts_on?: string | null;
   source_ref: string;
+  /**
+   * Build the page from one of the workspace's structures, its items rebased
+   * onto `starts_on`. Only has an effect here, at creation — a template seeds
+   * items, so applying one later would duplicate them.
+   *
+   * A template carrying messages needs `write:messages`; without it the
+   * platform refuses rather than quietly dropping them.
+   */
+  template_id?: string | null;
 }) =>
   call<FibreThread & { created: boolean }>(`/apps/${SLUG}/thread/threads`, {
     method: "POST",
     body: input,
   });
+
+/**
+ * The structures a festival can be built from — The Thread's thread templates.
+ *
+ * `structure` itself is not exposed by the platform, deliberately: it is The
+ * Thread's internal shape and an app that read it would come to depend on it.
+ * What an organiser needs in order to choose is the name, a sense of size, and
+ * whether picking it will email anyone.
+ */
+export type FibreThreadTemplate = {
+  id: string;
+  title: string;
+  scope: "personal" | "team" | "workspace";
+  item_count: number;
+  sends_messages: boolean;
+  created_at: string;
+};
+
+export const listThreadTemplates = () =>
+  call<{ templates: FibreThreadTemplate[] }>(`/apps/${SLUG}/thread/templates`);
 
 export const getThread = (id: string) =>
   call<FibreThread>(`/apps/${SLUG}/thread/threads/${id}`);
