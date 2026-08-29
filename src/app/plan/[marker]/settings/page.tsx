@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { collaborators } from "@/lib/festivals";
+import { listThreadTemplates, type FibreThreadTemplate } from "@/lib/fibre";
 import { currentUser } from "@/lib/supabase/server";
 import { FestivalHeader } from "../festival-header";
 import { festivalFor } from "../guard";
@@ -28,13 +29,28 @@ export default async function Page({
   const user = await currentUser();
   if (!user) notFound();
 
+  // The structures a festival can be built from. Only offered while the page
+  // does not exist yet — a template seeds a thread's items when it is created,
+  // so applying one afterwards would duplicate them or do nothing.
+  //
+  // Never fatal: if Fibre is unreachable or unconfigured the settings screen
+  // still has to open. An empty list simply means no choice is shown.
+  let templates: FibreThreadTemplate[] = [];
+  if (!festival.thread_id && process.env.FIBRE_APP_KEY) {
+    try {
+      templates = (await listThreadTemplates()).templates;
+    } catch {
+      templates = [];
+    }
+  }
+
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
       <FestivalHeader festival={festival} access={access} active="settings" />
 
       <div className="mt-8 space-y-6">
         <section className={`${card} p-5 sm:p-7`}>
-          <EventSettings festival={festival} />
+          <EventSettings festival={festival} templates={templates} />
         </section>
         <section className={`${card} p-5 sm:p-7`}>
           <CoverUpload festivalId={festival.id} current={festival.cover_url} />

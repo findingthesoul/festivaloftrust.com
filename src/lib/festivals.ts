@@ -57,12 +57,15 @@ export type Festival = {
   share_participants_participants: boolean;
   capacity: number | null;
   is_public_listed: boolean;
+
+  /** The Thread structure this festival is built from. Applied at publish. */
+  thread_template_id: string | null;
 };
 
 // One string literal, not a concatenation: supabase-js reads this at type
 // level to shape the row, and it can only do that for a literal.
 const COLUMNS =
-  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed";
+  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed, thread_template_id";
 
 /**
  * The festivals this person actually works on.
@@ -368,6 +371,13 @@ export type EventSettings = {
   share_participants_participants: boolean;
   capacity: number | null;
   is_public_listed: boolean;
+  /**
+   * Only settable while the festival is unpublished — a template seeds a
+   * page's items when it is created, so choosing a different one afterwards
+   * would either duplicate them or do nothing. The settings screen stops
+   * offering it once the page exists.
+   */
+  thread_template_id: string | null;
 };
 
 /**
@@ -677,6 +687,9 @@ export async function publishToThread(
       intention: festival.summary,
       starts_on: festival.starts_on,
       source_ref: festival.id,
+      // The structure the organiser chose. Only applies here, at creation:
+      // a template seeds the page's items, so it cannot be re-applied later.
+      template_id: festival.thread_template_id,
     });
 
     // Carry the settings the organiser chose while it was a draft. They are

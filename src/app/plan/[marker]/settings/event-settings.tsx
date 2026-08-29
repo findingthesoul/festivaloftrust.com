@@ -5,6 +5,7 @@ import { saveSettings } from "./actions";
 import { ActionBar, Field, Toggle, input, primary, quiet } from "@/components/ui";
 import { MarkerField } from "./marker-field";
 import type { Festival } from "@/lib/festivals";
+import type { FibreThreadTemplate } from "@/lib/fibre";
 
 /**
  * The event, as the public will meet it.
@@ -13,7 +14,13 @@ import type { Festival } from "@/lib/festivals";
  * festival as well because a festival is planned before it has a page. Saving
  * writes both.
  */
-export function EventSettings({ festival }: { festival: Festival }) {
+export function EventSettings({
+  festival,
+  templates,
+}: {
+  festival: Festival;
+  templates: FibreThreadTemplate[];
+}) {
   const [pending, start] = useTransition();
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +124,35 @@ export function EventSettings({ festival }: { festival: Festival }) {
             <option value="pt">Português</option>
           </select>
         </Field>
+
+        {/*
+          Offered only before the festival has a page. A template lays down the
+          event's items when the page is created; choosing a different one
+          afterwards would duplicate them or do nothing, so the honest thing is
+          not to offer it. The page above says what was chosen once it is set.
+        */}
+        {templates.length > 0 && (
+          <Field
+            label="Structure"
+            htmlFor="thread_template_id"
+            hint="The shape the event starts from. You fill in the content afterwards."
+          >
+            <select
+              id="thread_template_id"
+              name="thread_template_id"
+              defaultValue={festival.thread_template_id ?? ""}
+              className={input}
+            >
+              <option value="">Start empty</option>
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.title} — {t.item_count} item{t.item_count === 1 ? "" : "s"}
+                  {t.sends_messages ? ", sends messages" : ""}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
 
         <Field label="Places" htmlFor="capacity" hint="Leave empty for no limit.">
           <input
