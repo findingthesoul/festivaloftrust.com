@@ -145,49 +145,35 @@ export function EventSettings({
           not to offer it. The page above says what was chosen once it is set.
         */}
         {/*
-          Once the festival has a page the structure is settled — a template
-          lays down items when the page is created, so it cannot be re-applied.
-          Say what it was built from rather than showing nothing and leaving
-          someone to wonder where the field went.
+          One block, every case. Split across three conditions this had a hole
+          in it — a published festival with an empty template list matched none
+          of them and rendered nothing at all, which is the silence this was
+          supposed to end. If there is a reason there is no choice, say it.
         */}
-        {festival.thread_id && templates.length > 0 && (
-          <Field label="Structure">
+        <Field
+          label="Structure"
+          htmlFor={!festival.thread_id && templates.length > 0 ? "thread_template_id" : undefined}
+          hint={
+            !festival.thread_id && templates.length > 0
+              ? "The shape the event starts from. You fill in the content afterwards."
+              : undefined
+          }
+        >
+          {festival.thread_id ? (
             <p className="text-ink/70 py-2 text-sm">
               {templates.find((t) => t.id === festival.thread_template_id)?.title ??
-                "Started from an empty page"}
+                (festival.thread_template_id
+                  ? "A structure that is no longer listed"
+                  : "Started from an empty page")}
               <span className="text-ink/45 block text-xs">
                 Settled when the page was created, so it cannot be changed now.
+                {templatesProblem ? ` (${templatesProblem})` : ""}
               </span>
             </p>
-          </Field>
-        )}
-
-        {/*
-          An absent field reads as a broken one. If there is nothing to choose
-          from, say why — most often the key is pointed at a workspace that has
-          no structures in it, which is invisible from here otherwise.
-        */}
-        {!festival.thread_id && templates.length === 0 && templatesProblem && (
-          <Field label="Structure">
-            <p className="text-ink/45 py-2 text-sm">
-              Nothing to choose from — {templatesProblem}. The event will start
-              from an empty page.
-            </p>
-          </Field>
-        )}
-
-        {!festival.thread_id && templates.length > 0 && (
-          <Field
-            label="Structure"
-            htmlFor="thread_template_id"
-            hint="The shape the event starts from. You fill in the content afterwards."
-          >
+          ) : templates.length > 0 ? (
             <select
               id="thread_template_id"
               name="thread_template_id"
-              // A festival should start from a structure, so the first one is
-              // the default rather than an empty page. Starting empty stays
-              // possible, at the bottom, where an unusual choice belongs.
               defaultValue={festival.thread_template_id ?? templates[0]?.id ?? ""}
               className={input}
             >
@@ -199,8 +185,13 @@ export function EventSettings({
               ))}
               <option value="">Start empty</option>
             </select>
-          </Field>
-        )}
+          ) : (
+            <p className="text-ink/45 py-2 text-sm">
+              Nothing to choose from — {templatesProblem ?? "no structures found"}.
+              The event will start from an empty page.
+            </p>
+          )}
+        </Field>
 
         <Field label="Places" htmlFor="capacity" hint="Leave empty for no limit.">
           <input
