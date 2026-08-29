@@ -1,18 +1,12 @@
 import { currentUser } from "@/lib/supabase/server";
 import { PublicNav } from "./PublicNav";
-import { SignedInNav } from "./SignedInNav";
 
 /**
- * Two navigations, not one with extra items.
- *
- * A signed-out visitor is reading about the movement, so they get the whole
- * site. A signed-in organiser is working on their festival, so the marketing
- * pages are noise — they get their festivals and their account, and the public
- * site is still reachable through the wordmark.
+ * One navigation for everyone. Signed in, the JOIN or SIGN IN seat becomes
+ * the account control — the way to your festivals, your profile and the way
+ * out lives in its menu, so no second bar is needed anywhere.
  */
 export async function SiteNav() {
   const user = await currentUser();
-
-  if (user) return <SignedInNav email={user.email ?? ""} />;
-  return <PublicNav />;
+  return <PublicNav email={user?.email ?? null} />;
 }

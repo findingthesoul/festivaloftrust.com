@@ -3,26 +3,26 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { AccountMenu } from "./AccountMenu";
 import { NAV, PLAIN_PATHS } from "./nav-links";
 
 /**
- * The signed-out navigation. On the home page it floats over the full-screen
- * poster, menu to the right so the docking logo owns the left: transparent
- * while the page rests at the top, then a dark blur over the photo the moment
- * scrolling starts, so the cream menu stays legible on any part of the
- * picture. Everywhere else it is the plain centred bar in the flow of the
- * page it always was. On phones the menu folds into a hamburger.
+ * The one navigation, signed in or out. On the home page it floats over the
+ * full-screen poster, menu to the right so the docking logo owns the left:
+ * transparent while the page rests at the top, then a dark blur over the
+ * photo the moment scrolling starts. On a festival's page the top stays
+ * clean — nothing but the account control when someone is signed in; the
+ * footer carries the menu. Everywhere else it is the plain centred bar.
+ * Signed in, the JOIN or SIGN IN pill gives way to the account control —
+ * same bar, one seat changes.
  */
-export function PublicNav() {
+export function PublicNav({ email }: { email?: string | null }) {
   const pathname = usePathname();
   const home = pathname === "/";
-  // A festival page opens on a full-screen photo too, but its top stays
-  // clean: no menu over the title — the footer carries the way out.
   const event =
     !home &&
     pathname.split("/").filter(Boolean).length === 1 &&
     !PLAIN_PATHS.includes(pathname);
-  const overlay = home;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -35,6 +35,17 @@ export function PublicNav() {
   }, [home]);
 
   const close = () => setOpen(false);
+
+  if (event) {
+    if (!email) return null;
+    return (
+      <nav aria-label="Main" className="absolute inset-x-0 top-0 z-40">
+        <div className="flex justify-end px-6 py-4 sm:px-10">
+          <AccountMenu email={email} />
+        </div>
+      </nav>
+    );
+  }
 
   const burger = (
     <button
@@ -65,7 +76,7 @@ export function PublicNav() {
   const panel = open && (
     <div
       className={`sm:hidden ${
-        overlay
+        home
           ? "bg-ink/90 text-cream backdrop-blur-md"
           : "bg-background border-ink/10 border-b"
       }`}
@@ -82,25 +93,25 @@ export function PublicNav() {
             </Link>
           </li>
         ))}
-        <li className="mt-2 flex gap-4">
-          <Link href="/join" onClick={close} className="font-medium">
-            Join
-          </Link>
-          <Link
-            href="/sign-in"
-            onClick={close}
-            className={`font-medium ${overlay ? "text-yellow" : "text-green"}`}
-          >
-            Sign in
-          </Link>
-        </li>
+        {!email && (
+          <li className="mt-2 flex gap-4">
+            <Link href="/join" onClick={close} className="font-medium">
+              Join
+            </Link>
+            <Link
+              href="/sign-in"
+              onClick={close}
+              className={`font-medium ${home ? "text-yellow" : "text-green"}`}
+            >
+              Sign in
+            </Link>
+          </li>
+        )}
       </ul>
     </div>
   );
 
-  if (event) return null;
-
-  if (!overlay) {
+  if (!home) {
     return (
       <nav aria-label="Main" className="w-full">
         <div
@@ -110,7 +121,10 @@ export function PublicNav() {
           <Link href="/" className="text-sm font-bold tracking-[-0.01em]">
             Festival of Trust
           </Link>
-          {burger}
+          <div className="flex items-center gap-2">
+            {email && <AccountMenu email={email} />}
+            {burger}
+          </div>
         </div>
         {panel}
         <div
@@ -130,18 +144,24 @@ export function PublicNav() {
             ))}
           </ul>
           <span className="text-ink/20">|</span>
-          <Link
-            href="/join"
-            className="decoration-2 underline-offset-4 transition-opacity hover:underline hover:opacity-70"
-          >
-            Join
-          </Link>
-          <Link
-            href="/sign-in"
-            className="text-green font-medium hover:opacity-70"
-          >
-            Sign in
-          </Link>
+          {email ? (
+            <AccountMenu email={email} />
+          ) : (
+            <>
+              <Link
+                href="/join"
+                className="decoration-2 underline-offset-4 transition-opacity hover:underline hover:opacity-70"
+              >
+                Join
+              </Link>
+              <Link
+                href="/sign-in"
+                className="text-green font-medium hover:opacity-70"
+              >
+                Sign in
+              </Link>
+            </>
+          )}
         </div>
       </nav>
     );
@@ -156,8 +176,9 @@ export function PublicNav() {
     >
       <div
         data-nav-bar
-        className="flex h-14 items-center justify-end px-4 sm:hidden"
+        className="flex h-14 items-center justify-end gap-2 px-4 sm:hidden"
       >
+        {email && <AccountMenu email={email} />}
         {burger}
       </div>
       {panel}
@@ -182,19 +203,25 @@ export function PublicNav() {
             </li>
           ))}
         </ul>
-        <span
-          className={`ml-5 rounded-sm bg-white px-3 py-1.5 font-medium ${
-            scrolled ? "text-yellow" : "text-indigo"
-          }`}
-        >
-          <Link href="/join" className="hover:opacity-70">
-            JOIN
-          </Link>{" "}
-          <span className="font-normal lowercase">or</span>{" "}
-          <Link href="/sign-in" className="hover:opacity-70">
-            SIGN IN
-          </Link>
-        </span>
+        {email ? (
+          <span className="ml-5">
+            <AccountMenu email={email} />
+          </span>
+        ) : (
+          <span
+            className={`ml-5 rounded-sm bg-white px-3 py-1.5 font-medium ${
+              scrolled ? "text-yellow" : "text-indigo"
+            }`}
+          >
+            <Link href="/join" className="hover:opacity-70">
+              JOIN
+            </Link>{" "}
+            <span className="font-normal lowercase">or</span>{" "}
+            <Link href="/sign-in" className="hover:opacity-70">
+              SIGN IN
+            </Link>
+          </span>
+        )}
       </div>
     </nav>
   );
