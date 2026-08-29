@@ -533,6 +533,31 @@ export async function liveFestival(marker: string): Promise<Festival | null> {
 }
 
 /**
+ * The public calendar: live festivals that asked to be listed, still ahead of
+ * today or not yet dated. Anyone may read these — RLS lets every live
+ * festival through — so this is the same view each festival's own page gives,
+ * just all of them at once, dated ones first.
+ */
+export async function upcomingFestivals(): Promise<Festival[]> {
+  const supabase = await serverSupabase();
+  const today = new Date().toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("festival")
+    .select(COLUMNS)
+    .eq("status", "live")
+    .eq("is_public_listed", true)
+    .or(`starts_on.gte.${today},starts_on.is.null`)
+    .order("starts_on", { ascending: true, nullsFirst: false });
+  if (error) {
+    // Empty is also what "none published yet" returns, so log it or an
+    // outage reads as an empty calendar.
+    console.error("[festivals] could not list upcoming festivals", error.message);
+    return [];
+  }
+  return (data ?? []) as Festival[];
+}
+
+/**
  * The public page, or a preview of it.
  *
  * A draft stays nothing to everyone — that is what stops this page being used
