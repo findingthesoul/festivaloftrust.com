@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { currentUser } from "@/lib/supabase/server";
-import { AccountMenu } from "./AccountMenu";
 import { PublicNav } from "./PublicNav";
+import { SignedInNav } from "./SignedInNav";
 
 /**
  * Two navigations, not one with extra items.
@@ -14,23 +13,6 @@ import { PublicNav } from "./PublicNav";
 export async function SiteNav() {
   const user = await currentUser();
 
-  if (user) {
-    // Sticky for the signed-in bar only: someone working on a festival scrolls
-    // a long way into a step and should not lose the way out of it.
-    return (
-      <nav
-        aria-label="Main"
-        className="bg-background/85 border-ink/10 sticky top-0 z-30 border-b backdrop-blur"
-      >
-        <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-6 py-4 sm:px-10">
-          <Link href="/festivals" className="text-sm font-bold tracking-[-0.01em]">
-            Festival of Trust
-          </Link>
-          <AccountMenu email={user.email ?? ""} />
-        </div>
-      </nav>
-    );
-  }
-
+  if (user) return <SignedInNav email={user.email ?? ""} />;
   return <PublicNav />;
 }
