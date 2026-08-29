@@ -13,9 +13,9 @@ import { serverSupabase } from "@/lib/supabase/server";
 import {
   startRun,
   getThread,
-  threadPublicUrl,
   listFlows,
   listEnrolments,
+  publicEnrol,
   publishThread,
   patchThread,
   FibreError,
@@ -661,7 +661,7 @@ export async function publicFestival(
 }
 
 /**
- * Where someone registers, if anywhere yet.
+ * Whether the doors are open.
  *
  * Asked of the platform at view time rather than stored, because the answer
  * moves without us: the thread goes active on the cron's clock or from The
@@ -670,20 +670,64 @@ export async function publicFestival(
  */
 export async function registrationFor(
   festival: Festival,
-): Promise<{ url: string; open: boolean } | null> {
+): Promise<{ open: boolean } | null> {
   if (!festival.thread_id || !process.env.FIBRE_APP_KEY) return null;
   try {
     const thread = await getThread(festival.thread_id);
-    const url = thread.public_url ?? threadPublicUrl(thread);
-    if (!url) return null;
-    return { url, open: thread.status === "active" };
+    return { open: thread.status === "active" };
   } catch (e) {
-    // The page must render without the platform; the button just is not there.
+    // The page must render without the platform; the form just is not there.
     console.error("[festivals] could not read the thread for registration", {
       marker: festival.marker,
       detail: e instanceof FibreError ? e.detail : String(e),
     });
     return null;
+  }
+}
+
+/**
+ * Register someone, right here on the page. The submission goes to The
+ * Thread's own public enrol endpoint — the visitor never leaves the site,
+ * and the registration lands exactly where it always did. The storefront
+ * slugs are resolved at submit time, so a renamed storefront keeps working.
+ */
+export async function registerAttendee(
+  festival: Festival,
+  input: { name: string; email: string; requestId: string },
+): Promise<{ error?: string }> {
+  if (!festival.thread_id || !process.env.FIBRE_APP_KEY) {
+    return { error: "Registration is not open yet." };
+  }
+  try {
+    const thread = await getThread(festival.thread_id);
+    if (!thread.organiser?.slug || !thread.slug) {
+      return { error: "Registration is not open yet." };
+    }
+    await publicEnrol({
+      organiser_slug: thread.organiser.slug,
+      thread_slug: thread.slug,
+      name: input.name,
+      email: input.email,
+      // The tick is checked before this is called; the platform requires it
+      // and records which document was agreed to.
+      policy_accepted: true,
+      policy_version: "festivaloftrust.com/privacy 2026-08-29",
+      request_id: input.requestId,
+    });
+    return {};
+  } catch (e) {
+    const detail = e instanceof FibreError ? e.detail : String(e);
+    console.error("[festivals] registration failed", {
+      marker: festival.marker,
+      detail,
+    });
+    if (detail.includes("full")) return { error: "This festival is full." };
+    if (detail.includes("closed")) {
+      return { error: "Registration is not open right now." };
+    }
+    return {
+      error: "The registration did not go through — try again in a moment.",
+    };
   }
 }
 

@@ -398,6 +398,27 @@ export type FibreEnrolment = {
   created_at: string;
 };
 
+/**
+ * Register someone, as the public. This is The Thread's own unauthenticated
+ * enrol endpoint — the same one its popup uses — so the app-key wall that
+ * forbids apps from writing enrolments stays intact: we submit as the
+ * visitor, not as the app. Free tickets only, which a Festival of Trust
+ * always is. `request_id` makes a retried submit land once.
+ */
+export const publicEnrol = (input: {
+  organiser_slug: string;
+  thread_slug: string;
+  name: string;
+  email: string;
+  policy_accepted: boolean;
+  policy_version?: string;
+  request_id: string;
+}) =>
+  call<{ ok: boolean; enrolment_id?: string }>(`/thread/public/enrol`, {
+    method: "POST",
+    body: input,
+  });
+
 export const listEnrolments = (threadId: string) =>
   call<{ enrolments: FibreEnrolment[] }>(
     `/apps/${SLUG}/thread/threads/${threadId}/enrolments`,

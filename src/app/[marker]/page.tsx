@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { BrandLockup } from "@/components/BrandLockup";
 import { ShapeGrid } from "@/components/ShapeGrid";
 import { agendaFor, publicFestival, registrationFor } from "@/lib/festivals";
+import { RegisterForm } from "./register-form";
 
 export const dynamic = "force-dynamic";
 
@@ -96,7 +97,10 @@ export default async function Page({
         <BrandLockup className="absolute right-[6%] bottom-[8%] z-10 h-12 sm:h-14" />
       </section>
 
-      <section className="mx-auto w-full max-w-4xl px-6 py-16 sm:px-10 sm:py-24">
+      {/* Content on the left, the registration desk on the right — the whole
+          visit, including registering, happens on this page. */}
+      <section className="mx-auto grid w-full max-w-5xl gap-x-14 gap-y-12 px-6 py-16 sm:px-10 sm:py-24 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div>
         <p className="text-green text-[clamp(1.1rem,3.5vw,2rem)] font-bold tracking-[-0.01em] text-balance uppercase">
           {festival.place ?? "Festival of Trust"}
           {festival.starts_on && (
@@ -136,22 +140,27 @@ export default async function Page({
           </div>
         )}
 
-        {/* The page in The Thread is where enrolment actually happens — this
-            page introduces the festival and hands over. When the doors are not
-            open, saying when they are not is better than a button that does
-            nothing. */}
-        <div className="border-ink/15 mt-14 border-t pt-8">
-          {registration?.open ? (
-            <a
-              href={registration.url}
-              className="bg-green text-cream inline-block rounded-lg px-7 py-3.5 font-medium transition-opacity hover:opacity-90"
-            >
-              Register
-            </a>
-          ) : (
-            <p className="text-ink/60 text-sm">Registration opens closer to the day.</p>
-          )}
         </div>
+
+        {/* The registration desk. When the doors are not open, saying so is
+            better than a form that does nothing. */}
+        <aside className="self-start lg:sticky lg:top-8">
+          <div className="border-ink/15 rounded-xl border bg-white/50 p-6 sm:p-7">
+            {registration?.open ? (
+              <RegisterForm
+                marker={festival.marker}
+                requiresApproval={festival.requires_approval}
+              />
+            ) : (
+              <>
+                <h2 className="text-xl font-bold">Register</h2>
+                <p className="text-ink/60 mt-3 text-sm leading-relaxed">
+                  Registration opens closer to the day.
+                </p>
+              </>
+            )}
+          </div>
+        </aside>
       </section>
     </main>
   );
