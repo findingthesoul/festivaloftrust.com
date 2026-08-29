@@ -195,11 +195,11 @@ export function PublicNav() {
           }`}
         >
           <Link href="/join" className="hover:opacity-70">
-            Join
-          </Link>
-          /
+            JOIN
+          </Link>{" "}
+          <span className="font-normal lowercase">or</span>{" "}
           <Link href="/sign-in" className="hover:opacity-70">
-            Sign in
+            SIGN IN
           </Link>
         </span>
       </div>
