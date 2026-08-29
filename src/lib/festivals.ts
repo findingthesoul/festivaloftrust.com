@@ -776,7 +776,10 @@ export async function publishToThread(
   // this, "Take offline" would be a one-way door.
   if (festival.thread_id) {
     try {
-      await patchThread(festival.thread_id, { is_public_listed: true });
+      // Re-listing is not enough: taking a festival offline may have left the
+      // page as a draft, and a draft is a 404 to the public however it is
+      // listed. Putting it back means both.
+      await patchThread(festival.thread_id, { is_public_listed: true, status: "active" });
     } catch (e) {
       return { error: e instanceof FibreError ? e.detail : String(e) };
     }
@@ -835,7 +838,18 @@ export async function publishToThread(
     // Carry the settings the organiser chose while it was a draft. They are
     // held on the festival precisely because there was no thread to hold them
     // then; this is the moment there is one.
+    //
+    // status: "active" is the publish. program.status defaults to 'draft' and
+    // nothing here was setting it, so every festival published from the planner
+    // stayed a draft on the platform — and The Thread serves a draft as a 404
+    // to anyone who is not a member of the owning workspace. The page existed
+    // and the public could not open it.
+    //
+    // One act, not two: active means the page is live AND enrolment is open.
+    // See §3 of docs/brief-thread-event-settings.md, which asks that the two
+    // systems not drift on what "live" means.
     await patchThread(thread.id, {
+      status: "active",
       ends_on: festival.starts_on,
       timezone: festival.timezone,
       language: festival.language,
