@@ -74,14 +74,17 @@ export default async function Page({
               src={festival.cover_url}
               alt=""
               fill
-              priority
+              preload
               sizes="(max-width: 896px) 100vw, 896px"
               className="object-cover"
             />
           </div>
         ) : (
           <div className="mt-12 flex justify-center">
-            <ShapeGrid className="w-full max-w-sm" />
+            {/* Eager, not preload: without a cover the headline text and this
+                mark both contend for LCP depending on viewport, and preload
+                would bet the head of the document on one of them. */}
+            <ShapeGrid className="w-full max-w-sm" loading="eager" />
           </div>
         )}
 

@@ -1,7 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import closeUp from "@/assets/close-up.jpg";
-import { Wordmark } from "@/components/Wordmark";
+import { HeroPoster } from "@/components/HeroPoster";
 
 const WAYS = [
   {
@@ -19,66 +17,13 @@ const WAYS = [
 export default function Home() {
   return (
     <>
-      {/* The close-up poster, read in the order it is read on paper: the title
-          across the top, then the photograph running the full width of the
-          sheet with nothing in the margins beside it. */}
-      <section className="w-full">
-        <div className="mx-auto flex w-full max-w-5xl justify-center px-6 pt-2 pb-10 sm:px-10 sm:pt-6 sm:pb-14">
-          <h1>
-            <Wordmark className="w-[min(72vw,17rem)] sm:w-[24rem] md:w-[30rem]" />
-          </h1>
-        </div>
+      <HeroPoster />
 
-        {/* Full bleed without 100vw. This div is a child of the body rather
-            than of the max-w-5xl container, so its width is already the page
-            minus the scrollbar — 100vw would count the scrollbar in and give
-            the body a sideways scroll on every desktop browser that reserves
-            one.
-
-            The ratios step from the poster's portrait close-up on a phone,
-            through the photograph's own 3:2 on a tablet, to a band on a wide
-            screen — so the two crops that do happen cut the axis with the most
-            to spare. Capped at one screenful because a hero taller than the
-            window hides that there is a page under it. */}
-        <div className="relative aspect-[4/5] max-h-dvh w-full sm:aspect-[3/2] lg:aspect-[2/1]">
-          <Image
-            src={closeUp}
-            alt="A child in bright pink sunglasses, standing close among others at a festival."
-            fill
-            preload
-            sizes="100vw"
-            // Held above centre: the faces sit in the top third of the frame,
-            // and a plain centre crop takes the tops of their heads off.
-            className="object-[center_30%] object-cover"
-          />
-        </div>
-
-        <div className="flex justify-center py-10">
-          <a
-            href="#story"
-            aria-label="Scroll down to read more"
-            className="group text-green inline-flex flex-col items-center gap-1"
-          >
-            <span className="text-xs tracking-[0.15em] uppercase">Read on</span>
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-              className="h-6 w-6 animate-bounce motion-reduce:animate-none"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </a>
-        </div>
-      </section>
-
+      {/* scroll-mt clears the fixed nav bar, which otherwise covers the top
+          of the story when the Read on link jumps here. */}
       <main
         id="story"
-        className="mx-auto w-full max-w-5xl scroll-mt-4 px-6 sm:px-10"
+        className="mx-auto w-full max-w-5xl scroll-mt-20 px-6 sm:px-10"
       >
         {/* Narrative */}
         <section className="mx-auto max-w-2xl space-y-6 border-t border-ink/15 py-20 text-[clamp(1.05rem,1.6vw,1.3rem)] leading-relaxed text-pretty sm:py-28">

@@ -1,19 +1,7 @@
 import Link from "next/link";
 import { currentUser } from "@/lib/supabase/server";
 import { AccountMenu } from "./AccountMenu";
-
-export const NAV = [
-  { href: "/", label: "Home" },
-  { href: "/upcoming", label: "Upcoming" },
-  { href: "/for-society", label: "For society" },
-  { href: "/for-organisations", label: "For organisations" },
-  { href: "/funding", label: "Funding" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-];
-
-/** Public pages for the sitemap: the nav plus entry points not shown in it. */
-export const PUBLIC_PATHS = [...NAV.map((n) => n.href), "/join"];
+import { PublicNav } from "./PublicNav";
 
 /**
  * Two navigations, not one with extra items.
@@ -44,32 +32,5 @@ export async function SiteNav() {
     );
   }
 
-  return (
-    <nav aria-label="Main" className="w-full">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-x-5 gap-y-1 px-6 py-5 text-sm sm:gap-x-7 sm:px-10">
-        <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 sm:gap-x-7">
-          {NAV.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                className="decoration-2 underline-offset-4 transition-opacity hover:underline hover:opacity-70"
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-        <span className="text-ink/20 hidden sm:inline">|</span>
-        <Link
-          href="/join"
-          className="decoration-2 underline-offset-4 transition-opacity hover:underline hover:opacity-70"
-        >
-          Join
-        </Link>
-        <Link href="/sign-in" className="text-green font-medium hover:opacity-70">
-          Sign in
-        </Link>
-      </div>
-    </nav>
-  );
+  return <PublicNav />;
 }

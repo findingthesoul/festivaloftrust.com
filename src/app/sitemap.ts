@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { PUBLIC_PATHS } from "@/components/SiteNav";
+import { PUBLIC_PATHS } from "@/components/nav-links";
 
 const BASE = "https://www.festivaloftrust.com";
 
