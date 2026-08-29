@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { festivalFor } from "../guard";
 import { FestivalHeader } from "../festival-header";
-import { registrations } from "@/lib/festivals";
+import { registrationFor, registrations } from "@/lib/festivals";
+import { card } from "@/components/ui";
+import { OpenToggle } from "./open-toggle";
 
 export const metadata: Metadata = { title: "Registrations", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -14,10 +16,19 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
   // platform returns the person and their payment status and nothing else —
   // the registration answers stay behind the data wall, by its choice.
   const people = await registrations(festival);
+  const registration = await registrationFor(festival);
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
       <FestivalHeader festival={festival} access={access} active="registrations" />
+
+      {/* The doors, where the guest list is watched. Only once there is a
+          public page — enrolment cannot open onto nothing. */}
+      {festival.thread_id && registration && (
+        <section className={`${card} mt-8 p-5 sm:p-6`}>
+          <OpenToggle marker={festival.marker} open={registration.open} />
+        </section>
+      )}
 
       <div className="mt-10">
         {!festival.thread_id ? (
