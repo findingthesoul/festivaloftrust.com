@@ -82,17 +82,9 @@ export function FibrePlanner({ run: initial }: { run: FibreRun }) {
 
   return (
     <>
-      <header>
-        <p className="text-ink/50 text-xs tracking-[0.2em] uppercase">Festival of Trust</p>
-        <h1 className="mt-2 text-[clamp(2rem,6vw,3.25rem)] leading-[1.05] font-bold tracking-[-0.02em]">
-          {optimistic.subject}
-        </h1>
-        <p className="text-green mt-2 text-lg font-medium">
-          Grow trust, one pocket at a time.
-        </p>
-      </header>
-
-      <div className="mt-8">
+      {/* No header of its own: the page's FestivalHeader already says whose
+          plan this is, and the run subject repeats that same name. */}
+      <div>
         <div className="bg-ink/10 h-2 w-full overflow-hidden">
           <div
             className="h-full transition-[width] duration-500"
