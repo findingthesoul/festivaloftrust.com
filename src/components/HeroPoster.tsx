@@ -147,8 +147,8 @@ export function HeroPoster() {
           ),
           lerp((spec.w * brect.width) / w0, tile / w0, qi),
         );
-        if (spec.accent) {
-          el.style.backgroundColor = `rgb(${YELLOW.map((c) =>
+        if (spec.accent && el.firstElementChild) {
+          (el.firstElementChild as HTMLElement).style.backgroundColor = `rgb(${YELLOW.map((c) =>
             Math.round(lerp(c, 255, qi)),
           ).join(",")})`;
         }
@@ -194,7 +194,7 @@ export function HeroPoster() {
           its start positions from this box's rect. */}
       <div
         ref={boxRef}
-        className="pointer-events-none absolute bottom-[8%] left-[7%] z-50 w-[clamp(280px,34vw,460px)]"
+        className="pointer-events-none absolute bottom-[8%] left-[7%] z-50 w-[clamp(300px,46vw,600px)]"
         style={{ aspectRatio: POSTER_RATIO }}
       >
         <h1
@@ -223,20 +223,28 @@ export function HeroPoster() {
             }}
             aria-hidden="true"
             className="absolute aspect-square"
-            // Each form is cut with a mask instead of drawn as an image, so
-            // it can be painted any brand colour — the poster wants them
-            // white with one yellow star, no filter tricks.
             style={{
               left: `${spec.x * 100}%`,
               top: `${spec.y * 100}%`,
               width: `${spec.w * 100}%`,
-              backgroundColor: spec.accent ? "rgb(251,172,24)" : "#fff",
-              maskImage: `url(/brand/shapes/${spec.file}.svg)`,
-              maskSize: "100% 100%",
-              WebkitMaskImage: `url(/brand/shapes/${spec.file}.svg)`,
-              WebkitMaskSize: "100% 100%",
             }}
-          />
+          >
+            {/* Cut with a mask instead of drawn as an image, so each form
+                can be painted any brand colour — white with one yellow star.
+                Rotation, where the cluster asks for it, lives on this inner
+                layer so the flight's transform stays untouched. */}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundColor: spec.accent ? "rgb(251,172,24)" : "#fff",
+                transform: spec.rot ? `rotate(${spec.rot}deg)` : undefined,
+                maskImage: `url(/brand/shapes/${spec.file}.svg)`,
+                maskSize: "100% 100%",
+                WebkitMaskImage: `url(/brand/shapes/${spec.file}.svg)`,
+                WebkitMaskSize: "100% 100%",
+              }}
+            />
+          </div>
         ))}
       </div>
 
