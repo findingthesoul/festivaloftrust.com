@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { saveSettings } from "./actions";
 import { ActionBar, Field, Toggle, input, primary, quiet } from "@/components/ui";
 import { MarkerField } from "./marker-field";
-import { MarkupArea } from "./markup-area";
+import { WysiwygArea } from "./wysiwyg-area";
 import type { Festival } from "@/lib/festivals";
 import type { FibreThreadTemplate } from "@/lib/fibre";
 
@@ -115,9 +115,9 @@ export function EventSettings({
           label="Description"
           htmlFor="summary"
           className="sm:col-span-2"
-          hint="Formatting works: **bold**, *italic*, [link](https://…), ## heading, - list."
+          hint="Write it as it should look — the buttons above the field do the formatting."
         >
-          <MarkupArea
+          <WysiwygArea
             id="summary"
             name="summary"
             defaultValue={festival.summary ?? ""}
@@ -131,7 +131,7 @@ export function EventSettings({
           className="sm:col-span-2"
           hint="Shown on the event page: who is behind this festival. Same formatting as the description."
         >
-          <MarkupArea
+          <WysiwygArea
             id="organiser_note"
             name="organiser_note"
             defaultValue={festival.organiser_note ?? ""}
@@ -145,7 +145,7 @@ export function EventSettings({
           className="sm:col-span-2"
           hint="Address, times, what to bring — its own card on the event page. Same formatting as the description."
         >
-          <MarkupArea
+          <WysiwygArea
             id="practical_info"
             name="practical_info"
             defaultValue={festival.practical_info ?? ""}
