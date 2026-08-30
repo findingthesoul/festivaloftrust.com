@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { FestivalTabs, type Tab } from "./tabs";
-import type { Access, Festival } from "@/lib/festivals";
+import { organiserFor, type Access, type Festival } from "@/lib/festivals";
 
 /** The name, the way back, and the tabs. Every tab renders this. */
-export function FestivalHeader({
+export async function FestivalHeader({
   festival,
   access,
   active,
@@ -12,6 +12,12 @@ export function FestivalHeader({
   access: Access;
   active: Tab;
 }) {
+  // Whose festival this is. Absent for a host looking at somebody else's — the
+  // organiser row is not theirs to read — so the line simply does not appear
+  // rather than showing a blank or an id.
+  const owner = await organiserFor(festival.owner_id);
+  const ownerName = owner?.full_name ?? owner?.email ?? null;
+
   return (
     <>
       <Link
@@ -20,7 +26,10 @@ export function FestivalHeader({
       >
         ← Your festivals
       </Link>
-      <div className="mt-4 flex items-start justify-between gap-4">
+      {ownerName && (
+        <p className="text-ink/55 mt-4 text-sm">{ownerName}</p>
+      )}
+      <div className={`${ownerName ? "mt-1" : "mt-4"} flex items-start justify-between gap-4`}>
         <h1 className="text-[clamp(1.75rem,5vw,2.75rem)] leading-[1.05] font-bold tracking-[-0.02em]">
           {festival.name}
         </h1>
