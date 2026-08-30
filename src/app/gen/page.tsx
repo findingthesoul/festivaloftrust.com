@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { standing } from "@/lib/organiser";
 import { Generator } from "./generator";
 
 export const metadata: Metadata = {
@@ -6,7 +8,13 @@ export const metadata: Metadata = {
   robots: { index: false },
 };
 
-export default function Page() {
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+  // Workspace people only. Not a redirect: someone who is not an approved
+  // organiser should not learn that this tool exists.
+  const s = await standing();
+  if (s.state !== "approved") notFound();
   return (
     <main className="w-full flex-1">
       <section className="mx-auto w-full max-w-6xl px-6 pt-12 pb-6 sm:px-10">

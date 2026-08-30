@@ -21,10 +21,13 @@ export function BackendNav({
   email,
   reviewCount = null,
   canReviewVisitors = false,
+  isOrganiser = false,
 }: {
   email?: string | null;
   reviewCount?: number | null;
   canReviewVisitors?: boolean;
+  /** Approved workspace member: sees the internal tools. */
+  isOrganiser?: boolean;
 }) {
   if (!email) return null;
 
@@ -41,6 +44,7 @@ export function BackendNav({
           email={email}
           reviewCount={reviewCount}
           canReviewVisitors={canReviewVisitors}
+          isOrganiser={isOrganiser}
         />
       </div>
     </nav>

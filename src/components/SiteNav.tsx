@@ -20,14 +20,17 @@ export async function SiteNav() {
   // approval plus festivals submitted for review. Nobody else pays the
   // queries, and nobody else sees the item.
   let reviewCount: number | null = null;
+  let isOrganiser = false;
   if (user) {
     const supabase = await serverSupabase();
     const { data: me } = await supabase
       .from("organiser")
-      .select("is_admin")
+      .select("is_admin, status")
       .eq("id", user.id)
       .maybeSingle();
-    if ((me as { is_admin: boolean } | null)?.is_admin) {
+    const mine = me as { is_admin: boolean; status: string } | null;
+    isOrganiser = mine?.status === "approved";
+    if (mine?.is_admin) {
       const [organisers, festivals] = await Promise.all([
         supabase
           .from("organiser")
@@ -52,6 +55,7 @@ export async function SiteNav() {
           email={email}
           reviewCount={reviewCount}
           canReviewVisitors={canReviewVisitors}
+          isOrganiser={isOrganiser}
         />
       }
       backendNav={
@@ -59,6 +63,7 @@ export async function SiteNav() {
           email={email}
           reviewCount={reviewCount}
           canReviewVisitors={canReviewVisitors}
+          isOrganiser={isOrganiser}
         />
       }
     />

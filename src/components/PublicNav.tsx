@@ -20,10 +20,13 @@ export function PublicNav({
   email,
   reviewCount = null,
   canReviewVisitors = false,
+  isOrganiser = false,
 }: {
   email?: string | null;
   reviewCount?: number | null;
   canReviewVisitors?: boolean;
+  /** Approved workspace member: sees the internal tools. */
+  isOrganiser?: boolean;
 }) {
   const pathname = usePathname();
   const overlay = OVERLAY_PATHS.includes(pathname);
@@ -75,7 +78,7 @@ export function PublicNav({
       </ul>
       {email ? (
         <span className="ml-5">
-          <AccountMenu email={email} reviewCount={reviewCount} canReviewVisitors={canReviewVisitors} />
+          <AccountMenu email={email} reviewCount={reviewCount} canReviewVisitors={canReviewVisitors} isOrganiser={isOrganiser} />
         </span>
       ) : (
         <span
@@ -117,7 +120,7 @@ export function PublicNav({
         {email && !peek && (
           <nav aria-label="Account" className="absolute inset-x-0 top-0 z-40">
             <div className="flex justify-end px-6 py-4 sm:px-10">
-              <AccountMenu email={email} reviewCount={reviewCount} canReviewVisitors={canReviewVisitors} />
+              <AccountMenu email={email} reviewCount={reviewCount} canReviewVisitors={canReviewVisitors} isOrganiser={isOrganiser} />
             </div>
           </nav>
         )}
@@ -200,7 +203,7 @@ export function PublicNav({
             Festival of Trust
           </Link>
           <div className="flex items-center gap-2">
-            {email && <AccountMenu email={email} reviewCount={reviewCount} canReviewVisitors={canReviewVisitors} />}
+            {email && <AccountMenu email={email} reviewCount={reviewCount} canReviewVisitors={canReviewVisitors} isOrganiser={isOrganiser} />}
             {burger}
           </div>
         </div>
@@ -231,7 +234,7 @@ export function PublicNav({
           </ul>
           {email ? (
             <span className="ml-5">
-              <AccountMenu email={email} reviewCount={reviewCount} canReviewVisitors={canReviewVisitors} />
+              <AccountMenu email={email} reviewCount={reviewCount} canReviewVisitors={canReviewVisitors} isOrganiser={isOrganiser} />
             </span>
           ) : (
             <span className="border-ink/15 text-indigo ml-5 rounded-sm border bg-white px-3 py-1.5 font-medium">
@@ -260,7 +263,7 @@ export function PublicNav({
         data-nav-bar
         className="flex h-14 items-center justify-end gap-2 px-4 sm:hidden"
       >
-        {email && <AccountMenu email={email} reviewCount={reviewCount} canReviewVisitors={canReviewVisitors} />}
+        {email && <AccountMenu email={email} reviewCount={reviewCount} canReviewVisitors={canReviewVisitors} isOrganiser={isOrganiser} />}
         {burger}
       </div>
       {panel}
