@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AccountMenu } from "./AccountMenu";
-import { NAV, PLAIN_PATHS } from "./nav-links";
+import { NAV, OVERLAY_PATHS, PLAIN_PATHS } from "./nav-links";
 
 /**
  * The one navigation, signed in or out. On the home page it floats over the
@@ -18,21 +18,21 @@ import { NAV, PLAIN_PATHS } from "./nav-links";
  */
 export function PublicNav({ email }: { email?: string | null }) {
   const pathname = usePathname();
-  const home = pathname === "/";
+  const overlay = OVERLAY_PATHS.includes(pathname);
   const event =
-    !home &&
+    !overlay &&
     pathname.split("/").filter(Boolean).length === 1 &&
     !PLAIN_PATHS.includes(pathname);
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!home) return;
+    if (!overlay) return;
     const read = () => setScrolled(window.scrollY > 8);
     read();
     window.addEventListener("scroll", read, { passive: true });
     return () => window.removeEventListener("scroll", read);
-  }, [home]);
+  }, [overlay]);
 
   const close = () => setOpen(false);
 
@@ -76,7 +76,7 @@ export function PublicNav({ email }: { email?: string | null }) {
   const panel = open && (
     <div
       className={`sm:hidden ${
-        home
+        overlay
           ? "bg-ink/90 text-cream backdrop-blur-md"
           : "bg-background border-ink/10 border-b"
       }`}
@@ -101,7 +101,7 @@ export function PublicNav({ email }: { email?: string | null }) {
             <Link
               href="/sign-in"
               onClick={close}
-              className={`font-medium ${home ? "text-yellow" : "text-green"}`}
+              className={`font-medium ${overlay ? "text-yellow" : "text-green"}`}
             >
               Sign in
             </Link>
@@ -111,7 +111,7 @@ export function PublicNav({ email }: { email?: string | null }) {
     </div>
   );
 
-  if (!home) {
+  if (!overlay) {
     return (
       <nav aria-label="Main" className="w-full">
         <div

@@ -117,6 +117,18 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const formRefs = useRef<(HTMLDivElement | null)[]>([]);
 
+  // Magnetic cards: while a sheet page is open, the document snaps so a
+  // card never rests half in view — scrolling always completes the arrival,
+  // and the composition's journey completes with it.
+  useEffect(() => {
+    const root = document.documentElement;
+    const prev = root.style.scrollSnapType;
+    root.style.scrollSnapType = "y mandatory";
+    return () => {
+      root.style.scrollSnapType = prev;
+    };
+  }, []);
+
   useEffect(() => {
     const wrap = wrapRef.current;
     const box = boxRef.current;
@@ -219,7 +231,7 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
         return (
           <section
             key={sheet.title}
-            className="relative flex min-h-dvh w-full items-center"
+            className="relative flex min-h-dvh w-full snap-start items-center"
             style={{ backgroundColor: bg, color: text }}
           >
             <div className="relative z-10 mx-auto w-full max-w-5xl px-6 py-20 sm:px-10 sm:py-24">

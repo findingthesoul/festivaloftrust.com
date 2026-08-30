@@ -33,3 +33,15 @@ export const PLAIN_PATHS = [
   "/account",
   "/admin",
 ];
+
+/**
+ * Pages that open on a full-screen photo, where the nav floats over it in
+ * cream and blurs dark on scroll — the home page's manner, shared by every
+ * page that begins with a picture.
+ */
+export const OVERLAY_PATHS = [
+  "/",
+  "/for-society",
+  "/for-organisations",
+  "/about",
+];

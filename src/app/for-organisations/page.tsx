@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import closeUp from "@/assets/close-up.jpg";
 import { CardSheets } from "@/components/CardSheets";
+import { PageHero } from "@/components/PageHero";
 import { NineSteps } from "@/components/NineSteps";
 
 export const metadata: Metadata = { title: "For organisations" };
@@ -7,15 +9,9 @@ export const metadata: Metadata = { title: "For organisations" };
 export default function Page() {
   return (
     <main className="w-full flex-1">
-      <section className="mx-auto w-full max-w-5xl px-6 py-16 sm:px-10 sm:py-20">
-        <h1 className="text-[clamp(2rem,6vw,3.5rem)] leading-[1.05] font-bold tracking-[-0.02em] text-balance">
-          For organisations
-        </h1>
-        <p className="mt-6 max-w-2xl text-[clamp(1.05rem,1.6vw,1.3rem)] leading-relaxed text-pretty">
-          How an organisation hosts a Festival of Trust inside its own walls,
-          to grow trust among its own people.
-        </p>
-      </section>
+      {/* Placeholder photo until the page's own picture arrives — one
+          import to swap. */}
+      <PageHero photo={closeUp} title="For organisations" intro="How an organisation hosts a Festival of Trust inside its own walls, to grow trust among its own people." />
 
       <CardSheets
         sheets={[
