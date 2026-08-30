@@ -33,3 +33,6 @@ insert into public.calculator_price (key, value) values
 -- price locally). Effective prices are base times both.
 alter table public.calculator_currency
   add column if not exists rate numeric not null default 1 check (rate > 0);
+
+insert into public.calculator_price (key, value) values ('organising_hours', 12)
+  on conflict (key) do nothing;

@@ -71,6 +71,9 @@ const DEFAULT_PRICES: CalcPrices = {
   kit_pp_commercial: 50,
   kit_min_social: 1000,
   kit_min_commercial: 2500,
+  // Hours, not money: multiplied by the facilitator rate, never by the
+  // currency ratio.
+  organising_hours: 12,
 };
 const PRICE_KEYS = Object.keys(DEFAULT_PRICES);
 

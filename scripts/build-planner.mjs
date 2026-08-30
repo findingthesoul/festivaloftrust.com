@@ -264,6 +264,61 @@ patch(
 );
 
 
+// 14. Event organising: a cost of its own, hours times the facilitator's
+//     rate, 12 hours unless the fundamentals say otherwise.
+patch(
+  "organising hours variable",
+  `  let KIT_PP_SOCIAL = 25, KIT_PP_COMMERCIAL = 50, KIT_MIN_SOCIAL = 1000, KIT_MIN_COMMERCIAL = 2500;`,
+  `  let KIT_PP_SOCIAL = 25, KIT_PP_COMMERCIAL = 50, KIT_MIN_SOCIAL = 1000, KIT_MIN_COMMERCIAL = 2500;
+  let ORG_HOURS = 12;`,
+);
+
+patch(
+  "organising in the sums",
+  `    const trainFac = training ? TRAIN_HOURS * rate : 0;
+    const B = steps + artTotal + trainFac;`,
+  `    const trainFac = training ? TRAIN_HOURS * rate : 0;
+    const orgFac = ORG_HOURS * rate;
+    const B = steps + artTotal + trainFac + orgFac;`,
+);
+
+patch(
+  "organising absorbs discount too",
+  `    const absorbable = steps + trainFac + A;`,
+  `    const absorbable = steps + trainFac + orgFac + A;`,
+);
+
+patch(
+  "organising cost line",
+  `        <div class="line" id="rTrainFac"><span class="k">Training facilitation</span><span id="vTrainFac"></span></div>`,
+  `        <div class="line"><span class="k" id="kOrg">Event organising</span><span id="vOrg"></span></div>
+        <div class="line" id="rTrainFac"><span class="k">Training facilitation</span><span id="vTrainFac"></span></div>`,
+);
+
+patch(
+  "organising line filled",
+  `    $("vSteps").textContent = eur(steps);`,
+  `    $("vSteps").textContent = eur(steps);
+    $("kOrg").textContent = "Event organising, " + ORG_HOURS + " hours";
+    $("vOrg").textContent = eur(orgFac);`,
+);
+
+// 15. The fundamentals set the hours (hours, not money: no currency ratio).
+patch(
+  "organising in setBasePrices",
+  `      if (p.kit_min_commercial > 0) KIT_MIN_COMMERCIAL = p.kit_min_commercial * r;`,
+  `      if (p.kit_min_commercial > 0) KIT_MIN_COMMERCIAL = p.kit_min_commercial * r;
+      if (p.organising_hours > 0) ORG_HOURS = p.organising_hours;`,
+);
+
+patch(
+  "organising in the fundamentals panel",
+  `    '<label for="fpKitMinC">Kit minimum, commercial</label><input id="fpKitMinC" data-price="kit_min_commercial" type="number" min="1">' +`,
+  `    '<label for="fpKitMinC">Kit minimum, commercial</label><input id="fpKitMinC" data-price="kit_min_commercial" type="number" min="1">' +
+    '<label for="fpOrgH">Event organising, hours (at the facilitator rate)</label><input id="fpOrgH" data-price="organising_hours" type="number" min="1">' +`,
+);
+
+
 const html = `<!doctype html>
 <html lang="en">
 <head>
