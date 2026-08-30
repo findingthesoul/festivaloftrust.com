@@ -23,7 +23,7 @@ const GRID = [
 export function BrandLockup({ className }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2.5 ${className ?? ""}`}>
-      <div className="grid aspect-square h-full shrink-0 grid-cols-3">
+      <div data-lockup-grid className="grid aspect-square h-full shrink-0 grid-cols-3">
         {GRID.map((file) => (
           <div
             key={file}

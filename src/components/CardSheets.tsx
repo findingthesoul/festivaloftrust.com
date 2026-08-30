@@ -92,7 +92,11 @@ const CLUSTERS: { w: number; h: number; items: ClusterItem[] }[] = [
 
 // The star keeps its accent in both arrangements.
 const STAR_ID = 5;
-const STAR_YELLOW = "#F3B33C";
+const STAR_YELLOW = [243, 179, 60];
+
+// Which tile of the footer lockup's 3x3 each form docks into — the grid's
+// own order, by form id.
+const TILE_BY_ID: Record<number, number> = { 0: 0, 1: 1, 2: 2, 4: 3, 5: 4, 3: 5, 8: 6, 6: 7, 7: 8 };
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -147,12 +151,25 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
       const vw = window.innerWidth;
       if (!vh) return;
 
-      // Off the sheets entirely (intro above, footer below): the
-      // composition stays on its pages, not over them.
-      if (rect.top > vh * 0.6 || rect.bottom < vh * 0.5) {
+      // Above the sheets (the photo hero): the composition waits.
+      if (rect.top > vh * 0.6) {
         box.style.opacity = "0";
         return;
       }
+
+      // Towards the footer, the forms fly home: as the foot rises, every
+      // form travels to its own tile in the lockup's 3x3 and settles there —
+      // the same arrival the home page's logo makes, at the other end.
+      const footerGrid = document.querySelector<HTMLElement>(
+        "footer [data-lockup-grid]",
+      );
+      const footerEl = footerGrid?.closest("footer");
+      const dockE = footerEl
+        ? ease(
+            clamp01((vh - rect.bottom) / Math.max(1, footerEl.offsetHeight)),
+          )
+        : 0;
+      const gRect = footerGrid?.getBoundingClientRect();
 
       // Each card says which column its copy takes and whether the
       // composition sits at the top or the bottom of the other one; the
@@ -172,7 +189,7 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
           (sheet.shapes ?? "top") === "top" ? vh * 0.1 : vh - fh - vh * 0.08;
         return { x, y };
       };
-      box.style.opacity = wide ? "0.92" : "0.22";
+      box.style.opacity = String(lerp(wide ? 0.92 : 0.22, 1, dockE));
       box.style.width = `${fw}px`;
       box.style.height = `${fh}px`;
 
@@ -188,11 +205,9 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
 
       const sa = seat(i);
       const sb = seat(j);
-      box.style.transform = `translate3d(${lerp(sa.x, sb.x, f)}px, ${lerp(
-        sa.y,
-        sb.y,
-        f,
-      )}px, 0)`;
+      const bx = lerp(sa.x, sb.x, f);
+      const by = lerp(sa.y, sb.y, f);
+      box.style.transform = `translate3d(${bx}px, ${by}px, 0)`;
 
       const A = fit(CLUSTERS[0], fw, fh);
       const B = fit(CLUSTERS[1], fw, fh);
@@ -200,14 +215,31 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
         if (!el) return;
         const a = A[id];
         const b = B[id];
-        const w = lerp(a.w, b.w, mix);
+        let w = lerp(a.w, b.w, mix);
+        let x = lerp(a.x, b.x, mix);
+        let y = lerp(a.y, b.y, mix);
+        let rot = lerp(a.rot, b.rot, mix);
+        if (dockE > 0 && gRect) {
+          // Tile targets live in viewport space; the forms live in the
+          // box's — bridge with the box position, so the flight is exact.
+          const ts = gRect.width / 3;
+          const tIdx = TILE_BY_ID[id];
+          const tx = gRect.left + (tIdx % 3) * ts;
+          const ty = gRect.top + Math.floor(tIdx / 3) * ts;
+          x = lerp(x, tx - bx, dockE);
+          y = lerp(y, ty - by, dockE);
+          w = lerp(w, ts, dockE);
+          rot = rot * (1 - dockE);
+        }
         el.style.width = `${w}px`;
         el.style.height = `${w}px`;
-        el.style.transform = `translate3d(${lerp(a.x, b.x, mix)}px, ${lerp(
-          a.y,
-          b.y,
-          mix,
-        )}px, 0) rotate(${lerp(a.rot, b.rot, mix)}deg)`;
+        el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rot}deg)`;
+        if (id === STAR_ID) {
+          // The star's yellow melts to the lockup's white as it lands.
+          el.style.backgroundColor = `rgb(${STAR_YELLOW.map((c) =>
+            Math.round(lerp(c, 255, dockE)),
+          ).join(",")})`;
+        }
       });
     };
 
@@ -226,13 +258,16 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
 
   return (
     <div ref={wrapRef} className="relative">
-      {/* The composition, fixed to the viewport while the sheets pass.
-          Behind the copy, above the colour. */}
-      <div
-        ref={boxRef}
-        aria-hidden="true"
-        className="pointer-events-none fixed top-0 left-0 z-[5] opacity-0"
-      >
+      {/* The composition, pinned to the viewport while the sheets pass —
+          sticky rather than fixed, because Safari mislays fixed elements
+          inside a scroll-snapping page. Behind the copy, above the colour. */}
+      <div className="sticky top-0 z-[5] h-0">
+        <div
+          ref={boxRef}
+          data-composition
+          aria-hidden="true"
+          className="pointer-events-none absolute top-0 left-0 opacity-0"
+        >
         {Array.from({ length: 9 }, (_, id) => (
           <div
             key={id}
@@ -241,7 +276,7 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
             }}
             className="absolute top-0 left-0"
             style={{
-              backgroundColor: id === STAR_ID ? STAR_YELLOW : "#FFFFFF",
+              backgroundColor: id === STAR_ID ? "rgb(243,179,60)" : "#FFFFFF",
               maskImage: `url(/brand/shapes/forms-0${id + 1}.svg)`,
               maskSize: "100% 100%",
               WebkitMaskImage: `url(/brand/shapes/forms-0${id + 1}.svg)`,
@@ -249,6 +284,7 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
             }}
           />
         ))}
+        </div>
       </div>
 
       {sheets.map((sheet) => {
