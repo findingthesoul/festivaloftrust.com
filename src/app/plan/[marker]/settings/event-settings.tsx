@@ -110,6 +110,22 @@ export function EventSettings({
           />
         </Field>
 
+        <Field
+          label="About the organisers"
+          htmlFor="organiser_note"
+          className="sm:col-span-2"
+          hint="Shown on the event page: who is behind this festival."
+        >
+          <textarea
+            id="organiser_note"
+            name="organiser_note"
+            rows={3}
+            defaultValue={festival.organiser_note ?? ""}
+            className={input}
+            placeholder="Who you are, in a few lines — the neighbours, the school, the team hosting this day."
+          />
+        </Field>
+
         {/* One day. The Thread is told the end is the start, rather than asking
             a question a Festival of Trust never has two answers to. */}
         <Field label="Date" htmlFor="starts_on">

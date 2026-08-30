@@ -169,6 +169,7 @@ export async function saveSettings(
     capacity,
     is_public_listed: on("is_public_listed"),
     show_public_agenda: on("show_public_agenda"),
+    organiser_note: text("organiser_note"),
     thread_template_id: templateId,
   });
 

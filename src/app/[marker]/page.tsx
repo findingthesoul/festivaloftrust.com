@@ -118,6 +118,16 @@ export default async function Page({
           </p>
         )}
 
+        {/* Every festival page says what a Festival of Trust is — the page
+            must stand even before its organisers have written a word. */}
+        <p className="text-ink/70 mt-6 max-w-2xl leading-relaxed text-pretty">
+          A Festival of Trust is a one-day gathering that helps a community
+          notice the trust it already holds and grow it — organised by the
+          community itself, not delivered from outside. Where trust exists,
+          it deserves celebration; where it is missing, it gets built. Not
+          from above — from where each of us stands.
+        </p>
+
         {/* The day, when the organiser has chosen to show it. An empty agenda
             with the switch on shows nothing rather than an empty heading. */}
         {agenda.length > 0 && (
@@ -137,6 +147,18 @@ export default async function Page({
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Who invites you, in their own words — written in settings. */}
+        {festival.organiser_note && (
+          <div className="border-ink/15 mt-14 border-t pt-8">
+            <h2 className="text-2xl font-bold tracking-[-0.01em] sm:text-3xl">
+              The organisers
+            </h2>
+            <p className="mt-4 max-w-2xl leading-relaxed text-pretty">
+              {festival.organiser_note}
+            </p>
           </div>
         )}
 
