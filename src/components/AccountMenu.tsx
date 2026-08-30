@@ -6,7 +6,14 @@ import { useRouter } from "next/navigation";
 import { browserSupabase } from "@/lib/supabase/client";
 
 /** The account control, top right. Who you are, and the way out. */
-export function AccountMenu({ email }: { email: string }) {
+export function AccountMenu({
+  email,
+  reviewCount = null,
+}: {
+  email: string;
+  /** Pending requests, for the admin; null hides the item. */
+  reviewCount?: number | null;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -64,6 +71,21 @@ export function AccountMenu({ email }: { email: string }) {
             >
               Your festivals
             </Link>
+            {reviewCount !== null && (
+              <Link
+                href="/admin"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="hover:bg-ink/5 flex items-center justify-between rounded-lg px-2.5 py-2"
+              >
+                Review
+                {reviewCount > 0 && (
+                  <span className="bg-green text-cream rounded-full px-2 py-0.5 text-xs font-bold">
+                    {reviewCount}
+                  </span>
+                )}
+              </Link>
+            )}
             <div className="bg-ink/10 my-1.5 h-px" />
             <button
               type="button"

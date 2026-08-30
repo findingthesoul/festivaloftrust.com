@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { saveSettings } from "./actions";
 import { ActionBar, Field, Toggle, input, primary, quiet } from "@/components/ui";
 import { MarkerField } from "./marker-field";
+import { MarkupArea } from "./markup-area";
 import type { Festival } from "@/lib/festivals";
 import type { FibreThreadTemplate } from "@/lib/fibre";
 
@@ -61,7 +62,18 @@ export function EventSettings({
       }}
       action={(formData) =>
         start(async () => {
-          const result = await saveSettings(festival.marker, formData);
+          // A settings tab can outlive several deploys; its stale action
+          // reference then throws instead of returning, and the save died
+          // silently. Caught, so the page says what to do.
+          let result: { error?: string };
+          try {
+            result = await saveSettings(festival.marker, formData);
+          } catch {
+            result = {
+              error:
+                "This page is older than the site — reload the page and save again.",
+            };
+          }
           setError(result.error ?? null);
           if (!result.error) {
             setDirty(false);
@@ -105,12 +117,10 @@ export function EventSettings({
           className="sm:col-span-2"
           hint="Formatting works: **bold**, *italic*, [link](https://…), ## heading, - list."
         >
-          <textarea
+          <MarkupArea
             id="summary"
             name="summary"
-            rows={4}
             defaultValue={festival.summary ?? ""}
-            className={input}
             placeholder="What this festival is, in a few lines."
           />
         </Field>
@@ -121,12 +131,10 @@ export function EventSettings({
           className="sm:col-span-2"
           hint="Shown on the event page: who is behind this festival. Same formatting as the description."
         >
-          <textarea
+          <MarkupArea
             id="organiser_note"
             name="organiser_note"
-            rows={3}
             defaultValue={festival.organiser_note ?? ""}
-            className={input}
             placeholder="Who you are, in a few lines — the neighbours, the school, the team hosting this day."
           />
         </Field>
@@ -137,12 +145,10 @@ export function EventSettings({
           className="sm:col-span-2"
           hint="Address, times, what to bring — its own card on the event page. Same formatting as the description."
         >
-          <textarea
+          <MarkupArea
             id="practical_info"
             name="practical_info"
-            rows={3}
             defaultValue={festival.practical_info ?? ""}
-            className={input}
             placeholder="Where to be, from when, and anything to bring."
           />
         </Field>

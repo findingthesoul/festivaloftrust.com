@@ -16,7 +16,13 @@ import { NAV, OVERLAY_PATHS, PLAIN_PATHS } from "./nav-links";
  * Signed in, the JOIN or SIGN IN pill gives way to the account control —
  * same bar, one seat changes.
  */
-export function PublicNav({ email }: { email?: string | null }) {
+export function PublicNav({
+  email,
+  reviewCount = null,
+}: {
+  email?: string | null;
+  reviewCount?: number | null;
+}) {
   const pathname = usePathname();
   const overlay = OVERLAY_PATHS.includes(pathname);
   const event =
@@ -67,7 +73,7 @@ export function PublicNav({ email }: { email?: string | null }) {
       </ul>
       {email ? (
         <span className="ml-5">
-          <AccountMenu email={email} />
+          <AccountMenu email={email} reviewCount={reviewCount} />
         </span>
       ) : (
         <span
@@ -109,7 +115,7 @@ export function PublicNav({ email }: { email?: string | null }) {
         {email && !peek && (
           <nav aria-label="Account" className="absolute inset-x-0 top-0 z-40">
             <div className="flex justify-end px-6 py-4 sm:px-10">
-              <AccountMenu email={email} />
+              <AccountMenu email={email} reviewCount={reviewCount} />
             </div>
           </nav>
         )}
@@ -192,7 +198,7 @@ export function PublicNav({ email }: { email?: string | null }) {
             Festival of Trust
           </Link>
           <div className="flex items-center gap-2">
-            {email && <AccountMenu email={email} />}
+            {email && <AccountMenu email={email} reviewCount={reviewCount} />}
             {burger}
           </div>
         </div>
@@ -223,7 +229,7 @@ export function PublicNav({ email }: { email?: string | null }) {
           </ul>
           {email ? (
             <span className="ml-5">
-              <AccountMenu email={email} />
+              <AccountMenu email={email} reviewCount={reviewCount} />
             </span>
           ) : (
             <span className="border-ink/15 text-indigo ml-5 rounded-sm border bg-white px-3 py-1.5 font-medium">
@@ -252,7 +258,7 @@ export function PublicNav({ email }: { email?: string | null }) {
         data-nav-bar
         className="flex h-14 items-center justify-end gap-2 px-4 sm:hidden"
       >
-        {email && <AccountMenu email={email} />}
+        {email && <AccountMenu email={email} reviewCount={reviewCount} />}
         {burger}
       </div>
       {panel}

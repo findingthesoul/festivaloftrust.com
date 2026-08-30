@@ -1,4 +1,4 @@
-import { currentUser } from "@/lib/supabase/server";
+import { currentUser, serverSupabase } from "@/lib/supabase/server";
 import { PublicNav } from "./PublicNav";
 
 /**
@@ -8,5 +8,32 @@ import { PublicNav } from "./PublicNav";
  */
 export async function SiteNav() {
   const user = await currentUser();
-  return <PublicNav email={user?.email ?? null} />;
+
+  // The admin's inbox, counted for the badge: organisers waiting for
+  // approval plus festivals submitted for review. Nobody else pays the
+  // queries, and nobody else sees the item.
+  let reviewCount: number | null = null;
+  if (user) {
+    const supabase = await serverSupabase();
+    const { data: me } = await supabase
+      .from("organiser")
+      .select("is_admin")
+      .eq("id", user.id)
+      .maybeSingle();
+    if ((me as { is_admin: boolean } | null)?.is_admin) {
+      const [organisers, festivals] = await Promise.all([
+        supabase
+          .from("organiser")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "pending"),
+        supabase
+          .from("festival")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "submitted"),
+      ]);
+      reviewCount = (organisers.count ?? 0) + (festivals.count ?? 0);
+    }
+  }
+
+  return <PublicNav email={user?.email ?? null} reviewCount={reviewCount} />;
 }

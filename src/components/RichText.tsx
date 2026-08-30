@@ -55,7 +55,7 @@ export function RichText({ text }: { text: string }) {
             </ul>
           );
         }
-        const heading = lines.length === 1 && /^#{1,3} /.exec(lines[0].trim());
+        const heading = lines.length === 1 && /^#{1,3} ?/.exec(lines[0].trim());
         if (heading) {
           return (
             <h3 key={i} className="text-xl font-bold tracking-[-0.01em]">
