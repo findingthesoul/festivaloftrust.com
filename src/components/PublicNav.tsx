@@ -25,6 +25,9 @@ export function PublicNav({ email }: { email?: string | null }) {
     !PLAIN_PATHS.includes(pathname);
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  // The event pages keep their top clean; hovering the top edge slides the
+  // bar down for a look, and leaving it slides it away.
+  const [peek, setPeek] = useState(false);
   // Where you are: the current page's item is underlined, everywhere the
   // menu appears.
   const here = (href: string) =>
@@ -40,14 +43,77 @@ export function PublicNav({ email }: { email?: string | null }) {
 
   const close = () => setOpen(false);
 
-  if (event) {
-    if (!email) return null;
-    return (
-      <nav aria-label="Main" className="absolute inset-x-0 top-0 z-40">
-        <div className="flex justify-end px-6 py-4 sm:px-10">
+  const desktopRow = (dark: boolean) => (
+    <div
+      data-nav-bar
+      className="mx-auto hidden min-h-16 max-w-7xl flex-wrap items-center justify-end gap-y-1 px-6 py-2 text-sm sm:flex sm:px-10"
+    >
+      <ul className="flex flex-wrap items-center justify-end">
+        {NAV.map((item, i) => (
+          <li key={item.href} className="flex items-center">
+            {i > 0 && (
+              <span aria-hidden="true" className="text-cream/50 px-2">
+                |
+              </span>
+            )}
+            <Link
+              href={item.href}
+              className={`transition-opacity hover:opacity-70 ${here(item.href)}`}
+            >
+              {item.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {email ? (
+        <span className="ml-5">
           <AccountMenu email={email} />
-        </div>
-      </nav>
+        </span>
+      ) : (
+        <span
+          className={`ml-5 rounded-sm bg-white px-3 py-1.5 font-medium ${
+            dark ? "text-yellow" : "text-indigo"
+          }`}
+        >
+          <Link href="/join" className="hover:opacity-70">
+            JOIN
+          </Link>{" "}
+          <span className="font-normal lowercase">or</span>{" "}
+          <Link href="/sign-in" className="hover:opacity-70">
+            SIGN IN
+          </Link>
+        </span>
+      )}
+    </div>
+  );
+
+  if (event) {
+    return (
+      <>
+        {/* The hover sensor along the top edge; on touch there is no hover,
+            and the footer carries the menu there. */}
+        <div
+          aria-hidden="true"
+          onMouseEnter={() => setPeek(true)}
+          className="fixed inset-x-0 top-0 z-40 hidden h-6 sm:block"
+        />
+        <nav
+          aria-label="Main"
+          onMouseLeave={() => setPeek(false)}
+          className={`text-cream bg-ink/60 fixed inset-x-0 top-0 z-50 hidden backdrop-blur-md transition-transform duration-300 sm:block ${
+            peek ? "translate-y-0" : "-translate-y-full"
+          }`}
+        >
+          {desktopRow(true)}
+        </nav>
+        {email && !peek && (
+          <nav aria-label="Account" className="absolute inset-x-0 top-0 z-40">
+            <div className="flex justify-end px-6 py-4 sm:px-10">
+              <AccountMenu email={email} />
+            </div>
+          </nav>
+        )}
+      </>
     );
   }
 
@@ -190,47 +256,7 @@ export function PublicNav({ email }: { email?: string | null }) {
         {burger}
       </div>
       {panel}
-      <div
-        data-nav-bar
-        className="mx-auto hidden min-h-16 max-w-7xl flex-wrap items-center justify-end gap-y-1 px-6 py-2 text-sm sm:flex sm:px-10"
-      >
-        <ul className="flex flex-wrap items-center justify-end">
-          {NAV.map((item, i) => (
-            <li key={item.href} className="flex items-center">
-              {i > 0 && (
-                <span aria-hidden="true" className="text-cream/50 px-2">
-                  |
-                </span>
-              )}
-              <Link
-                href={item.href}
-                className={`transition-opacity hover:opacity-70 ${here(item.href)}`}
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-        {email ? (
-          <span className="ml-5">
-            <AccountMenu email={email} />
-          </span>
-        ) : (
-          <span
-            className={`ml-5 rounded-sm bg-white px-3 py-1.5 font-medium ${
-              scrolled ? "text-yellow" : "text-indigo"
-            }`}
-          >
-            <Link href="/join" className="hover:opacity-70">
-              JOIN
-            </Link>{" "}
-            <span className="font-normal lowercase">or</span>{" "}
-            <Link href="/sign-in" className="hover:opacity-70">
-              SIGN IN
-            </Link>
-          </span>
-        )}
-      </div>
+      {desktopRow(scrolled)}
     </nav>
   );
 }
