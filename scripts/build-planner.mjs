@@ -143,7 +143,8 @@ patch(
       '<input style="width:64px" data-i="' + i + '" data-k="code" maxlength="3" placeholder="EUR" value="' + (c.code || "") + '">' +
       '<input style="width:52px" data-i="' + i + '" data-k="symbol" placeholder="\\u20AC" value="' + (c.symbol || "") + '">' +
       '<input style="flex:1" data-i="' + i + '" data-k="label" placeholder="Euro" value="' + (c.label || "") + '">' +
-      '<input style="width:88px" data-i="' + i + '" data-k="ratio" type="number" step="0.05" min="0.05" value="' + (c.ratio || 1) + '">' +
+      '<input style="width:80px" title="Exchange rate" data-i="' + i + '" data-k="rate" type="number" step="0.01" min="0.01" value="' + (c.rate || 1) + '">' +
+      '<input style="width:80px" title="Price level" data-i="' + i + '" data-k="ratio" type="number" step="0.05" min="0.05" value="' + (c.ratio || 1) + '">' +
       '<button type="button" data-del="' + i + '">\\u00d7</button></div>').join("");
   }
   $("fundRows") || null;
@@ -163,7 +164,7 @@ patch(
     }
   });
   function setFundamentals(list, canEdit) {
-    FUND = (Array.isArray(list) ? list : []).map(c => ({ code: c.code, symbol: c.symbol, label: c.label, ratio: Number(c.ratio) || 1 }));
+    FUND = (Array.isArray(list) ? list : []).map(c => ({ code: c.code, symbol: c.symbol, label: c.label, rate: Number(c.rate) || 1, ratio: Number(c.ratio) || 1 }));
     $("tabFund").style.display = canEdit ? "" : "none";
     drawFund();
   }
@@ -177,6 +178,89 @@ patch(
   };
 
   function snapshot() {`,
+);
+
+
+// 9. The training and kit prices become settable — they were literals.
+patch(
+  "base price variables",
+  `  const TRAIN_HOURS = 16, TRAIN_PP = 250;`,
+  `  const TRAIN_HOURS = 16; let TRAIN_PP = 250;
+  let KIT_PP_SOCIAL = 25, KIT_PP_COMMERCIAL = 50, KIT_MIN_SOCIAL = 1000, KIT_MIN_COMMERCIAL = 2500;`,
+);
+
+// 10. The calculation reads them instead of its literals.
+patch(
+  "base price calculation",
+  `    const kitPP  = mode === "social" ? 25 : 50;
+    const kitMin = mode === "social" ? 1000 : 2500;`,
+  `    const kitPP  = mode === "social" ? KIT_PP_SOCIAL : KIT_PP_COMMERCIAL;
+    const kitMin = mode === "social" ? KIT_MIN_SOCIAL : KIT_MIN_COMMERCIAL;`,
+);
+
+// 11. The host page hands the base prices in, already knowing the
+//     festival's currency ratio — these are not snapshot fields, so the
+//     ratio applies on every load.
+patch(
+  "setBasePrices",
+  `  function setFundamentals(`,
+  `  function setBasePrices(p, ratio) {
+    const r = ratio || 1;
+    if (p) {
+      if (p.train_pp > 0) TRAIN_PP = p.train_pp * r;
+      if (p.kit_pp_social > 0) KIT_PP_SOCIAL = p.kit_pp_social * r;
+      if (p.kit_pp_commercial > 0) KIT_PP_COMMERCIAL = p.kit_pp_commercial * r;
+      if (p.kit_min_social > 0) KIT_MIN_SOCIAL = p.kit_min_social * r;
+      if (p.kit_min_commercial > 0) KIT_MIN_COMMERCIAL = p.kit_min_commercial * r;
+    }
+    calc();
+  }
+  function setFundamentals(`,
+);
+
+// 12. The fundamentals panel grows the price fields under the currencies.
+patch(
+  "fundamentals price fields",
+  `    '<div id="fundRows"></div>' +`,
+  `    '<div id="fundRows"></div>' +
+    '<h2 style="margin-top:18px">Base prices</h2>' +
+    '<p class="hint">In the base currency. Other currencies get these times their ratio.</p>' +
+    '<div style="display:grid;grid-template-columns:1fr 110px;gap:6px;max-width:420px;align-items:center">' +
+    '<label for="fpTrain">Trust training, per person</label><input id="fpTrain" data-price="train_pp" type="number" min="1">' +
+    '<label for="fpKitS">Kit per person, social</label><input id="fpKitS" data-price="kit_pp_social" type="number" min="1">' +
+    '<label for="fpKitC">Kit per person, commercial</label><input id="fpKitC" data-price="kit_pp_commercial" type="number" min="1">' +
+    '<label for="fpKitMinS">Kit minimum, social</label><input id="fpKitMinS" data-price="kit_min_social" type="number" min="1">' +
+    '<label for="fpKitMinC">Kit minimum, commercial</label><input id="fpKitMinC" data-price="kit_min_commercial" type="number" min="1">' +
+    '</div>' +`,
+);
+
+// 13. Fill the price fields with setFundamentals, and carry them out with
+//     the save — the payload becomes { currencies, prices }.
+patch(
+  "fundamentals payload",
+  `  function setFundamentals(list, canEdit) {
+    FUND = (Array.isArray(list) ? list : []).map(c => ({ code: c.code, symbol: c.symbol, label: c.label, rate: Number(c.rate) || 1, ratio: Number(c.ratio) || 1 }));
+    $("tabFund").style.display = canEdit ? "" : "none";
+    drawFund();
+  }`,
+  `  function setFundamentals(fund, canEdit) {
+    const list = fund && Array.isArray(fund.currencies) ? fund.currencies : [];
+    FUND = list.map(c => ({ code: c.code, symbol: c.symbol, label: c.label, rate: Number(c.rate) || 1, ratio: Number(c.ratio) || 1 }));
+    const prices = (fund && fund.prices) || {};
+    fundPanel.querySelectorAll("[data-price]").forEach(el => {
+      const v = Number(prices[el.dataset.price]);
+      if (Number.isFinite(v) && v > 0) el.value = String(v);
+    });
+    $("tabFund").style.display = canEdit ? "" : "none";
+    drawFund();
+  }`,
+);
+patch(
+  "fundamentals save payload",
+  `      Promise.resolve(window.onFundamentalsSave(FUND)).then(r => {`,
+  `      const prices = {};
+      fundPanel.querySelectorAll("[data-price]").forEach(el => { prices[el.dataset.price] = Number(el.value); });
+      Promise.resolve(window.onFundamentalsSave({ currencies: FUND, prices })).then(r => {`,
 );
 
 

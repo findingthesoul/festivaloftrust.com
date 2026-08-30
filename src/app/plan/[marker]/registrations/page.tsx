@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { festivalFor } from "../guard";
 import { FestivalHeader } from "../festival-header";
-import { registrationFor, registrations } from "@/lib/festivals";
+import { attendeesFor, registrationFor, registrations } from "@/lib/festivals";
+import { RegistrationList } from "./registration-list";
 import { card } from "@/components/ui";
 import { OpenToggle } from "./open-toggle";
 
@@ -17,15 +18,18 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
   // the registration answers stay behind the data wall, by its choice.
   const people = await registrations(festival);
   const registration = await registrationFor(festival);
+  const attendees = await attendeesFor(festival.id);
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
-      <FestivalHeader festival={festival} access={access} active="registrations" />
+      <div className="print:hidden">
+        <FestivalHeader festival={festival} access={access} active="registrations" />
+      </div>
 
       {/* The doors, where the guest list is watched. Only once there is a
           public page — enrolment cannot open onto nothing. */}
       {festival.thread_id && registration && (
-        <section className={`${card} mt-8 p-5 sm:p-6`}>
+        <section className={`${card} mt-8 p-5 print:hidden sm:p-6`}>
           <OpenToggle marker={festival.marker} open={registration.open} />
         </section>
       )}
@@ -36,24 +40,16 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
             Nobody can register yet. This festival has no public page — that
             happens when it is published.
           </p>
-        ) : people.length === 0 ? (
+        ) : attendees.length === 0 && people.length === 0 ? (
           <p className="text-ink/70 max-w-xl leading-relaxed text-pretty">
             No registrations yet. They will appear here as they come in.
           </p>
         ) : (
-          <>
-            <p className="text-ink/60 text-sm">
-              {people.length} {people.length === 1 ? "person" : "people"}
-            </p>
-            <ul className="divide-ink/10 border-ink/10 mt-4 divide-y border-y">
-              {people.map((r) => (
-                <li key={r.id} className="flex items-center justify-between gap-6 py-4">
-                  <span className="font-mono text-sm">{r.person_id}</span>
-                  <span className="text-ink/60 text-sm">{r.payment_status}</span>
-                </li>
-              ))}
-            </ul>
-          </>
+          <RegistrationList
+            attendees={attendees}
+            festivalName={festival.name}
+            platformCount={people.length}
+          />
         )}
       </div>
     </main>

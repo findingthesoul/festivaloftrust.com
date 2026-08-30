@@ -77,6 +77,17 @@ export function RegisterForm({
         className="border-ink/20 focus:border-ink mt-1.5 w-full rounded-lg border bg-white px-3.5 py-2.5 outline-none"
       />
 
+      <label htmlFor="reg-phone" className="text-ink/80 mt-4 block text-sm font-medium">
+        Phone <span className="text-ink/50 font-normal">(optional)</span>
+      </label>
+      <input
+        id="reg-phone"
+        name="phone"
+        type="tel"
+        autoComplete="tel"
+        className="border-ink/20 focus:border-ink mt-1.5 w-full rounded-lg border bg-white px-3.5 py-2.5 outline-none"
+      />
+
       <label className="mt-4 flex items-start gap-2.5 text-sm">
         <input type="checkbox" name="policy" required className="mt-0.5" />
         <span>

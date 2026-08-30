@@ -41,6 +41,7 @@ export async function register(
   const r = await registerAttendee(festival, {
     name,
     email,
+    phone: String(formData.get("phone") ?? "").trim() || null,
     requestId: requestId.length >= 8 ? requestId : crypto.randomUUID(),
   });
   if (r.error) return { status: "error", message: r.error };

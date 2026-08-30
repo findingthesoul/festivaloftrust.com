@@ -91,7 +91,7 @@ export default async function Page({
           className="from-ink/50 pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t to-transparent"
         />
 
-        <h1 className="text-cream absolute top-24 left-1/2 z-10 w-[80%] -translate-x-1/2 text-center text-[clamp(2.2rem,6.5vw,4.5rem)] uppercase leading-[1.05] font-bold tracking-[-0.02em] text-balance">
+        <h1 className="text-cream absolute top-24 left-1/2 z-10 w-[94%] -translate-x-1/2 text-center text-[clamp(2.2rem,6.5vw,4.5rem)] uppercase leading-[1.05] font-bold tracking-[-0.02em] text-balance">
           {festival.name}
         </h1>
 

@@ -55,8 +55,24 @@ export type CalcCurrency = {
   code: string;
   label: string;
   symbol: string;
+  /** Exchange rate against the base: how many of this one base unit buys. */
+  rate: number;
+  /** Price level for the income group: 0.5 is half price locally. */
   ratio: number;
 };
+
+export type CalcPrices = Record<string, number>;
+
+// What the fundamentals mean when the table is empty: the tool's own
+// original literals.
+const DEFAULT_PRICES: CalcPrices = {
+  train_pp: 250,
+  kit_pp_social: 25,
+  kit_pp_commercial: 50,
+  kit_min_social: 1000,
+  kit_min_commercial: 2500,
+};
+const PRICE_KEYS = Object.keys(DEFAULT_PRICES);
 
 /**
  * Everything the calculator page needs to speak currency: the workspace's
@@ -67,6 +83,7 @@ export async function loadCurrencyContext(marker: string): Promise<{
   currencies: CalcCurrency[];
   current: string;
   isAdmin: boolean;
+  prices: CalcPrices;
 } | null> {
   const festival = await moneyAccessTo(marker);
   if (!festival) return null;
@@ -74,7 +91,7 @@ export async function loadCurrencyContext(marker: string): Promise<{
   const supabase = await serverSupabase();
   const { data: rows } = await supabase
     .from("calculator_currency")
-    .select("code, label, symbol, ratio")
+    .select("code, label, symbol, ratio, rate")
     .order("code");
   const { data: calc } = await supabase
     .from("festival_calculator")
@@ -90,13 +107,23 @@ export async function loadCurrencyContext(marker: string): Promise<{
         .maybeSingle()
     : { data: null };
 
+  const { data: priceRows } = await supabase
+    .from("calculator_price")
+    .select("key, value");
+  const prices: CalcPrices = { ...DEFAULT_PRICES };
+  for (const row of (priceRows ?? []) as { key: string; value: number }[]) {
+    if (PRICE_KEYS.includes(row.key)) prices[row.key] = Number(row.value);
+  }
+
   return {
     currencies: ((rows ?? []) as CalcCurrency[]).map((c) => ({
       ...c,
       ratio: Number(c.ratio),
+      rate: Number(c.rate ?? 1),
     })),
     current: (calc as { currency: string } | null)?.currency ?? "EUR",
     isAdmin: !!(me as { is_admin: boolean } | null)?.is_admin,
+    prices,
   };
 }
 
@@ -119,9 +146,11 @@ export async function setFestivalCurrency(
  * The admin's fundamentals: replace the currency list wholesale. RLS backs
  * this, but the action checks too — it is a public endpoint.
  */
-export async function saveFundamentals(
-  list: CalcCurrency[],
-): Promise<{ error?: string }> {
+export async function saveFundamentals(payload: {
+  currencies: CalcCurrency[];
+  prices: CalcPrices;
+}): Promise<{ error?: string }> {
+  const list = payload?.currencies;
   const supabase = await serverSupabase();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { error: "not signed in" };
@@ -140,10 +169,15 @@ export async function saveFundamentals(
       label: String(c.label ?? "").trim(),
       symbol: String(c.symbol ?? "").trim(),
       ratio: Number(c.ratio),
+      rate: Number(c.rate),
     }))
     .filter(
       (c) =>
-        /^[A-Z]{3}$/.test(c.code) && c.label && c.symbol && c.ratio > 0,
+        /^[A-Z]{3}$/.test(c.code) &&
+        c.label &&
+        c.symbol &&
+        c.ratio > 0 &&
+        c.rate > 0,
     );
   if (clean.length === 0) return { error: "the list needs at least one currency" };
   if (!clean.some((c) => c.code === "EUR")) {
@@ -160,5 +194,17 @@ export async function saveFundamentals(
     .from("calculator_currency")
     .delete()
     .not("code", "in", `(${keep.join(",")})`);
-  return delError ? { error: delError.message } : {};
+  if (delError) return { error: delError.message };
+
+  const priceRows = PRICE_KEYS.map((key) => ({
+    key,
+    value: Number(payload?.prices?.[key]),
+  })).filter((r) => r.value > 0);
+  if (priceRows.length) {
+    const { error: priceError } = await supabase
+      .from("calculator_price")
+      .upsert(priceRows, { onConflict: "key" });
+    if (priceError) return { error: priceError.message };
+  }
+  return {};
 }

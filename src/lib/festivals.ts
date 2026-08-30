@@ -718,6 +718,62 @@ export async function publicFestival(
 }
 
 /**
+ * The festival's own guest book, written with the service role at the moment
+ * of registration — the visitor has no session, and the table has no public
+ * insert door on purpose. A failure here is logged, never surfaced: the
+ * registration itself already landed on the platform.
+ */
+async function recordAttendee(
+  festival: Festival,
+  input: { name: string; email: string; phone?: string | null; requestId: string },
+) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    console.error("[festivals] attendee book skipped — service credentials missing");
+    return;
+  }
+  const { createClient } = await import("@supabase/supabase-js");
+  const admin = createClient(url, key, { auth: { persistSession: false } });
+  const { error } = await admin.from("festival_attendee").insert({
+    festival_id: festival.id,
+    name: input.name,
+    email: input.email,
+    phone: input.phone ?? null,
+    request_id: input.requestId,
+  });
+  // 23505 is the request_id unique index: the same registration retried.
+  if (error && error.code !== "23505") {
+    console.error("[festivals] attendee book write failed", error.message);
+  }
+}
+
+/**
+ * The team's view of the book. RLS opens it to the festival's own people.
+ */
+export type Attendee = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  created_at: string;
+};
+
+export async function attendeesFor(festivalId: string): Promise<Attendee[]> {
+  const supabase = await serverSupabase();
+  const { data, error } = await supabase
+    .from("festival_attendee")
+    .select("id, name, email, phone, created_at")
+    .eq("festival_id", festivalId)
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("[festivals] could not read the attendee book", error.message);
+    return [];
+  }
+  return (data ?? []) as Attendee[];
+}
+
+/**
  * Whether the doors are open.
  *
  * Asked of the platform at view time rather than stored, because the answer
@@ -750,7 +806,7 @@ export async function registrationFor(
  */
 export async function registerAttendee(
   festival: Festival,
-  input: { name: string; email: string; requestId: string },
+  input: { name: string; email: string; phone?: string | null; requestId: string },
 ): Promise<{ error?: string }> {
   if (!festival.thread_id || !process.env.FIBRE_APP_KEY) {
     return { error: "Registration is not open yet." };
@@ -771,6 +827,7 @@ export async function registerAttendee(
       policy_version: "festivaloftrust.com/privacy 2026-08-29",
       request_id: input.requestId,
     });
+    await recordAttendee(festival, input);
     return {};
   } catch (e) {
     const detail = e instanceof FibreError ? e.detail : String(e);

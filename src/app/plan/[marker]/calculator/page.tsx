@@ -33,6 +33,7 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
         currencies={money?.currencies ?? []}
         current={money?.current ?? "EUR"}
         isAdmin={money?.isAdmin ?? false}
+        prices={money?.prices ?? {}}
       />
     </main>
   );

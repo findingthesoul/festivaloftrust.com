@@ -7,6 +7,7 @@ import {
   saveFundamentals,
   setFestivalCurrency,
   type CalcCurrency,
+  type CalcPrices,
 } from "./actions";
 
 type Saved = "idle" | "saving" | "saved" | "error";
@@ -29,6 +30,8 @@ export function CalculatorFrame({
   currencies,
   current,
   isAdmin,
+  prices,
+  tall,
 }: {
   marker: string;
   /** Field id to value, for what the festival already knows. */
@@ -39,10 +42,17 @@ export function CalculatorFrame({
   current: string;
   /** Whether the fundamentals tab is this viewer's to edit. */
   isAdmin: boolean;
+  /** The workspace's base prices, in the base currency. */
+  prices: CalcPrices;
+  /** Fill the viewport, for the full-screen page. */
+  tall?: boolean;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [state, setState] = useState<Saved>("idle");
+  // The chosen currency lives in state: after a change the reloaded tool
+  // must speak the new one, not the code the page was served with.
+  const [cur, setCur] = useState(current);
   const [note, setNote] = useState<string | null>(null);
 
   const save = useCallback(async () => {
@@ -115,20 +125,33 @@ export function CalculatorFrame({
     // Currency: the symbol always; the ratio scales the default prices only
     // when the festival has no saved figures yet — saved figures are already
     // in the festival's own currency and must not be touched.
-    const chosen = currencies.find((c) => c.code === current);
+    const chosen = currencies.find((c) => c.code === cur);
     const tool = win as Window & {
       setCurrency?: (symbol: string, ratio: number, scale: boolean) => void;
-      setFundamentals?: (list: CalcCurrency[], canEdit: boolean) => void;
+      setFundamentals?: (
+        fund: { currencies: CalcCurrency[]; prices: CalcPrices },
+        canEdit: boolean,
+      ) => void;
     };
+    const multiplier = chosen ? chosen.rate * chosen.ratio : 1;
     if (chosen && typeof tool.setCurrency === "function") {
-      tool.setCurrency(chosen.symbol, chosen.ratio, !saved);
+      tool.setCurrency(chosen.symbol, multiplier, !saved);
+    }
+    const withPrices = win as typeof tool & {
+      setBasePrices?: (p: CalcPrices, m: number) => void;
+    };
+    if (typeof withPrices.setBasePrices === "function") {
+      withPrices.setBasePrices(prices, multiplier);
     }
     // The fundamentals tab: filled for everyone, revealed only to the admin,
     // and saved through this page's own action.
     if (typeof tool.setFundamentals === "function") {
-      tool.setFundamentals(currencies, isAdmin);
-      Reflect.set(win, "onFundamentalsSave", (list: CalcCurrency[]) =>
-        saveFundamentals(list),
+      tool.setFundamentals({ currencies, prices }, isAdmin);
+      Reflect.set(
+        win,
+        "onFundamentalsSave",
+        (payload: { currencies: CalcCurrency[]; prices: CalcPrices }) =>
+          saveFundamentals(payload),
       );
     }
 
@@ -156,7 +179,7 @@ export function CalculatorFrame({
         schedule();
       });
     }
-  }, [marker, prefill, save, currencies, current, isAdmin]);
+  }, [marker, prefill, save, currencies, cur, isAdmin, prices]);
 
   useEffect(() => {
     return () => {
@@ -179,9 +202,11 @@ export function CalculatorFrame({
         <label className="text-ink/60 flex items-center gap-2 text-sm">
           Currency
           <select
-            defaultValue={current}
+            value={cur}
             onChange={async (e) => {
-              const r = await setFestivalCurrency(marker, e.target.value);
+              const code = e.target.value;
+              setCur(code);
+              const r = await setFestivalCurrency(marker, code);
               if (r.error) {
                 setNote(r.error);
                 return;
@@ -199,14 +224,14 @@ export function CalculatorFrame({
             ))}
           </select>
         </label>
-        <a
-          href="/planner"
-          target="_blank"
-          rel="noreferrer"
-          className="text-ink/60 hover:text-ink shrink-0 text-sm underline decoration-2 underline-offset-4 transition-colors"
-        >
-          Full screen ↗
-        </a>
+        {!tall && (
+          <a
+            href={`/plan/${marker}/calculator/full`}
+            className="text-ink/60 hover:text-ink shrink-0 text-sm underline decoration-2 underline-offset-4 transition-colors"
+          >
+            Full screen ↗
+          </a>
+        )}
       </div>
       {note && <p className="mt-2 text-sm text-red-700">{note}</p>}
 
@@ -215,7 +240,7 @@ export function CalculatorFrame({
         onLoad={onLoad}
         src="/planner"
         title="The business model"
-        className="border-ink/15 mt-4 h-[calc(100vh-24rem)] min-h-[40rem] w-full border bg-white"
+        className={`border-ink/15 mt-4 w-full border bg-white ${tall ? "h-[calc(100vh-11rem)]" : "h-[calc(100vh-24rem)] min-h-[40rem]"}`}
       />
     </>
   );

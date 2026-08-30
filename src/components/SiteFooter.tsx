@@ -47,7 +47,7 @@ const SOCIAL = [
  */
 export function SiteFooter() {
   return (
-    <footer className="bg-ink text-cream mt-auto w-full snap-end">
+    <footer className="bg-ink text-cream mt-auto w-full snap-end print:hidden">
       <div className="mx-auto w-full max-w-5xl px-6 py-14 sm:px-10">
         <div className="flex flex-wrap items-start justify-between gap-x-10 gap-y-10">
           <BrandLockup className="h-9 sm:h-10" />
