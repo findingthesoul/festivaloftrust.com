@@ -90,9 +90,25 @@ const CLUSTERS: { w: number; h: number; items: ClusterItem[] }[] = [
   },
 ];
 
-// The star keeps its accent in both arrangements.
+// The star keeps its accent in the cluster arrangements.
 const STAR_ID = 5;
 const STAR_YELLOW = [243, 179, 60];
+const WHITE = [255, 255, 255];
+
+// Each form's own colour from the poster artwork (festival-plan's step
+// colours, keyed here by form id) — worn on the photo, where the grid
+// stands as itself.
+const ORIGINAL_RGB: Record<number, number[]> = {
+  0: [248, 179, 167],
+  1: [51, 143, 173],
+  2: [251, 172, 24],
+  3: [110, 88, 137],
+  4: [251, 172, 24],
+  5: [7, 124, 76],
+  6: [238, 54, 79],
+  7: [248, 179, 167],
+  8: [78, 76, 155],
+};
 
 // Which tile of the footer lockup's 3x3 each form docks into — the grid's
 // own order, by form id.
@@ -187,8 +203,12 @@ export function CardSheets({
       const fh = Math.min(vh * 0.58, fw * 0.9);
       const seat = (k: number) => {
         if (hero && k === 0) {
-          // On the photo: right of the title, vertically centred.
-          return { x: wide ? vw * 0.5 : vw * 0.15, y: (vh - fh) / 2 };
+          // On the photo: the half-size grid stands just above the title,
+          // aligned to the same left edge as the hero's own text.
+          const gs = Math.min(fw, fh) * 0.45;
+          const gx = Math.max((vw - 1024) / 2, 0) + (vw >= 640 ? 40 : 24);
+          const gy = vh - 230 - gs - 24;
+          return { x: gx - (fw - gs) / 2, y: gy - (fh - gs) / 2 };
         }
         const sheet =
           sheets[Math.min(k - (hero ? 1 : 0), sheets.length - 1)];
@@ -214,7 +234,7 @@ export function CardSheets({
       const count = sheets.length + (hero ? 1 : 0);
       const t = Math.min(count - 1, Math.max(0, -rect.top / vh));
       const i = Math.floor(t);
-      const j = Math.min(i + 1, sheets.length - 1);
+      const j = Math.min(i + 1, count - 1);
       const f = ease(clamp01(t - i));
 
       const sa = seat(i);
@@ -223,24 +243,35 @@ export function CardSheets({
       const by = lerp(sa.y, sb.y, f);
       box.style.transform = `translate3d(${bx}px, ${by}px, 0)`;
 
-      const layoutFor = (k: number) => {
+      type Layout = Record<
+        number,
+        { x: number; y: number; w: number; rot: number; c: number[] }
+      >;
+      const layoutFor = (k: number): Layout => {
         if (k === 0 && hero) {
-          const gs = Math.min(fw, fh) * 0.9;
+          // Half size, in the artwork's own colours: the poster's grid.
+          const gs = Math.min(fw, fh) * 0.45;
           const tile = gs / 3;
           const ox = (fw - gs) / 2;
           const oy = (fh - gs) / 2;
-          const out: Record<number, { x: number; y: number; w: number; rot: number }> = {};
+          const out: Layout = {};
           for (const [id, tIdx] of Object.entries(TILE_BY_ID)) {
             out[+id] = {
               x: ox + (tIdx % 3) * tile,
               y: oy + Math.floor(tIdx / 3) * tile,
               w: tile,
               rot: 0,
+              c: ORIGINAL_RGB[+id],
             };
           }
           return out;
         }
-        return fit(CLUSTERS[(k - (hero ? 1 : 0)) % CLUSTERS.length], fw, fh);
+        const base = fit(CLUSTERS[(k - (hero ? 1 : 0)) % CLUSTERS.length], fw, fh);
+        const out: Layout = {};
+        for (const [id, r] of Object.entries(base)) {
+          out[+id] = { ...r, c: +id === STAR_ID ? STAR_YELLOW : WHITE };
+        }
+        return out;
       };
       const A = layoutFor(i);
       const B = layoutFor(j);
@@ -252,6 +283,7 @@ export function CardSheets({
         let x = lerp(a.x, b.x, f);
         let y = lerp(a.y, b.y, f);
         let rot = lerp(a.rot, b.rot, f);
+        let c = a.c.map((v, ci) => lerp(v, b.c[ci], f));
         if (dockE > 0 && gRect) {
           // Tile targets live in viewport space; the forms live in the
           // box's — bridge with the box position, so the flight is exact.
@@ -263,16 +295,13 @@ export function CardSheets({
           y = lerp(y, ty - by, dockE);
           w = lerp(w, ts, dockE);
           rot = rot * (1 - dockE);
+          // Every colour lands white, the lockup's own.
+          c = c.map((v) => lerp(v, 255, dockE));
         }
         el.style.width = `${w}px`;
         el.style.height = `${w}px`;
         el.style.transform = `translate3d(${x}px, ${y}px, 0) rotate(${rot}deg)`;
-        if (id === STAR_ID) {
-          // The star's yellow melts to the lockup's white as it lands.
-          el.style.backgroundColor = `rgb(${STAR_YELLOW.map((c) =>
-            Math.round(lerp(c, 255, dockE)),
-          ).join(",")})`;
-        }
+        el.style.backgroundColor = `rgb(${c.map(Math.round).join(",")})`;
       });
     };
 
@@ -308,7 +337,7 @@ export function CardSheets({
             }}
             className="absolute top-0 left-0"
             style={{
-              backgroundColor: id === STAR_ID ? "rgb(243,179,60)" : "#FFFFFF",
+              backgroundColor: `rgb(${ORIGINAL_RGB[id].join(",")})`,
               maskImage: `url(/brand/shapes/forms-0${id + 1}.svg)`,
               maskSize: "100% 100%",
               WebkitMaskImage: `url(/brand/shapes/forms-0${id + 1}.svg)`,
