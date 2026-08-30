@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
+import { Chrome } from "@/components/Chrome";
 import "./globals.css";
 
 const title = "Festival of Trust";
@@ -32,9 +33,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-scroll-behavior="smooth"
     >
       <body className="bg-background text-foreground flex min-h-full flex-col">
-        <SiteNav />
-        {children}
-        <SiteFooter />
+        <Chrome nav={<SiteNav />} footer={<SiteFooter />}>
+          {children}
+        </Chrome>
       </body>
     </html>
   );
