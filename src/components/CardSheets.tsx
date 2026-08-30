@@ -120,7 +120,14 @@ function fit(cluster: (typeof CLUSTERS)[number], fw: number, fh: number) {
   return out;
 }
 
-export function CardSheets({ sheets }: { sheets: Sheet[] }) {
+export function CardSheets({
+  hero,
+  sheets,
+}: {
+  /** The opening photo sheet; the base grid stands on it, like home. */
+  hero?: React.ReactNode;
+  sheets: Sheet[];
+}) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const formRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -143,9 +150,7 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
     if (!wrap || !box) return;
     const forms = formRefs.current;
 
-    let raf = 0;
     const frame = () => {
-      raf = 0;
       const rect = wrap.getBoundingClientRect();
       const vh = window.innerHeight;
       const vw = window.innerWidth;
@@ -181,7 +186,12 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
       const fw = wide ? vw * 0.44 : vw * 0.7;
       const fh = Math.min(vh * 0.58, fw * 0.9);
       const seat = (k: number) => {
-        const sheet = sheets[Math.min(k, sheets.length - 1)];
+        if (hero && k === 0) {
+          // On the photo: right of the title, vertically centred.
+          return { x: wide ? vw * 0.5 : vw * 0.15, y: (vh - fh) / 2 };
+        }
+        const sheet =
+          sheets[Math.min(k - (hero ? 1 : 0), sheets.length - 1)];
         const x = wide
           ? (sheet.text ?? "left") === "left"
             ? vw * 0.53
@@ -195,12 +205,14 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
       box.style.width = `${fw}px`;
       box.style.height = `${fh}px`;
 
-      // The first card holds the base grid — the nine forms in their own
-      // three-by-three, the logo at rest. From the second card on, the
-      // designer's clusters alternate. Between cards, every form travels
-      // from its seat in one arrangement to its seat in the next, while the
-      // whole frame glides to the next card's column.
-      const t = Math.min(sheets.length - 1, Math.max(0, -rect.top / vh));
+      // The photo holds the base grid — the nine forms in their own
+      // three-by-three, the logo at rest on the picture, like home. From
+      // the first coloured card on, the designer's clusters alternate.
+      // Between cards, every form travels from its seat in one arrangement
+      // to its seat in the next, while the whole frame glides to the next
+      // card's column.
+      const count = sheets.length + (hero ? 1 : 0);
+      const t = Math.min(count - 1, Math.max(0, -rect.top / vh));
       const i = Math.floor(t);
       const j = Math.min(i + 1, sheets.length - 1);
       const f = ease(clamp01(t - i));
@@ -212,7 +224,7 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
       box.style.transform = `translate3d(${bx}px, ${by}px, 0)`;
 
       const layoutFor = (k: number) => {
-        if (k === 0) {
+        if (k === 0 && hero) {
           const gs = Math.min(fw, fh) * 0.9;
           const tile = gs / 3;
           const ox = (fw - gs) / 2;
@@ -228,7 +240,7 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
           }
           return out;
         }
-        return fit(CLUSTERS[(k - 1) % CLUSTERS.length], fw, fh);
+        return fit(CLUSTERS[(k - (hero ? 1 : 0)) % CLUSTERS.length], fw, fh);
       };
       const A = layoutFor(i);
       const B = layoutFor(j);
@@ -264,16 +276,15 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
       });
     };
 
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(frame);
-    };
+    // Straight from the scroll event, no animation-frame indirection:
+    // browsers already deliver scroll at most once per frame, and a queued
+    // frame in a throttled tab would freeze the composition until it fired.
     frame();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
+    window.addEventListener("scroll", frame, { passive: true });
+    window.addEventListener("resize", frame);
     return () => {
-      window.removeEventListener("scroll", schedule);
-      window.removeEventListener("resize", schedule);
-      if (raf) cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", frame);
+      window.removeEventListener("resize", frame);
     };
   }, [sheets]);
 
@@ -307,6 +318,8 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
         ))}
         </div>
       </div>
+
+      {hero}
 
       {sheets.map((sheet) => {
         const { bg, text } = TONES[sheet.tone];

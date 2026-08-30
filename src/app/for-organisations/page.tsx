@@ -9,9 +9,9 @@ export const metadata: Metadata = { title: "For organisations" };
 export default function Page() {
   return (
     <main className="w-full flex-1">
-      <PageHero photo={photo} photoAlt="Three friends close together in golden light at a festival." title="For organisations" intro="How an organisation hosts a Festival of Trust inside its own walls, to grow trust among its own people." />
 
       <CardSheets
+        hero={<PageHero photo={photo} photoAlt="Three friends close together in golden light at a festival." title="For organisations" intro="How an organisation hosts a Festival of Trust inside its own walls, to grow trust among its own people." />}
         sheets={[
           {
             tone: "indigo",

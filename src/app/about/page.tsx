@@ -11,9 +11,9 @@ export default function Page() {
     <main className="w-full flex-1">
       {/* Placeholder photo until the page's own picture arrives — one
           import to swap. */}
-      <PageHero photo={closeUp} title="About" intro="Festival of Trust is a grassroots movement: finding trust where it already lives, and building it where it is missing." />
 
       <CardSheets
+        hero={<PageHero photo={closeUp} title="About" intro="Festival of Trust is a grassroots movement: finding trust where it already lives, and building it where it is missing." />}
         sheets={[
           {
             tone: "yellow",
