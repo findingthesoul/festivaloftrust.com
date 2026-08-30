@@ -44,6 +44,8 @@ export default async function Page() {
           {festivals.map((festival) => (
             <li key={festival.id}>
               <Link href={`/${festival.marker}`} className="group block">
+                {/* The card is the event's poster in miniature: title on the
+                    picture, place and date beneath it, nothing more. */}
                 <div className="border-ink/10 relative aspect-[3/2] w-full overflow-hidden border">
                   {festival.cover_url ? (
                     <Image
@@ -54,12 +56,19 @@ export default async function Page() {
                       className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center">
+                    <div className="bg-ink flex h-full items-center justify-center">
                       <ShapeGrid className="w-2/5" />
                     </div>
                   )}
+                  <div
+                    aria-hidden="true"
+                    className="from-ink/60 pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t to-transparent"
+                  />
+                  <h2 className="text-cream absolute inset-x-4 bottom-3 text-xl leading-tight font-bold tracking-[-0.01em] text-balance uppercase sm:text-2xl">
+                    {festival.name}
+                  </h2>
                 </div>
-                <p className="text-green mt-4 text-sm font-bold tracking-[-0.01em] uppercase">
+                <p className="text-green mt-3 text-sm font-bold tracking-[-0.01em] uppercase">
                   {festival.place ?? "Festival of Trust"}
                   {festival.starts_on && (
                     <>
@@ -69,14 +78,6 @@ export default async function Page() {
                     </>
                   )}
                 </p>
-                <h2 className="mt-1.5 text-xl font-bold tracking-[-0.01em] sm:text-2xl">
-                  {festival.name}
-                </h2>
-                {festival.summary && (
-                  <p className="mt-2 leading-relaxed text-pretty">
-                    {festival.summary}
-                  </p>
-                )}
               </Link>
             </li>
           ))}
