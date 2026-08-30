@@ -16,11 +16,15 @@ import {
   SwatchDropdown,
   type FormState,
 } from "./editor";
+import { addLogo, listLogos, removeLogo, type LogoRow } from "./actions";
 
 const BATCH = 24;
 const STORE = "fot-gen-saved";
 const STORE_COLLECTIONS = "fot-gen-collections";
 const DEFAULT_COLLECTION = "Unsorted";
+// The one collection that does not live in this browser: festival logos are
+// a shared pool in the database, claimed one-per-festival from Settings.
+const FESTIVAL_COLLECTION = "Festival logos";
 const GEN_TAB = "__gen__";
 
 type SavedForm = FormState & { id: string; version: number; collection: string };
@@ -35,6 +39,7 @@ export function Generator() {
   const [picked, setPicked] = useState<number[]>([]);
   const [saved, setSaved] = useState<SavedForm[]>([]);
   const [extraCollections, setExtraCollections] = useState<string[]>([]);
+  const [dbLogos, setDbLogos] = useState<LogoRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   // The tab bar: the generator, or one collection shown at a time.
   const [tab, setTab] = useState<string>(GEN_TAB);
@@ -63,6 +68,12 @@ export function Generator() {
       if (rawC) setExtraCollections(JSON.parse(rawC));
     } catch {}
     setLoaded(true);
+  }, []);
+
+  // The shared collection comes from the server, not localStorage.
+  const refreshLogos = () => listLogos().then((r) => setDbLogos(r.logos));
+  useEffect(() => {
+    void listLogos().then((r) => setDbLogos(r.logos));
   }, []);
   useEffect(() => {
     if (!loaded) return;
@@ -93,13 +104,32 @@ export function Generator() {
   const pickedSeeds = useMemo(() => new Set(picked), [picked]);
   const collections = useMemo(
     () => [
-      ...new Set([DEFAULT_COLLECTION, ...extraCollections, ...saved.map((s) => s.collection)]),
+      ...new Set([
+        DEFAULT_COLLECTION,
+        FESTIVAL_COLLECTION,
+        ...extraCollections,
+        ...saved.map((s) => s.collection),
+      ]),
     ],
     [saved, extraCollections],
   );
   const tabForms = useMemo(
-    () => saved.filter((f) => f.collection === tab),
-    [saved, tab],
+    () =>
+      tab === FESTIVAL_COLLECTION
+        ? dbLogos.map(
+            (l): SavedForm => ({
+              ...l.form,
+              id: l.id,
+              version: 1,
+              collection: FESTIVAL_COLLECTION,
+            }),
+          )
+        : saved.filter((f) => f.collection === tab),
+    [saved, tab, dbLogos],
+  );
+  const claimedBy = useMemo(
+    () => new Map(dbLogos.map((l) => [l.id, l.claimedBy])),
+    [dbLogos],
   );
   const onGenerator = tab === GEN_TAB;
 
@@ -145,7 +175,14 @@ export function Generator() {
     }, delay);
 
   // Every save is a new version — edits never overwrite an earlier form.
-  const saveForm = (form: FormState, into = collection) =>
+  const saveForm = (form: FormState, into = collection) => {
+    if (into === FESTIVAL_COLLECTION) {
+      void addLogo(form).then((r) => {
+        if (r.error) window.alert(r.error);
+        return refreshLogos();
+      });
+      return;
+    }
     setSaved((prev) => {
       const version =
         Math.max(0, ...prev.filter((s) => s.seed === form.seed).map((s) => s.version)) + 1;
@@ -154,6 +191,7 @@ export function Generator() {
         { ...form, version, collection: into, id: `${form.seed}-${version}-${Date.now()}` },
       ];
     });
+  };
 
   // "Shapes selected → add to collection": picked tiles become saved forms.
   const addPickedToCollection = () => {
@@ -264,7 +302,11 @@ export function Generator() {
                 tab === c ? "bg-white" : "bg-black/5 text-black/50 hover:text-black"
               }`}
             >
-              {c} ({saved.filter((f) => f.collection === c).length})
+              {c} (
+              {c === FESTIVAL_COLLECTION
+                ? dbLogos.length
+                : saved.filter((f) => f.collection === c).length}
+              )
             </button>
           ))}
           <button
@@ -425,19 +467,30 @@ export function Generator() {
                 dangerouslySetInnerHTML={{ __html: savedSvg(f) }}
               />
               <span className="absolute bottom-2 left-3 text-xs text-black/40">
-                {f.seed} · v{f.version}
+                {tab === FESTIVAL_COLLECTION && claimedBy.get(f.id)
+                  ? `chosen by ${claimedBy.get(f.id)}`
+                  : `${f.seed} · v${f.version}`}
               </span>
-              <button
-                type="button"
-                aria-label="Delete saved form"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setSaved((prev) => prev.filter((s) => s.id !== f.id));
-                }}
-                className="absolute top-2 right-2 hidden h-6 w-6 items-center justify-center rounded-full bg-black/70 text-sm text-white group-hover:flex"
-              >
-                ✕
-              </button>
+              {!(tab === FESTIVAL_COLLECTION && claimedBy.get(f.id)) && (
+                <button
+                  type="button"
+                  aria-label="Delete saved form"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (tab === FESTIVAL_COLLECTION) {
+                      void removeLogo(f.id).then((r) => {
+                        if (r.error) window.alert(r.error);
+                        return refreshLogos();
+                      });
+                    } else {
+                      setSaved((prev) => prev.filter((s) => s.id !== f.id));
+                    }
+                  }}
+                  className="absolute top-2 right-2 hidden h-6 w-6 items-center justify-center rounded-full bg-black/70 text-sm text-white group-hover:flex"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           ))}
         </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ShapeGrid } from "@/components/ShapeGrid";
+import { allLogos, fallbackLogoSvg, logoSvg } from "@/lib/logos";
 import { upcomingFestivals } from "@/lib/festivals";
 
 export const metadata: Metadata = { title: "Upcoming" };
@@ -17,6 +17,11 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
 
 export default async function Page() {
   const festivals = await upcomingFestivals();
+  // Posters without a photo wear the festival's own composition instead.
+  const logos = await allLogos().catch(() => []);
+  const logoOf = new Map(
+    logos.filter((l) => l.claimed_by).map((l) => [l.claimed_by, l.form]),
+  );
 
   return (
     <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-16 sm:px-10 sm:py-24">
@@ -56,8 +61,18 @@ export default async function Page() {
                       className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                     />
                   ) : (
-                    <div className="bg-ink flex h-full items-center justify-center">
-                      <ShapeGrid className="w-2/5" />
+                    <div className="bg-cream flex h-full items-center justify-center p-8">
+                      <div
+                        className="h-full w-full [&_svg]:h-full [&_svg]:w-full"
+                        dangerouslySetInnerHTML={{
+                          __html: (() => {
+                            const form = logoOf.get(festival.id);
+                            return form
+                              ? logoSvg(form, `up${festival.id.slice(0, 8)}`)
+                              : fallbackLogoSvg(festival.marker);
+                          })(),
+                        }}
+                      />
                     </div>
                   )}
                   <div

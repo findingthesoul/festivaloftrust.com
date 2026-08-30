@@ -11,6 +11,8 @@ import { EventSettings } from "./event-settings";
 import { card } from "@/components/ui";
 import { CoverUpload } from "./cover-upload";
 import { DeleteFestival } from "./delete-festival";
+import { LogoPicker } from "./logo-picker";
+import { allLogos, logoSvg } from "@/lib/logos";
 
 export const metadata: Metadata = { title: "Settings", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -26,6 +28,8 @@ export default async function Page({
 
   const { members, invites } = await collaborators(festival.id);
   const agenda = await agendaFor(festival.id);
+  // Fails soft: without the 0018 migration there simply is no logo card data.
+  const logos = await allLogos().catch(() => []);
   // Who "you" is in the collaborator list. festivalFor has already proved a
   // signed-in organiser, so this is narrowing rather than a real check — but
   // a non-null assertion here would outlive the reason for it.
@@ -81,6 +85,18 @@ export default async function Page({
         </section>
         <section className={`${card} p-5 sm:p-7`}>
           <CoverUpload festivalId={festival.id} current={festival.cover_url} />
+        </section>
+        <section className={`${card} p-5 sm:p-7`}>
+          <LogoPicker
+            marker={marker}
+            current={(() => {
+              const mine = logos.find((l) => l.claimed_by === festival.id);
+              return mine ? { id: mine.id, html: logoSvg(mine.form, "curlogo") } : null;
+            })()}
+            available={logos
+              .filter((l) => !l.claimed_by)
+              .map((l, i) => ({ id: l.id, html: logoSvg(l.form, `avlogo${i}`) }))}
+          />
         </section>
         <section className={`${card} p-5 sm:p-7`}>
           <Collaborators

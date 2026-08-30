@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { StepMark } from "@/components/StepMark";
+import { fallbackLogoSvg, logoForFestival, logoSvg } from "@/lib/logos";
 import type { Festival } from "@/lib/festivals";
 
 const STATUS: Record<Festival["status"], { label: string; className: string }> = {
@@ -12,12 +12,21 @@ const STATUS: Record<Festival["status"], { label: string; className: string }> =
 /**
  * A festival at a glance.
  *
- * Where there is no cover yet the nine marks stand in — the festival still has
- * a face, and it is the one the whole system is built from, rather than a grey
- * rectangle apologising for a missing upload.
+ * Where there is no cover yet the festival's own composition stands in: the
+ * logo it claimed from the Festival logos pool, or — before one is chosen —
+ * a form grown by the generator's grammar from the festival's address, in
+ * the original drawing's colours. Unique either way, never a grey rectangle
+ * apologising for a missing upload.
  */
-export function FestivalCard({ festival }: { festival: Festival }) {
+export async function FestivalCard({ festival }: { festival: Festival }) {
   const status = STATUS[festival.status];
+  let art: string | null = null;
+  if (!festival.cover_url) {
+    const logo = await logoForFestival(festival.id).catch(() => null);
+    art = logo
+      ? logoSvg(logo.form, `card${festival.id.slice(0, 8)}`)
+      : fallbackLogoSvg(festival.marker);
+  }
 
   return (
     <Link
@@ -34,11 +43,10 @@ export function FestivalCard({ festival }: { festival: Festival }) {
             className="object-cover"
           />
         ) : (
-          <div className="grid h-full w-full grid-cols-3 grid-rows-3 gap-2 p-5 opacity-90">
-            {Array.from({ length: 9 }, (_, i) => (
-              <StepMark key={i} step={i + 1} className="h-full w-full" />
-            ))}
-          </div>
+          <div
+            className="flex h-full w-full items-center justify-center p-6 [&_svg]:h-full [&_svg]:w-full"
+            dangerouslySetInnerHTML={{ __html: art ?? "" }}
+          />
         )}
         <span
           className={`absolute top-3 right-3 px-2 py-0.5 text-xs font-medium ${status.className}`}

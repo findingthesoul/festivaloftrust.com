@@ -302,3 +302,42 @@ export async function deleteFestivalAction(
   }
   redirect("/festivals");
 }
+
+/**
+ * Claim one composition from the Festival logos pool. Two organisers racing
+ * for the same form is settled by the database: the update only lands where
+ * claimed_by is still null, so the second one gets a count of zero and a
+ * message instead of someone else's logo.
+ */
+export async function chooseLogo(
+  marker: string,
+  logoId: string,
+): Promise<{ error?: string }> {
+  const festival = await festivalByMarker(marker);
+  if (!festival) return { error: "not found" };
+  const supabase = await serverSupabase();
+  // A festival wears one logo at a time — hand back the current one first.
+  await supabase.from("logo").update({ claimed_by: null }).eq("claimed_by", festival.id);
+  const { error, count } = await supabase
+    .from("logo")
+    .update({ claimed_by: festival.id }, { count: "exact" })
+    .eq("id", logoId)
+    .is("claimed_by", null);
+  if (error) return { error: error.message };
+  if (!count) return { error: "another festival chose this one just now — pick a different form" };
+  revalidatePath(`/plan/${marker}/settings`);
+  return {};
+}
+
+export async function releaseLogo(marker: string): Promise<{ error?: string }> {
+  const festival = await festivalByMarker(marker);
+  if (!festival) return { error: "not found" };
+  const supabase = await serverSupabase();
+  const { error } = await supabase
+    .from("logo")
+    .update({ claimed_by: null })
+    .eq("claimed_by", festival.id);
+  if (error) return { error: error.message };
+  revalidatePath(`/plan/${marker}/settings`);
+  return {};
+}
