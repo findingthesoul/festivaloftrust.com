@@ -200,7 +200,12 @@ export function CardSheets({
       // legible rather than ghostly.
       const wide = vw >= 768;
       const fw = wide ? vw * 0.44 : vw * 0.7;
-      const fh = Math.min(vh * 0.58, fw * 0.9);
+      // On a phone the card splits vertically instead: the composition
+      // takes the top or bottom, the copy takes the other — so the frame
+      // stays shallow enough for both.
+      const fh = wide
+        ? Math.min(vh * 0.58, fw * 0.9)
+        : Math.min(vh * 0.34, fw * 0.9);
       const seat = (k: number) => {
         if (hero && k === 0) {
           // On the photo: the half-size grid stands just above the title,
@@ -221,7 +226,7 @@ export function CardSheets({
           (sheet.shapes ?? "top") === "top" ? vh * 0.1 : vh - fh - vh * 0.08;
         return { x, y };
       };
-      box.style.opacity = String(lerp(wide ? 0.92 : 0.4, 1, dockE));
+      box.style.opacity = String(lerp(wide ? 0.92 : 0.85, 1, dockE));
       box.style.width = `${fw}px`;
       box.style.height = `${fh}px`;
 
@@ -355,7 +360,9 @@ export function CardSheets({
         return (
           <section
             key={sheet.title}
-            className="relative flex min-h-dvh w-full snap-start items-center"
+            className={`relative flex min-h-dvh w-full snap-start md:items-center ${
+              sheet.shapes === "bottom" ? "items-start" : "items-end"
+            }`}
             style={{ backgroundColor: bg, color: text }}
           >
             <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 sm:py-24 md:grid md:grid-cols-2 md:gap-16">
