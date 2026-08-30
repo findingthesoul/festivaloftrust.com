@@ -99,7 +99,12 @@ export function EventSettings({
 
         <MarkerField current={festival.marker} title={title} />
 
-        <Field label="Description" htmlFor="summary" className="sm:col-span-2">
+        <Field
+          label="Description"
+          htmlFor="summary"
+          className="sm:col-span-2"
+          hint="Formatting works: **bold**, *italic*, [link](https://…), ## heading, - list."
+        >
           <textarea
             id="summary"
             name="summary"
@@ -114,7 +119,7 @@ export function EventSettings({
           label="About the organisers"
           htmlFor="organiser_note"
           className="sm:col-span-2"
-          hint="Shown on the event page: who is behind this festival."
+          hint="Shown on the event page: who is behind this festival. Same formatting as the description."
         >
           <textarea
             id="organiser_note"

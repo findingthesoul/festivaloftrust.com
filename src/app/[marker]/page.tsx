@@ -5,6 +5,7 @@ import { BrandLockup } from "@/components/BrandLockup";
 import { ShapeGrid } from "@/components/ShapeGrid";
 import { agendaFor, publicFestival, registrationFor } from "@/lib/festivals";
 import { RegisterForm } from "./register-form";
+import { RichText } from "@/components/RichText";
 
 export const dynamic = "force-dynamic";
 
@@ -113,9 +114,9 @@ export default async function Page({
         </p>
 
         {festival.summary && (
-          <p className="mt-6 max-w-2xl text-[clamp(1.05rem,1.6vw,1.3rem)] leading-relaxed text-pretty">
-            {festival.summary}
-          </p>
+          <div className="mt-6 max-w-2xl space-y-4 text-[clamp(1.05rem,1.6vw,1.3rem)] leading-relaxed text-pretty">
+            <RichText text={festival.summary} />
+          </div>
         )}
 
         {/* Every festival page says what a Festival of Trust is — the page
@@ -140,9 +141,9 @@ export default async function Page({
                 <li key={item.id} className="py-5 first:pt-0">
                   <h3 className="text-lg font-bold">{item.title}</h3>
                   {item.description && (
-                    <p className="mt-1.5 leading-relaxed text-pretty">
-                      {item.description}
-                    </p>
+                    <div className="mt-1.5 space-y-2 leading-relaxed text-pretty">
+                      <RichText text={item.description} />
+                    </div>
                   )}
                 </li>
               ))}
@@ -156,9 +157,9 @@ export default async function Page({
             <h2 className="text-2xl font-bold tracking-[-0.01em] sm:text-3xl">
               The organisers
             </h2>
-            <p className="mt-4 max-w-2xl leading-relaxed text-pretty">
-              {festival.organiser_note}
-            </p>
+            <div className="mt-4 max-w-2xl space-y-3 leading-relaxed text-pretty">
+              <RichText text={festival.organiser_note} />
+            </div>
           </div>
         )}
 
