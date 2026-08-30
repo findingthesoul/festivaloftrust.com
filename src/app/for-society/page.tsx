@@ -15,6 +15,8 @@ export default function Page() {
         sheets={[
           {
             tone: "yellow",
+            text: "left",
+            shapes: "top",
             kicker: "Communities",
             title: "Hosted by the community, backed by a funder",
             body: (
@@ -36,6 +38,8 @@ export default function Page() {
           },
           {
             tone: "magenta",
+            text: "right",
+            shapes: "bottom",
             kicker: "The concept",
             title: "Start from the tension, then turn",
             body: (
@@ -63,6 +67,8 @@ export default function Page() {
           },
           {
             tone: "indigo",
+            text: "left",
+            shapes: "bottom",
             kicker: "Pockets and the web",
             title: "A single pocket is fragile. A web of pockets holds weight.",
             body: (
@@ -82,6 +88,8 @@ export default function Page() {
           },
           {
             tone: "blush",
+            text: "right",
+            shapes: "top",
             kicker: "The stance",
             title: "The festival walks alongside. It does not instruct.",
             body: (
@@ -100,6 +108,8 @@ export default function Page() {
           },
           {
             tone: "ink",
+            text: "left",
+            shapes: "top",
             kicker: "The method",
             title: "Nine steps, three phases",
             body: (
@@ -115,6 +125,8 @@ export default function Page() {
           },
           {
             tone: "orange",
+            text: "right",
+            shapes: "bottom",
             kicker: "The start",
             title: "It begins with someone deciding to host",
             body: (

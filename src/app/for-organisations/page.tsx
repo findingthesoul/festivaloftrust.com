@@ -15,6 +15,8 @@ export default function Page() {
         sheets={[
           {
             tone: "indigo",
+            text: "left",
+            shapes: "top",
             kicker: "Organisations",
             title: "Inside your own walls",
             body: (
@@ -38,6 +40,8 @@ export default function Page() {
           },
           {
             tone: "yellow",
+            text: "right",
+            shapes: "bottom",
             kicker: "The concept",
             title: "Start from the tension, then turn",
             body: (
@@ -63,6 +67,8 @@ export default function Page() {
           },
           {
             tone: "blush",
+            text: "left",
+            shapes: "bottom",
             kicker: "The stance",
             title: "The festival walks alongside. It does not instruct.",
             body: (
@@ -81,6 +87,8 @@ export default function Page() {
           },
           {
             tone: "ink",
+            text: "right",
+            shapes: "top",
             kicker: "The method",
             title: "Nine steps, three phases",
             body: (
@@ -96,6 +104,8 @@ export default function Page() {
           },
           {
             tone: "magenta",
+            text: "left",
+            shapes: "top",
             kicker: "The start",
             title: "Bring it inside",
             body: (

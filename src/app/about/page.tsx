@@ -17,6 +17,8 @@ export default function Page() {
         sheets={[
           {
             tone: "yellow",
+            text: "right",
+            shapes: "top",
             kicker: "The movement",
             title: "Grow trust, one pocket at a time",
             body: (
@@ -37,6 +39,8 @@ export default function Page() {
           },
           {
             tone: "magenta",
+            text: "left",
+            shapes: "bottom",
             kicker: "The concept",
             title: "Start from the tension, then turn",
             body: (
@@ -64,6 +68,8 @@ export default function Page() {
           },
           {
             tone: "indigo",
+            text: "right",
+            shapes: "bottom",
             kicker: "Pockets and the web",
             title: "A single pocket is fragile. A web of pockets holds weight.",
             body: (
@@ -83,6 +89,8 @@ export default function Page() {
           },
           {
             tone: "blush",
+            text: "left",
+            shapes: "top",
             kicker: "Two ways",
             title: "One method, two entry points",
             body: (
@@ -112,6 +120,8 @@ export default function Page() {
           },
           {
             tone: "ink",
+            text: "right",
+            shapes: "top",
             kicker: "The method made visible",
             title: "Nine steps, nine marks, one grid",
             body: (
@@ -131,6 +141,8 @@ export default function Page() {
           },
           {
             tone: "orange",
+            text: "left",
+            shapes: "bottom",
             kicker: "The organisation",
             title: "Solidarity Lab, partner of soul.com",
             body: (
