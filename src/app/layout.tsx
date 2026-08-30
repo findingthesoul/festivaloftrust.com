@@ -24,7 +24,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full scroll-smooth antialiased">
+    {/* data-scroll-behavior tells Next the smooth scrolling is deliberate,
+        so route transitions can disable it while they jump. */}
+    <html
+      lang="en"
+      className="h-full scroll-smooth antialiased"
+      data-scroll-behavior="smooth"
+    >
       <body className="bg-background text-foreground flex min-h-full flex-col">
         <SiteNav />
         {children}
