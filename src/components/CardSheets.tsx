@@ -173,9 +173,11 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
 
       // Each card says which column its copy takes and whether the
       // composition sits at the top or the bottom of the other one; the
-      // frame glides from seat to seat as the arrangement morphs. Narrow
-      // screens have no second column, so the composition goes faint there.
-      const wide = vw >= 1024;
+      // frame glides from seat to seat as the arrangement morphs. Only a
+      // phone is too narrow for two columns — a halved laptop window is not
+      // — and where one column is all there is, the composition stays
+      // legible rather than ghostly.
+      const wide = vw >= 768;
       const fw = wide ? vw * 0.44 : vw * 0.7;
       const fh = Math.min(vh * 0.58, fw * 0.9);
       const seat = (k: number) => {
@@ -189,19 +191,19 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
           (sheet.shapes ?? "top") === "top" ? vh * 0.1 : vh - fh - vh * 0.08;
         return { x, y };
       };
-      box.style.opacity = String(lerp(wide ? 0.92 : 0.22, 1, dockE));
+      box.style.opacity = String(lerp(wide ? 0.92 : 0.4, 1, dockE));
       box.style.width = `${fw}px`;
       box.style.height = `${fh}px`;
 
-      // Card k holds arrangement k mod 2; between cards, every form travels
-      // from its seat in one to its seat in the other — like the logo on
-      // the home page, but between the designer's two clusters — while the
-      // whole frame glides to the next card's seat.
+      // The first card holds the base grid — the nine forms in their own
+      // three-by-three, the logo at rest. From the second card on, the
+      // designer's clusters alternate. Between cards, every form travels
+      // from its seat in one arrangement to its seat in the next, while the
+      // whole frame glides to the next card's column.
       const t = Math.min(sheets.length - 1, Math.max(0, -rect.top / vh));
       const i = Math.floor(t);
       const j = Math.min(i + 1, sheets.length - 1);
       const f = ease(clamp01(t - i));
-      const mix = i % 2 === 0 ? f : 1 - f;
 
       const sa = seat(i);
       const sb = seat(j);
@@ -209,16 +211,35 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
       const by = lerp(sa.y, sb.y, f);
       box.style.transform = `translate3d(${bx}px, ${by}px, 0)`;
 
-      const A = fit(CLUSTERS[0], fw, fh);
-      const B = fit(CLUSTERS[1], fw, fh);
+      const layoutFor = (k: number) => {
+        if (k === 0) {
+          const gs = Math.min(fw, fh) * 0.9;
+          const tile = gs / 3;
+          const ox = (fw - gs) / 2;
+          const oy = (fh - gs) / 2;
+          const out: Record<number, { x: number; y: number; w: number; rot: number }> = {};
+          for (const [id, tIdx] of Object.entries(TILE_BY_ID)) {
+            out[+id] = {
+              x: ox + (tIdx % 3) * tile,
+              y: oy + Math.floor(tIdx / 3) * tile,
+              w: tile,
+              rot: 0,
+            };
+          }
+          return out;
+        }
+        return fit(CLUSTERS[(k - 1) % CLUSTERS.length], fw, fh);
+      };
+      const A = layoutFor(i);
+      const B = layoutFor(j);
       forms.forEach((el, id) => {
         if (!el) return;
         const a = A[id];
         const b = B[id];
-        let w = lerp(a.w, b.w, mix);
-        let x = lerp(a.x, b.x, mix);
-        let y = lerp(a.y, b.y, mix);
-        let rot = lerp(a.rot, b.rot, mix);
+        let w = lerp(a.w, b.w, f);
+        let x = lerp(a.x, b.x, f);
+        let y = lerp(a.y, b.y, f);
+        let rot = lerp(a.rot, b.rot, f);
         if (dockE > 0 && gRect) {
           // Tile targets live in viewport space; the forms live in the
           // box's — bridge with the box position, so the flight is exact.
@@ -295,8 +316,8 @@ export function CardSheets({ sheets }: { sheets: Sheet[] }) {
             className="relative flex min-h-dvh w-full snap-start items-center"
             style={{ backgroundColor: bg, color: text }}
           >
-            <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 sm:py-24 lg:grid lg:grid-cols-2 lg:gap-16">
-              <div className={sheet.text === "right" ? "lg:col-start-2" : ""}>
+            <div className="relative z-10 mx-auto w-full max-w-6xl px-6 py-20 sm:px-10 sm:py-24 md:grid md:grid-cols-2 md:gap-16">
+              <div className={sheet.text === "right" ? "md:col-start-2" : ""}>
               {sheet.kicker && (
                 <p className="text-sm font-bold tracking-[0.18em] uppercase opacity-70">
                   {sheet.kicker}
