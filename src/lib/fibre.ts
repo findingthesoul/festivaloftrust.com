@@ -420,6 +420,11 @@ export const addThreadHost = (
  * data wall, by the platform's choice rather than ours.
  */
 export type FibreEnrolment = {
+  /** True exactly when the organiser's decision is what the person waits for. */
+  awaiting_approval?: boolean;
+  status?: string;
+  full_name?: string | null;
+  email?: string | null;
   id: string;
   enrolment_id: string;
   person_id: string;
@@ -447,6 +452,24 @@ export const publicEnrol = (input: {
     method: "POST",
     body: input,
   });
+
+/**
+ * The organiser's decision, through the app key (scope review:enrolments).
+ * Same machinery as The Thread's own buttons — approve sends the
+ * confirmation and releases held messages, decline closes any open payment
+ * tab. Both idempotent; a second approve answers { ok, already: true }.
+ */
+export const approveEnrolment = (id: string) =>
+  call<{ ok: boolean; already?: boolean }>(
+    `/apps/${SLUG}/thread/enrolments/${id}/approve`,
+    { method: "POST" },
+  );
+
+export const declineEnrolment = (id: string) =>
+  call<{ ok: boolean; already?: boolean }>(
+    `/apps/${SLUG}/thread/enrolments/${id}/decline`,
+    { method: "POST" },
+  );
 
 export const listEnrolments = (threadId: string) =>
   call<{ enrolments: FibreEnrolment[] }>(

@@ -35,5 +35,11 @@ export async function SiteNav() {
     }
   }
 
-  return <PublicNav email={user?.email ?? null} reviewCount={reviewCount} />;
+  return (
+    <PublicNav
+      email={user?.email ?? null}
+      reviewCount={reviewCount}
+      canReviewVisitors={!!user && reviewCount === null}
+    />
+  );
 }

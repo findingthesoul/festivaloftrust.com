@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { countAwaitingVisitors } from "@/app/review-actions";
 import { useRouter } from "next/navigation";
 import { browserSupabase } from "@/lib/supabase/client";
 
@@ -9,14 +10,20 @@ import { browserSupabase } from "@/lib/supabase/client";
 export function AccountMenu({
   email,
   reviewCount = null,
+  canReviewVisitors = false,
 }: {
   email: string;
   /** Pending requests, for the admin; null hides the item. */
   reviewCount?: number | null;
+  /** Whether to count this organiser's waiting visitors when the menu opens. */
+  canReviewVisitors?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Counted the first time the menu opens, not on every page: the platform
+  // round-trips are only paid when someone actually looks.
+  const [visitors, setVisitors] = useState<{ count: number; href: string } | null>(null);
 
   const initial = (email[0] ?? "?").toUpperCase();
 
@@ -31,7 +38,12 @@ export function AccountMenu({
     <div className="relative">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => {
+          setOpen((o) => !o);
+          if (canReviewVisitors && visitors === null) {
+            countAwaitingVisitors().then(setVisitors).catch(() => {});
+          }
+        }}
         aria-expanded={open}
         aria-haspopup="menu"
         className="bg-ink text-cream flex size-8 items-center justify-center rounded-full text-sm font-bold transition-opacity hover:opacity-85"
@@ -71,6 +83,19 @@ export function AccountMenu({
             >
               Your festivals
             </Link>
+            {canReviewVisitors && visitors !== null && visitors.count > 0 && (
+              <Link
+                href={visitors.href}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="hover:bg-ink/5 flex items-center justify-between rounded-lg px-2.5 py-2"
+              >
+                Review
+                <span className="bg-green text-cream rounded-full px-2 py-0.5 text-xs font-bold">
+                  {visitors.count}
+                </span>
+              </Link>
+            )}
             {reviewCount !== null && (
               <Link
                 href="/admin"

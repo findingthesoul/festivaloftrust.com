@@ -1,25 +1,41 @@
 "use client";
 
-import { useState } from "react";
-import type { Attendee } from "@/lib/festivals";
+import { useState, useTransition } from "react";
+import { admit, turnAway } from "./actions";
 
 /**
  * The guest list as a list of guests: name, email, phone, selectable rows,
- * and two ways onto paper — a plain participant list and name tags. Printing
- * hides everything but the chosen sheet via the print variants; with nothing
- * selected, everyone prints.
+ * and two ways onto paper — a plain participant list and name tags. Rows
+ * still waiting for the organiser's decision carry Admit and Decline, which
+ * speak to The Thread's own machinery through the app key. Printing hides
+ * everything but the chosen sheet; with nothing selected, everyone prints.
  */
+
+export type GuestRow = {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  awaiting: boolean;
+  /** The platform's enrolment row id, when the platform knows this guest. */
+  enrolmentRowId: string | null;
+};
+
 export function RegistrationList({
-  attendees,
+  marker,
+  rows,
   festivalName,
-  platformCount,
+  canReview,
 }: {
-  attendees: Attendee[];
+  marker: string;
+  rows: GuestRow[];
   festivalName: string;
-  platformCount: number;
+  canReview: boolean;
 }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [printMode, setPrintMode] = useState<"list" | "tags">("list");
+  const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -29,26 +45,34 @@ export function RegistrationList({
       return next;
     });
   };
-  const allSelected = selected.size === attendees.length && attendees.length > 0;
-  const toPrint =
-    selected.size > 0 ? attendees.filter((a) => selected.has(a.id)) : attendees;
+  const allSelected = selected.size === rows.length && rows.length > 0;
+  const toPrint = selected.size > 0 ? rows.filter((a) => selected.has(a.id)) : rows;
 
   const print = (mode: "list" | "tags") => {
     setPrintMode(mode);
-    // Let the print sheet re-render before the dialog opens.
     setTimeout(() => window.print(), 50);
   };
+
+  const decide = (row: GuestRow, yes: boolean) =>
+    start(async () => {
+      if (!row.enrolmentRowId) return;
+      const r = yes
+        ? await admit(marker, row.enrolmentRowId)
+        : await turnAway(marker, row.enrolmentRowId);
+      setError(r.error ?? null);
+    });
+
+  const waiting = rows.filter((r) => r.awaiting).length;
 
   return (
     <div>
       <div className="print:hidden">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <p className="text-ink/60 text-sm">
-            {attendees.length} {attendees.length === 1 ? "person" : "people"}
-            {platformCount > attendees.length &&
-              ` — plus ${platformCount - attendees.length} registered before the book existed, known only to The Thread`}
+            {rows.length} {rows.length === 1 ? "person" : "people"}
+            {waiting > 0 && ` — ${waiting} waiting for your decision`}
           </p>
-          {attendees.length > 0 && (
+          {rows.length > 0 && (
             <div className="flex gap-3">
               <button
                 type="button"
@@ -68,7 +92,7 @@ export function RegistrationList({
           )}
         </div>
 
-        {attendees.length > 0 && (
+        {rows.length > 0 && (
           <table className="border-ink/10 mt-4 w-full border-y text-sm">
             <thead>
               <tr className="text-ink/60 text-left">
@@ -79,9 +103,7 @@ export function RegistrationList({
                     checked={allSelected}
                     onChange={() =>
                       setSelected(
-                        allSelected
-                          ? new Set()
-                          : new Set(attendees.map((a) => a.id)),
+                        allSelected ? new Set() : new Set(rows.map((a) => a.id)),
                       )
                     }
                   />
@@ -89,10 +111,11 @@ export function RegistrationList({
                 <th className="py-2 font-medium">Name</th>
                 <th className="py-2 font-medium">Email</th>
                 <th className="py-2 font-medium">Phone</th>
+                <th className="py-2" />
               </tr>
             </thead>
             <tbody className="divide-ink/10 divide-y">
-              {attendees.map((a) => (
+              {rows.map((a) => (
                 <tr key={a.id}>
                   <td className="py-2.5">
                     <input
@@ -105,11 +128,37 @@ export function RegistrationList({
                   <td className="py-2.5 font-medium">{a.name}</td>
                   <td className="py-2.5">{a.email}</td>
                   <td className="text-ink/70 py-2.5">{a.phone ?? "—"}</td>
+                  <td className="py-2.5 text-right">
+                    {a.awaiting &&
+                      (canReview && a.enrolmentRowId ? (
+                        <span className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            disabled={pending}
+                            onClick={() => decide(a, true)}
+                            className="bg-green text-cream rounded px-3 py-1 text-xs font-bold transition-opacity hover:opacity-85 disabled:opacity-50"
+                          >
+                            Admit
+                          </button>
+                          <button
+                            type="button"
+                            disabled={pending}
+                            onClick={() => decide(a, false)}
+                            className="border-ink/25 text-ink/70 rounded border px-3 py-1 text-xs font-medium transition-colors hover:border-ink/60 disabled:opacity-50"
+                          >
+                            Decline
+                          </button>
+                        </span>
+                      ) : (
+                        <span className="text-ink/50 text-xs">waiting</span>
+                      ))}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
+        {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
         {selected.size > 0 && (
           <p className="text-ink/50 mt-2 text-xs">
             {selected.size} selected — printing prints the selection.

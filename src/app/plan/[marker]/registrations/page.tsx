@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { festivalFor } from "../guard";
 import { FestivalHeader } from "../festival-header";
 import { attendeesFor, registrationFor, registrations } from "@/lib/festivals";
-import { RegistrationList } from "./registration-list";
+import { RegistrationList, type GuestRow } from "./registration-list";
 import { card } from "@/components/ui";
 import { OpenToggle } from "./open-toggle";
 
@@ -19,6 +19,39 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
   const people = await registrations(festival);
   const registration = await registrationFor(festival);
   const attendees = await attendeesFor(festival.id);
+
+  // One list from two books: the platform now names its rows and says who
+  // still waits for a decision; the site's own book adds the phone. Matched
+  // by email; either side alone still makes a row.
+  const bookByEmail = new Map(
+    attendees.map((a) => [a.email.toLowerCase(), a] as const),
+  );
+  const seen = new Set<string>();
+  const rows: GuestRow[] = people.map((e) => {
+    const email = (e.email ?? "").toLowerCase();
+    const book = email ? bookByEmail.get(email) : undefined;
+    if (book) seen.add(book.id);
+    return {
+      id: e.id,
+      name: e.full_name ?? book?.name ?? e.person_id,
+      email: e.email ?? book?.email ?? "",
+      phone: book?.phone ?? null,
+      awaiting: !!e.awaiting_approval,
+      enrolmentRowId: e.id,
+    };
+  });
+  for (const a of attendees) {
+    if (!seen.has(a.id)) {
+      rows.push({
+        id: a.id,
+        name: a.name,
+        email: a.email,
+        phone: a.phone,
+        awaiting: false,
+        enrolmentRowId: null,
+      });
+    }
+  }
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
@@ -40,15 +73,16 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
             Nobody can register yet. This festival has no public page — that
             happens when it is published.
           </p>
-        ) : attendees.length === 0 && people.length === 0 ? (
+        ) : rows.length === 0 ? (
           <p className="text-ink/70 max-w-xl leading-relaxed text-pretty">
             No registrations yet. They will appear here as they come in.
           </p>
         ) : (
           <RegistrationList
-            attendees={attendees}
+            marker={festival.marker}
+            rows={rows}
             festivalName={festival.name}
-            platformCount={people.length}
+            canReview={access?.role === "organiser"}
           />
         )}
       </div>
