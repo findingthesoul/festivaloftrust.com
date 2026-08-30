@@ -270,3 +270,35 @@ export async function removeAgenda(
   revalidatePath(`/${marker}`);
   return r;
 }
+
+/**
+ * Deletion is the owner's (or the admin's), not a collaborator's — RLS says
+ * the same, and refuses live festivals besides. The typed address is checked
+ * again here: a public endpoint takes no browser's word for a confirmation.
+ */
+export async function deleteFestivalAction(
+  marker: string,
+  confirmMarker: string,
+): Promise<{ error?: string }> {
+  if (confirmMarker !== marker) return { error: "the address does not match" };
+  const festival = await festivalByMarker(marker);
+  if (!festival) return { error: "not found" };
+  if (festival.status === "live") {
+    return { error: "a live festival is taken offline first, then deleted" };
+  }
+
+  const supabase = await serverSupabase();
+  const { error, count } = await supabase
+    .from("festival")
+    .delete({ count: "exact" })
+    .eq("id", festival.id);
+  if (error) return { error: error.message };
+  if (!count) {
+    // RLS swallowed it: not the owner, or the policy migration has not run.
+    return {
+      error:
+        "nothing was deleted — only the owner may, and the database needs 0017_festival_delete.sql",
+    };
+  }
+  redirect("/festivals");
+}

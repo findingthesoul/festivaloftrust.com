@@ -48,7 +48,7 @@ export default async function Page({
   // Deliberately NOT folded into "Your festivals": that list is what you own or
   // work on, and an admin seeing everybody's there would make the word "your"
   // a lie. Two questions, two screens.
-  const [{ data: allOrganisers }, { data: everyFestivalRaw }] = await Promise.all([
+  const [{ data: allOrganisers }, { data: everyFestivalRaw }, { data: memberships }] = await Promise.all([
     supabase
       .from("organiser")
       .select("id, email, full_name")
@@ -61,6 +61,7 @@ export default async function Page({
       .from("festival")
       .select("id, name, marker, place, status, starts_on, owner_id")
       .order("created_at", { ascending: false }),
+    supabase.from("festival_member").select("user_id"),
   ]);
 
   const organisers = allOrganisers ?? [];
@@ -71,6 +72,14 @@ export default async function Page({
   const pickedName = pickedOrganiser
     ? (byOwner.get(pickedOrganiser)?.full_name ?? byOwner.get(pickedOrganiser)?.email ?? "them")
     : null;
+
+  // Inactive: approved, but on no festival at all — neither owning one nor
+  // helping on one. The accounts that said yes and then never began.
+  const activeIds = new Set([
+    ...(everyFestivalRaw ?? []).map((f) => f.owner_id),
+    ...((memberships ?? []) as { user_id: string }[]).map((m) => m.user_id),
+  ]);
+  const inactive = organisers.filter((o) => !activeIds.has(o.id));
 
   const pendingPeople = people ?? [];
   const pendingFestivals = festivals ?? [];
@@ -88,6 +97,7 @@ export default async function Page({
     { key: "submitted", label: "To publish", count: pendingFestivals.length },
     { key: "live", label: "Live", count: live.length },
     { key: "all", label: "Every festival", count: everyFestival.length },
+    { key: "inactive", label: "Inactive", count: inactive.length },
   ] as const;
 
   // Default to whatever needs a person first — somebody waiting to be let in,
@@ -134,6 +144,28 @@ export default async function Page({
           </Link>
         ))}
       </nav>
+
+      {active === "inactive" && (
+        <section className="mt-10">
+          {inactive.length === 0 ? (
+            <p className="text-ink/60 mt-3 text-sm">
+              Nobody idle — every approved account is on a festival.
+            </p>
+          ) : (
+            <ul className="divide-ink/10 border-ink/10 mt-5 divide-y border-y">
+              {inactive.map((o) => (
+                <li key={o.id} className="flex items-center justify-between gap-6 py-4">
+                  <div className="min-w-0">
+                    <p className="font-bold">{o.full_name ?? o.email}</p>
+                    <p className="text-ink/60 text-sm">{o.email}</p>
+                  </div>
+                  <span className="text-ink/50 text-sm">approved, no festival yet</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {active === "organisers" && (
       <section className="mt-10">

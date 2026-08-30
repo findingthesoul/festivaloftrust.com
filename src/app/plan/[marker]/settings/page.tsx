@@ -10,6 +10,7 @@ import { Collaborators } from "./collaborators";
 import { EventSettings } from "./event-settings";
 import { card } from "@/components/ui";
 import { CoverUpload } from "./cover-upload";
+import { DeleteFestival } from "./delete-festival";
 
 export const metadata: Metadata = { title: "Settings", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -88,6 +89,9 @@ export default async function Page({
             invites={invites}
             meId={user.id}
           />
+        </section>
+        <section className={`${card} border-red/30 p-5 sm:p-7`}>
+          <DeleteFestival marker={marker} isLive={festival.status === "live"} />
         </section>
       </div>
     </main>
