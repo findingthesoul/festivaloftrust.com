@@ -61,12 +61,18 @@ export type Festival = {
 
   /** The Thread structure this festival is built from. Applied at publish. */
   thread_template_id: string | null;
+
+  /**
+   * Bumped by the touch_updated_at trigger on every write. The settings form
+   * keys off it so a save actually re-renders — see event-settings.tsx.
+   */
+  updated_at: string;
 };
 
 // One string literal, not a concatenation: supabase-js reads this at type
 // level to shape the row, and it can only do that for a literal.
 const COLUMNS =
-  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed, show_public_agenda, thread_template_id";
+  "id, marker, name, status, summary, place, starts_on, cover_url, fibre_run_id, host_org_id, thread_id, thread_slug, owner_id, created_at, timezone, language, requires_approval, public_interaction, share_participants_public, share_participants_participants, capacity, is_public_listed, show_public_agenda, thread_template_id, updated_at";
 
 /**
  * The festivals this person actually works on.
