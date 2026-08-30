@@ -25,6 +25,10 @@ export function PublicNav({ email }: { email?: string | null }) {
     !PLAIN_PATHS.includes(pathname);
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  // Where you are: the current page's item is underlined, everywhere the
+  // menu appears.
+  const here = (href: string) =>
+    href === pathname ? "font-bold underline decoration-2 underline-offset-4" : "";
 
   useEffect(() => {
     if (!overlay) return;
@@ -87,7 +91,7 @@ export function PublicNav({ email }: { email?: string | null }) {
             <Link
               href={item.href}
               onClick={close}
-              className="block py-1.5 transition-opacity hover:opacity-70"
+              className={`block py-1.5 transition-opacity hover:opacity-70 ${here(item.href)}`}
             >
               {item.label}
             </Link>
@@ -144,7 +148,7 @@ export function PublicNav({ email }: { email?: string | null }) {
                 )}
                 <Link
                   href={item.href}
-                  className="transition-opacity hover:opacity-70"
+                  className={`transition-opacity hover:opacity-70 ${here(item.href)}`}
                 >
                   {item.label}
                 </Link>
@@ -200,7 +204,7 @@ export function PublicNav({ email }: { email?: string | null }) {
               )}
               <Link
                 href={item.href}
-                className="transition-opacity hover:opacity-70"
+                className={`transition-opacity hover:opacity-70 ${here(item.href)}`}
               >
                 {item.label}
               </Link>
