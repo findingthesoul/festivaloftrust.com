@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { loadCalculator, saveCalculator } from "./actions";
+import {
+  loadCalculator,
+  saveCalculator,
+  saveFundamentals,
+  setFestivalCurrency,
+  type CalcCurrency,
+} from "./actions";
 
 type Saved = "idle" | "saving" | "saved" | "error";
 
@@ -20,10 +26,19 @@ type Saved = "idle" | "saving" | "saved" | "error";
 export function CalculatorFrame({
   marker,
   prefill,
+  currencies,
+  current,
+  isAdmin,
 }: {
   marker: string;
   /** Field id to value, for what the festival already knows. */
   prefill: Record<string, string>;
+  /** The workspace's currencies, for the picker and the fundamentals tab. */
+  currencies: CalcCurrency[];
+  /** This festival's currency code. */
+  current: string;
+  /** Whether the fundamentals tab is this viewer's to edit. */
+  isAdmin: boolean;
 }) {
   const frame = useRef<HTMLIFrameElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -97,6 +112,26 @@ export function CalculatorFrame({
     const panel = doc.getElementById("fName")?.closest(".panel") as HTMLElement | null;
     panel?.style.setProperty("display", "none");
 
+    // Currency: the symbol always; the ratio scales the default prices only
+    // when the festival has no saved figures yet — saved figures are already
+    // in the festival's own currency and must not be touched.
+    const chosen = currencies.find((c) => c.code === current);
+    const tool = win as Window & {
+      setCurrency?: (symbol: string, ratio: number, scale: boolean) => void;
+      setFundamentals?: (list: CalcCurrency[], canEdit: boolean) => void;
+    };
+    if (chosen && typeof tool.setCurrency === "function") {
+      tool.setCurrency(chosen.symbol, chosen.ratio, !saved);
+    }
+    // The fundamentals tab: filled for everyone, revealed only to the admin,
+    // and saved through this page's own action.
+    if (typeof tool.setFundamentals === "function") {
+      tool.setFundamentals(currencies, isAdmin);
+      Reflect.set(win, "onFundamentalsSave", (list: CalcCurrency[]) =>
+        saveFundamentals(list),
+      );
+    }
+
     // Save on any change, coalesced. The tool has no change event of its own,
     // so this listens on its document, where every input bubbles to.
     const schedule = () => {
@@ -121,7 +156,7 @@ export function CalculatorFrame({
         schedule();
       });
     }
-  }, [marker, prefill, save]);
+  }, [marker, prefill, save, currencies, current, isAdmin]);
 
   useEffect(() => {
     return () => {
@@ -141,6 +176,29 @@ export function CalculatorFrame({
                 ? "Not saved"
                 : "Changes are kept with this festival"}
         </p>
+        <label className="text-ink/60 flex items-center gap-2 text-sm">
+          Currency
+          <select
+            defaultValue={current}
+            onChange={async (e) => {
+              const r = await setFestivalCurrency(marker, e.target.value);
+              if (r.error) {
+                setNote(r.error);
+                return;
+              }
+              // Reload the tool so a fresh festival reseeds its defaults in
+              // the new currency; saved figures stay exactly as they were.
+              if (frame.current) frame.current.src = "/planner";
+            }}
+            className="border-ink/20 rounded-lg border bg-white px-2 py-1"
+          >
+            {currencies.map((c) => (
+              <option key={c.code} value={c.code}>
+                {c.code} {c.symbol}
+              </option>
+            ))}
+          </select>
+        </label>
         <a
           href="/planner"
           target="_blank"

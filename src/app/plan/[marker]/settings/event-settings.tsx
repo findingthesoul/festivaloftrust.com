@@ -131,6 +131,22 @@ export function EventSettings({
           />
         </Field>
 
+        <Field
+          label="Practical information"
+          htmlFor="practical_info"
+          className="sm:col-span-2"
+          hint="Address, times, what to bring — its own card on the event page. Same formatting as the description."
+        >
+          <textarea
+            id="practical_info"
+            name="practical_info"
+            rows={3}
+            defaultValue={festival.practical_info ?? ""}
+            className={input}
+            placeholder="Where to be, from when, and anything to bring."
+          />
+        </Field>
+
         {/* One day. The Thread is told the end is the start, rather than asking
             a question a Festival of Trust never has two answers to. */}
         <Field label="Date" htmlFor="starts_on">

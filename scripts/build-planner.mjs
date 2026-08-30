@@ -81,6 +81,105 @@ patch(
                     "travel","vat","discval","rateSocial","rateCommercial"];`,
 );
 
+// 5. Currency: one symbol for every printed amount, settable by the host
+//    page, with the option of scaling the default prices by the currency's
+//    ratio (a fresh South African festival starts from half the base rates).
+patch(
+  "currency formatter",
+  `  const eur = n => "\\u20AC" + Math.round(n).toLocaleString("de-DE");`,
+  `  let CURRENCY_SYMBOL = "\\u20AC";
+  const eur = n => CURRENCY_SYMBOL + Math.round(n).toLocaleString("de-DE");
+  function setCurrency(symbol, ratio, scaleDefaults) {
+    CURRENCY_SYMBOL = symbol || "\\u20AC";
+    if (scaleDefaults && ratio && ratio !== 1) {
+      ["rateSocial","rateCommercial","drinks","food","otherPP","travel","location","otherTotal"].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const n = Number(el.value);
+        if (Number.isFinite(n) && n > 0) el.value = String(Math.round(n * ratio));
+      });
+    }
+    calc();
+  }`,
+);
+
+// 6. The Fundamentals tab button, hidden until the host page says the
+//    viewer is the workspace admin.
+patch(
+  "fundamentals tab button",
+  `<button type="button" id="tabHours" role="tab" aria-selected="false">Hours per step</button>`,
+  `<button type="button" id="tabHours" role="tab" aria-selected="false">Hours per step</button>
+        <button type="button" id="tabFund" role="tab" aria-selected="false" style="display:none">Fundamentals</button>`,
+);
+
+// 7. The other tabs put the fundamentals panel away again.
+patch(
+  "fundamentals tab switching",
+  `  $("tabOffer").onclick = () => setTab(false);
+  $("tabHours").onclick = () => setTab(true);`,
+  `  const hideFund = () => { const p = document.getElementById("pageFund"); if (p) p.style.display = "none"; $("tabFund").setAttribute("aria-selected", "false"); };
+  $("tabOffer").onclick = () => { hideFund(); setTab(false); };
+  $("tabHours").onclick = () => { hideFund(); setTab(true); };`,
+);
+
+// 8. The panel itself, and the host-page seam: setFundamentals(list, canEdit)
+//    fills and reveals it; window.onFundamentalsSave carries edits out.
+patch(
+  "fundamentals panel",
+  `  function snapshot() {`,
+  `  const fundPanel = document.createElement("section");
+  fundPanel.id = "pageFund";
+  fundPanel.style.display = "none";
+  fundPanel.innerHTML = '<div class="panel"><h2>Fundamentals</h2>' +
+    '<p class="hint">Currencies, and each one\\u2019s ratio against the base prices. A festival that chooses a currency starts from the base defaults times its ratio \\u2014 0.5 means half the base rates.</p>' +
+    '<div id="fundRows"></div>' +
+    '<p style="margin-top:10px"><button type="button" id="fundAdd">Add currency</button> ' +
+    '<button type="button" id="fundSave">Save</button> <span id="fundNote" class="hint"></span></p></div>';
+  $("pageOffer").parentNode.insertBefore(fundPanel, $("pageOffer").nextSibling);
+  let FUND = [];
+  function drawFund() {
+    $("fundRows").innerHTML = FUND.map((c, i) =>
+      '<div style="display:flex;gap:8px;margin:6px 0;align-items:center">' +
+      '<input style="width:64px" data-i="' + i + '" data-k="code" maxlength="3" placeholder="EUR" value="' + (c.code || "") + '">' +
+      '<input style="width:52px" data-i="' + i + '" data-k="symbol" placeholder="\\u20AC" value="' + (c.symbol || "") + '">' +
+      '<input style="flex:1" data-i="' + i + '" data-k="label" placeholder="Euro" value="' + (c.label || "") + '">' +
+      '<input style="width:88px" data-i="' + i + '" data-k="ratio" type="number" step="0.05" min="0.05" value="' + (c.ratio || 1) + '">' +
+      '<button type="button" data-del="' + i + '">\\u00d7</button></div>').join("");
+  }
+  $("fundRows") || null;
+  fundPanel.addEventListener("input", e => {
+    const t = e.target;
+    if (t.dataset && t.dataset.k) FUND[Number(t.dataset.i)][t.dataset.k] = t.dataset.k === "ratio" ? Number(t.value) : t.value;
+  });
+  fundPanel.addEventListener("click", e => {
+    const t = e.target;
+    if (t.id === "fundAdd") { FUND.push({ code: "", symbol: "", label: "", ratio: 1 }); drawFund(); }
+    if (t.dataset && t.dataset.del !== undefined && t.dataset.del !== "") { FUND.splice(Number(t.dataset.del), 1); drawFund(); }
+    if (t.id === "fundSave" && typeof window.onFundamentalsSave === "function") {
+      $("fundNote").textContent = "Saving\\u2026";
+      Promise.resolve(window.onFundamentalsSave(FUND)).then(r => {
+        $("fundNote").textContent = r && r.error ? r.error : "Saved";
+      });
+    }
+  });
+  function setFundamentals(list, canEdit) {
+    FUND = (Array.isArray(list) ? list : []).map(c => ({ code: c.code, symbol: c.symbol, label: c.label, ratio: Number(c.ratio) || 1 }));
+    $("tabFund").style.display = canEdit ? "" : "none";
+    drawFund();
+  }
+  $("tabFund").onclick = () => {
+    $("pageHours").style.display = "none";
+    $("pageOffer").style.display = "none";
+    fundPanel.style.display = "block";
+    $("tabFund").setAttribute("aria-selected", "true");
+    $("tabOffer").setAttribute("aria-selected", "false");
+    $("tabHours").setAttribute("aria-selected", "false");
+  };
+
+  function snapshot() {`,
+);
+
+
 const html = `<!doctype html>
 <html lang="en">
 <head>

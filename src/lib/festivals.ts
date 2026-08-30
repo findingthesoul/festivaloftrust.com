@@ -60,6 +60,8 @@ export type Festival = {
   show_public_agenda: boolean;
   /** Who is behind it, in the organisers own words. Public. */
   organiser_note: string | null;
+  /** Address, times, what to bring — the practical card on the page. */
+  practical_info: string | null;
 
   /** The Thread structure this festival is built from. Applied at publish. */
   thread_template_id: string | null;
@@ -383,6 +385,7 @@ export type EventSettings = {
   show_public_agenda: boolean;
   /** Stays here: The Thread has no seat for it. */
   organiser_note: string | null;
+  practical_info: string | null;
   /**
    * Only settable while the festival is unpublished — a template seeds a
    * page's items when it is created, so choosing a different one afterwards

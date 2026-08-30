@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { register, type RegisterState } from "./actions";
 
 /**
@@ -103,5 +103,71 @@ export function RegisterForm({
         {pending ? "Registering…" : "Register"}
       </button>
     </form>
+  );
+}
+
+/**
+ * The popup way of opening it, for festivals whose settings say so: the desk
+ * shows one Enrol button, and the form arrives in a dialog over the page.
+ */
+export function EnrolPopup({
+  marker,
+  requiresApproval,
+}: {
+  marker: string;
+  requiresApproval: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <h2 className="text-xl font-bold">Register</h2>
+      <p className="text-ink/60 mt-1 text-sm">
+        Free, as every Festival of Trust is.
+      </p>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="bg-green text-cream mt-5 w-full rounded-lg px-7 py-3.5 font-medium transition-opacity hover:opacity-90"
+      >
+        Enrol
+      </button>
+      {open && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Register"
+          className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+        >
+          {/* Click-away. Sits behind the card so a click anywhere closes it. */}
+          <button
+            type="button"
+            aria-label="Close"
+            onClick={() => setOpen(false)}
+            className="bg-ink/60 absolute inset-0 cursor-default backdrop-blur-sm"
+          />
+          <div className="bg-cream relative w-full max-w-md rounded-xl p-6 shadow-xl sm:p-8">
+            <button
+              type="button"
+              aria-label="Close"
+              onClick={() => setOpen(false)}
+              className="text-ink/60 hover:text-ink absolute top-4 right-4 p-1 transition-colors"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              >
+                <path d="M5 5l14 14M19 5L5 19" />
+              </svg>
+            </button>
+            <RegisterForm marker={marker} requiresApproval={requiresApproval} />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

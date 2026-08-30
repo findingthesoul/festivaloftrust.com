@@ -170,6 +170,7 @@ export async function saveSettings(
     is_public_listed: on("is_public_listed"),
     show_public_agenda: on("show_public_agenda"),
     organiser_note: text("organiser_note"),
+    practical_info: text("practical_info"),
     thread_template_id: templateId,
   });
 

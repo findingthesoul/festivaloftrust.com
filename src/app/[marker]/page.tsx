@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { BrandLockup } from "@/components/BrandLockup";
 import { ShapeGrid } from "@/components/ShapeGrid";
 import { agendaFor, publicFestival, registrationFor } from "@/lib/festivals";
-import { RegisterForm } from "./register-form";
+import { EnrolPopup, RegisterForm } from "./register-form";
 import { RichText } from "@/components/RichText";
 
 export const dynamic = "force-dynamic";
@@ -91,7 +91,7 @@ export default async function Page({
           className="from-ink/50 pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t to-transparent"
         />
 
-        <h1 className="text-cream absolute top-24 left-1/2 z-10 w-[80%] -translate-x-1/2 text-center text-[clamp(2.2rem,6.5vw,4.5rem)] leading-[1.05] font-bold tracking-[-0.02em] text-balance">
+        <h1 className="text-cream absolute top-24 left-1/2 z-10 w-[80%] -translate-x-1/2 text-center text-[clamp(2.2rem,6.5vw,4.5rem)] uppercase leading-[1.05] font-bold tracking-[-0.02em] text-balance">
           {festival.name}
         </h1>
 
@@ -151,18 +151,6 @@ export default async function Page({
           </div>
         )}
 
-        {/* Who invites you, in their own words — written in settings. */}
-        {festival.organiser_note && (
-          <div className="border-ink/15 mt-14 border-t pt-8">
-            <h2 className="text-2xl font-bold tracking-[-0.01em] sm:text-3xl">
-              The organisers
-            </h2>
-            <div className="mt-4 max-w-2xl space-y-3 leading-relaxed text-pretty">
-              <RichText text={festival.organiser_note} />
-            </div>
-          </div>
-        )}
-
         </div>
 
         {/* The registration desk. When the doors are not open, saying so is
@@ -170,10 +158,17 @@ export default async function Page({
         <aside className="self-start lg:sticky lg:top-8">
           <div className="border-ink/15 rounded-xl border bg-white/50 p-6 sm:p-7">
             {registration?.open ? (
-              <RegisterForm
-                marker={festival.marker}
-                requiresApproval={festival.requires_approval}
-              />
+              festival.public_interaction === "popup" ? (
+                <EnrolPopup
+                  marker={festival.marker}
+                  requiresApproval={festival.requires_approval}
+                />
+              ) : (
+                <RegisterForm
+                  marker={festival.marker}
+                  requiresApproval={festival.requires_approval}
+                />
+              )
             ) : (
               <>
                 <h2 className="text-xl font-bold">Register</h2>
@@ -183,6 +178,26 @@ export default async function Page({
               </>
             )}
           </div>
+
+          {/* Who invites you, in their own words — written in settings. */}
+          {festival.organiser_note && (
+            <div className="border-ink/15 mt-6 rounded-xl border bg-white/50 p-6 sm:p-7">
+              <h2 className="text-xl font-bold">The organisers</h2>
+              <div className="mt-3 space-y-3 text-sm leading-relaxed text-pretty">
+                <RichText text={festival.organiser_note} />
+              </div>
+            </div>
+          )}
+
+          {/* Where to be and what to bring — written in settings. */}
+          {festival.practical_info && (
+            <div className="border-ink/15 mt-6 rounded-xl border bg-white/50 p-6 sm:p-7">
+              <h2 className="text-xl font-bold">Practical information</h2>
+              <div className="mt-3 space-y-3 text-sm leading-relaxed text-pretty">
+                <RichText text={festival.practical_info} />
+              </div>
+            </div>
+          )}
         </aside>
       </section>
     </main>
