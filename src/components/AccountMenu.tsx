@@ -11,12 +11,15 @@ export function AccountMenu({
   email,
   reviewCount = null,
   canReviewVisitors = false,
+  isOrganiser = false,
 }: {
   email: string;
   /** Pending requests, for the admin; null hides the item. */
   reviewCount?: number | null;
   /** Whether to count this organiser's waiting visitors when the menu opens. */
   canReviewVisitors?: boolean;
+  /** Approved workspace member: sees the internal design tools. */
+  isOrganiser?: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -109,6 +112,16 @@ export function AccountMenu({
                     {reviewCount}
                   </span>
                 )}
+              </Link>
+            )}
+            {isOrganiser && (
+              <Link
+                href="/gen"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="hover:bg-ink/5 block rounded-lg px-2.5 py-2"
+              >
+                Shape generator
               </Link>
             )}
             <div className="bg-ink/10 my-1.5 h-px" />

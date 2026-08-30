@@ -504,6 +504,28 @@ export async function agendaFor(festivalId: string): Promise<AgendaItem[]> {
   return (data ?? []) as AgendaItem[];
 }
 
+/**
+ * Who owns a festival, for showing above its title.
+ *
+ * Returns null when the row is not readable, which is not an error: the
+ * `organiser` table is selectable only by the person themselves or an admin
+ * (organiser_select_self), and that table also holds their email and the reason
+ * they applied. A host working on somebody else's festival therefore sees no
+ * name rather than being handed the row — and widening the policy to fix a
+ * label would hand over the rest of it too.
+ */
+export async function organiserFor(
+  ownerId: string,
+): Promise<{ full_name: string | null; email: string } | null> {
+  const supabase = await serverSupabase();
+  const { data } = await supabase
+    .from("organiser")
+    .select("full_name, email")
+    .eq("id", ownerId)
+    .maybeSingle();
+  return (data as { full_name: string | null; email: string } | null) ?? null;
+}
+
 /** New items land at the end: one past the highest position there is. */
 export async function addAgendaItem(
   festivalId: string,
