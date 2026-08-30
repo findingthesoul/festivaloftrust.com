@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import closeUp from "@/assets/close-up.jpg";
+import photo from "@/assets/society.jpg";
 import { CardSheets } from "@/components/CardSheets";
 import { PageHero } from "@/components/PageHero";
 import { NineSteps } from "@/components/NineSteps";
@@ -9,9 +9,7 @@ export const metadata: Metadata = { title: "For society" };
 export default function Page() {
   return (
     <main className="w-full flex-1">
-      {/* Placeholder photo until the page's own picture arrives — one
-          import to swap. */}
-      <PageHero photo={closeUp} title="For society" intro="How a community hosts a Festival of Trust in its own place, with the backing of a funder." />
+      <PageHero photo={photo} photoAlt="A community celebrating under bunting, dressed in white, laughing." title="For society" intro="How a community hosts a Festival of Trust in its own place, with the backing of a funder." />
 
       <CardSheets
         sheets={[
