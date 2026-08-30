@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { serverSupabase } from "@/lib/supabase/server";
 import { standing } from "@/lib/organiser";
+import Link from "next/link";
 import { FestivalButtons, OrganiserButtons } from "./review-buttons";
 
 export const metadata: Metadata = { title: "Review", robots: { index: false } };
@@ -10,9 +11,9 @@ export const dynamic = "force-dynamic";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ organiser?: string }>;
+  searchParams: Promise<{ organiser?: string; tab?: string }>;
 }) {
-  const { organiser: pickedOrganiser } = await searchParams;
+  const { organiser: pickedOrganiser, tab } = await searchParams;
   const s = await standing();
   // Not a redirect: someone who is not an admin should not learn that this
   // page exists.
@@ -75,16 +76,67 @@ export default async function Page({
   const pendingFestivals = festivals ?? [];
   const live = liveFestivals ?? [];
 
+  // Links, not client-side tabs: each one is an address, so a reviewer can
+  // bookmark "everything by this organiser" and land back on it. It also keeps
+  // the organiser filter below working without a second mechanism — both are
+  // just the query string.
+  //
+  // The counts are the point of the row as much as the labels are: what a
+  // reviewer wants first is whether anything is waiting at all.
+  const TABS = [
+    { key: "organisers", label: "Organisers", count: pendingPeople.length },
+    { key: "submitted", label: "To publish", count: pendingFestivals.length },
+    { key: "live", label: "Live", count: live.length },
+    { key: "all", label: "Every festival", count: everyFestival.length },
+  ] as const;
+
+  // Default to whatever needs a person first — somebody waiting to be let in,
+  // then a festival waiting to go out — rather than always the same tab.
+  const active =
+    TABS.some((t) => t.key === tab) && tab
+      ? tab
+      : pendingPeople.length > 0
+        ? "organisers"
+        : pendingFestivals.length > 0
+          ? "submitted"
+          : "all";
+
+  const href = (key: string) =>
+    key === "all" && pickedOrganiser
+      ? `/admin?tab=all&organiser=${encodeURIComponent(pickedOrganiser)}`
+      : `/admin?tab=${key}`;
+
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
       <h1 className="text-[clamp(1.75rem,5vw,2.75rem)] leading-[1.05] font-bold tracking-[-0.02em]">
         Review
       </h1>
 
-      <section className="mt-12">
-        <h2 className="text-xl font-bold">
-          Organisers <span className="text-ink/50 font-normal">({pendingPeople.length})</span>
-        </h2>
+      <nav
+        aria-label="Review"
+        className="border-ink/10 mt-6 flex gap-1 overflow-x-auto border-b"
+      >
+        {TABS.map((t) => (
+          <Link
+            key={t.key}
+            href={href(t.key)}
+            aria-current={t.key === active ? "page" : undefined}
+            className={
+              t.key === active
+                ? "border-green -mb-px border-b-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap"
+                : "text-ink/60 hover:text-ink -mb-px border-b-2 border-transparent px-4 py-2.5 text-sm whitespace-nowrap transition-colors"
+            }
+          >
+            {t.label}{" "}
+            <span className={t.key === active ? "text-ink/50 font-normal" : "text-ink/40"}>
+              ({t.count})
+            </span>
+          </Link>
+        ))}
+      </nav>
+
+      {active === "organisers" && (
+      <section className="mt-10">
         {pendingPeople.length === 0 ? (
           <p className="text-ink/60 mt-3 text-sm">Nobody waiting.</p>
         ) : (
@@ -108,11 +160,10 @@ export default async function Page({
         )}
       </section>
 
-      <section className="mt-14">
-        <h2 className="text-xl font-bold">
-          Festivals to publish{" "}
-          <span className="text-ink/50 font-normal">({pendingFestivals.length})</span>
-        </h2>
+      )}
+
+      {active === "submitted" && (
+      <section className="mt-10">
         {pendingFestivals.length === 0 ? (
           <p className="text-ink/60 mt-3 text-sm">Nothing waiting.</p>
         ) : (
@@ -133,10 +184,10 @@ export default async function Page({
         )}
       </section>
 
-      <section className="mt-14">
-        <h2 className="text-xl font-bold">
-          Live <span className="text-ink/50 font-normal">({live.length})</span>
-        </h2>
+      )}
+
+      {active === "live" && (
+      <section className="mt-10">
         {live.length === 0 ? (
           <p className="text-ink/60 mt-3 text-sm">Nothing published yet.</p>
         ) : (
@@ -161,11 +212,13 @@ export default async function Page({
           </ul>
         )}
       </section>
-      <section className="mt-14">
+      )}
+
+      {active === "all" && (
+      <section className="mt-10">
         <div className="flex flex-wrap items-baseline justify-between gap-3">
           <h2 className="text-xl font-bold">
-            {pickedName ? `Festivals by ${pickedName}` : "Every festival"}{" "}
-            <span className="text-ink/50 font-normal">({everyFestival.length})</span>
+            {pickedName ? `Festivals by ${pickedName}` : "Every festival"}
           </h2>
 
           {/* A plain GET form: the choice is in the address, so it survives a
@@ -227,6 +280,7 @@ export default async function Page({
           </ul>
         )}
       </section>
+      )}
     </main>
   );
 }
