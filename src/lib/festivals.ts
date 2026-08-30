@@ -393,6 +393,23 @@ export type EventSettings = {
 };
 
 /**
+ * What The Thread gets as the intention: the festival's own record lives
+ * here, full length and with its formatting marks; the platform's column
+ * caps at 2000 characters and renders plain text, so it receives a stripped,
+ * capped preview rather than a refusal.
+ */
+function plainIntention(summary: string | null): string | null {
+  if (!summary) return summary;
+  const plain = summary
+    .replace(/\[([^\]]+)\]\((?:https?:\/\/[^\s)]+|mailto:[^\s)]+)\)/g, "$1")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/^#{1,3} /gm, "");
+  if (plain.length <= 2000) return plain;
+  return plain.slice(0, 1999).replace(/\s+\S*$/, "") + "\u2026";
+}
+
+/**
  * Save the event's settings, here and on its public page.
  *
  * Written locally first, because the festival is the record and the thread is
@@ -431,7 +448,7 @@ export async function saveEventSettings(
   try {
     await patchThread(festival.thread_id, {
       title: input.name,
-      intention: input.summary,
+      intention: plainIntention(input.summary),
       starts_on: input.starts_on,
       // A Festival of Trust is one day. The Thread wants both ends, so the end
       // is the start rather than a second question nobody should be asked.
