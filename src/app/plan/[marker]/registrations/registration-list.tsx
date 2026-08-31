@@ -93,7 +93,10 @@ export function RegistrationList({
         </div>
 
         {rows.length > 0 && (
-          <table className="border-ink/10 mt-4 w-full border-y text-sm">
+          // Five columns never fit a phone; the table scrolls in its own
+          // strip rather than dragging the whole page sideways.
+          <div className="mt-4 overflow-x-auto">
+          <table className="border-ink/10 w-full border-y text-sm">
             <thead>
               <tr className="text-ink/60 text-left">
                 <th className="w-10 py-2">
@@ -157,6 +160,7 @@ export function RegistrationList({
               ))}
             </tbody>
           </table>
+          </div>
         )}
         {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
         {selected.size > 0 && (
