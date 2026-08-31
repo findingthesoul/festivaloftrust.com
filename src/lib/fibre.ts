@@ -426,6 +426,8 @@ export type FibreEnrolment = {
   full_name?: string | null;
   email?: string | null;
   checked_in_at?: string | null;
+  /** The Thread's door capability: opens the QR and the check-in, nothing else. */
+  checkin_code?: string | null;
   id: string;
   enrolment_id: string;
   person_id: string;

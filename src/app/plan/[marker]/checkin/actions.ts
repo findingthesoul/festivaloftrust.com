@@ -79,13 +79,6 @@ export async function checkInPlatformGuest(
   return { arrived: true, name: guest.name };
 }
 
-/** The scanner's question: this ticket id — whose is it? Check them in. */
-export async function checkInTicket(
-  marker: string,
-  ticketId: string,
-): Promise<CheckResult> {
-  return setArrived(marker, ticketId, true);
-}
 
 /** Check a platform enrolment in or out, on the platform's own book. */
 export async function setEnrolmentArrived(

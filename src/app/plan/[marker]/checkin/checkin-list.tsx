@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { checkInPlatformGuest, checkInThreadCode, checkInTicket, setArrived, setEnrolmentArrived } from "./actions";
+import { checkInPlatformGuest, checkInThreadCode, setArrived, setEnrolmentArrived } from "./actions";
 import { input } from "@/components/ui";
 
 export type DoorGuest = {
@@ -16,9 +16,8 @@ export type DoorGuest = {
   arrived: boolean;
 };
 
-const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-// The Thread's own tickets carry a 32-hex check-in code in their address.
-const THREAD_CODE = /checkin\/([0-9a-f]{32})/i;
+// Every ticket is The Thread's: a 32-hex check-in code in its address.
+const THREAD_CODE = /(?:checkin\/)?([0-9a-f]{32})/i;
 
 /**
  * The list at the door, and the camera above it. Scanning prefers the
@@ -78,21 +77,16 @@ export function CheckinList({
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     const onCode = (raw: string) => {
-      // Two kinds of ticket arrive at one door: the site's own (a UUID in
-      // the address) and The Thread's (a 32-hex check-in code).
-      const threadCode = THREAD_CODE.exec(raw)?.[1];
-      const id = threadCode ?? UUID.exec(raw)?.[0];
-      if (!id) {
+      const code = THREAD_CODE.exec(raw)?.[1];
+      if (!code) {
         setNote("That QR code is not a ticket for this festival.");
         return;
       }
       const now = Date.now();
-      if (lastCode.current.code === id && now - lastCode.current.at < 4000) return;
-      lastCode.current = { code: id, at: now };
+      if (lastCode.current.code === code && now - lastCode.current.at < 4000) return;
+      lastCode.current = { code, at: now };
       start(async () => {
-        const r = threadCode
-          ? await checkInThreadCode(marker, threadCode)
-          : await checkInTicket(marker, id);
+        const r = await checkInThreadCode(marker, code);
         setNote(r.error ? r.error : `${r.name ?? "Guest"} is in ✓`);
         if (!r.error) router.refresh();
       });
