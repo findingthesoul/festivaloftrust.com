@@ -89,15 +89,28 @@ patch(
   `  const eur = n => "\\u20AC" + Math.round(n).toLocaleString("de-DE");`,
   `  let CURRENCY_SYMBOL = "\\u20AC";
   const eur = n => CURRENCY_SYMBOL + Math.round(n).toLocaleString("de-DE");
-  function setCurrency(symbol, ratio, scaleDefaults) {
+  function scaleMoneyFields(f) {
+    ["rateSocial","rateCommercial","drinks","food","otherPP","travel","location","otherTotal"].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const n = Number(el.value);
+      if (Number.isFinite(n) && n > 0) el.value = String(Math.round(n * f));
+    });
+  }
+  function setCurrency(symbol, ratio, scaleDefaults, convert) {
     CURRENCY_SYMBOL = symbol || "\\u20AC";
-    if (scaleDefaults && ratio && ratio !== 1) {
-      ["rateSocial","rateCommercial","drinks","food","otherPP","travel","location","otherTotal"].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const n = Number(el.value);
-        if (Number.isFinite(n) && n > 0) el.value = String(Math.round(n * ratio));
-      });
+    if (scaleDefaults && ratio && ratio !== 1) scaleMoneyFields(ratio);
+    if (convert && Number.isFinite(convert) && convert > 0 && convert !== 1) {
+      scaleMoneyFields(convert);
+      artists = artists.map(a => Math.round(a * convert));
+      funders = funders.map(f => ({ name: f.name, amt: Math.round(f.amt * convert) }));
+      if (!discPct) {
+        const dv = document.getElementById("discval");
+        const n = Number(dv && dv.value);
+        if (dv && Number.isFinite(n) && n > 0) dv.value = String(Math.round(n * convert));
+      }
+      drawArtists();
+      drawFunders();
     }
     calc();
   }`,

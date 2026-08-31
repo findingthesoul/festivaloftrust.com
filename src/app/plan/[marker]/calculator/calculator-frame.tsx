@@ -205,14 +205,42 @@ export function CalculatorFrame({
             value={cur}
             onChange={async (e) => {
               const code = e.target.value;
+              // The money on screen changes currency, so every amount —
+              // inputs, artists, funders — converts by the step between the
+              // old multiplier and the new one. R20 to the euro at half the
+              // price level: a €10.000 line becomes R100.000, not R10.000.
+              const mOf = (c: string) => {
+                const found = currencies.find((x) => x.code === c);
+                return found ? found.rate * found.ratio : 1;
+              };
+              const factor = mOf(code) / mOf(cur);
+              const win = frame.current?.contentWindow as
+                | (Window & {
+                    setCurrency?: (
+                      s: string,
+                      r: number,
+                      scale: boolean,
+                      convert?: number,
+                    ) => void;
+                  })
+                | null
+                | undefined;
+              const symbol =
+                currencies.find((x) => x.code === code)?.symbol ?? "€";
+              if (factor !== 1 && typeof win?.setCurrency === "function") {
+                win.setCurrency(symbol, mOf(code), false, factor);
+                // The converted figures are the festival's figures now —
+                // saved before the reload restores them.
+                await save();
+              }
               setCur(code);
               const r = await setFestivalCurrency(marker, code);
               if (r.error) {
                 setNote(r.error);
                 return;
               }
-              // Reload the tool so a fresh festival reseeds its defaults in
-              // the new currency; saved figures stay exactly as they were.
+              // Reload so the tool reseeds base prices at the new
+              // multiplier and restores the converted snapshot.
               if (frame.current) frame.current.src = "/planner";
             }}
             className="border-ink/20 rounded-lg border bg-white px-2 py-1"
