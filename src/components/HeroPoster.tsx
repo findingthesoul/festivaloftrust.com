@@ -60,7 +60,23 @@ function seatsFor(
   const minY = Math.min(...logo.map((i) => i.y));
   const gw = Math.max(...logo.map((i) => i.x + i.size)) - minX;
   const gh = Math.max(...logo.map((i) => i.y + i.size)) - minY;
-  const u = Math.min(0.86 / gw, (0.55 * BOX_A) / gh);
+  // On short windows the composition box's top rises above the viewport, so
+  // a seat near the box top would sail through the nav bar. The ceiling is
+  // measured in screen space — just under the menu — and translated into
+  // box fractions; the cluster shrinks if that is what fitting takes.
+  let topY = 0.02;
+  if (box && typeof window !== "undefined") {
+    const b = box.getBoundingClientRect();
+    if (b.height > 0) {
+      let navH = 64;
+      for (const bar of document.querySelectorAll<HTMLElement>("[data-nav-bar]")) {
+        navH = Math.max(navH, bar.offsetHeight);
+      }
+      topY = Math.max(topY, (navH + 16 - b.top) / b.height);
+    }
+  }
+  const availY = Math.max(0.12, 0.58 - topY);
+  const u = Math.min(0.86 / gw, (availY * BOX_A) / gh);
   let ox = (1 - gw * u) / 2;
   // Keep the composition off the faces: when the photo says where they are,
   // aim the cluster's centre at the emptier half of the screen, translated
@@ -72,7 +88,7 @@ function seatsFor(
       ox = (targetScreen * window.innerWidth - b.left) / b.width - (gw * u) / 2;
     }
   }
-  const oy = Math.max(0.02, (0.56 - (gh * u) / BOX_A) / 2);
+  const oy = topY + Math.max(0, (availY - (gh * u) / BOX_A) / 2);
   const out = POSTER_SEATS.map((s) => ({ ...s }));
   for (const it of logo) {
     const idx = FORMS.findIndex((f) => f.file === `forms-0${it.id + 1}`);
