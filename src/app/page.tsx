@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { HeroPoster } from "@/components/HeroPoster";
+import { HeroPoster, type HeroSlide } from "@/components/HeroPoster";
+import { homeSlides } from "@/lib/photos";
+
+// The hero rotates through photos festivals offered — those come and go
+// without a deploy.
+export const dynamic = "force-dynamic";
+
+/** The close-up the site opened with, first in every rotation. */
+const BUILTIN: HeroSlide = { url: null, credit: "Cape Town 2026", logo: null };
 
 const WAYS = [
   {
@@ -14,10 +22,22 @@ const WAYS = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  // Never fatal: a home page that cannot reach the photo list still opens
+  // with its own poster.
+  const offered = await homeSlides().catch(() => []);
   return (
     <>
-      <HeroPoster />
+      <HeroPoster
+        slides={[
+          BUILTIN,
+          ...offered.map((s) => ({
+            url: s.url,
+            credit: s.credit,
+            logo: s.logo,
+          })),
+        ]}
+      />
 
       {/* scroll-mt clears the fixed nav bar, which otherwise covers the top
           of the story when the Read on link jumps here. */}

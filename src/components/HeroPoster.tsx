@@ -1,10 +1,21 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import closeUp from "@/assets/close-up.jpg";
 import wordmark from "@/assets/festival-of-trust.png";
 import { POSTER_FORMS as FORMS, POSTER_MARK as MARK, POSTER_RATIO } from "./composition";
+
+/**
+ * A photo in the rotation: url null means the built-in close-up. The logo is
+ * the festival's claimed composition from the generator (cell units), which
+ * the nine forms re-seat themselves into while that photo shows.
+ */
+export type HeroSlide = {
+  url: string | null;
+  credit: string | null;
+  logo: { id: number; x: number; y: number; size: number }[] | null;
+};
 
 /**
  * The poster, animated. The photo fills the whole screen, nav included; the
@@ -24,6 +35,40 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const ease = (t: number) =>
   t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+type Seat = { x: number; y: number; w: number };
+const POSTER_SEATS: Seat[] = FORMS.map((f) => ({ x: f.x, y: f.y, w: f.w }));
+// Height over width of the composition box, for keeping cells square when
+// converting the logo's cell units into box fractions.
+const BOX_A = 1536 / 1290;
+
+/**
+ * Where each form sits for a slide: the poster arrangement, or the
+ * festival's own logo composition fitted into the upper part of the box.
+ * Forms and logo shapes pair one to one — generator shape id N is the file
+ * forms-0(N+1).
+ */
+function seatsFor(logo: HeroSlide["logo"]): Seat[] {
+  if (!logo || logo.length === 0) return POSTER_SEATS.map((s) => ({ ...s }));
+  const minX = Math.min(...logo.map((i) => i.x));
+  const minY = Math.min(...logo.map((i) => i.y));
+  const gw = Math.max(...logo.map((i) => i.x + i.size)) - minX;
+  const gh = Math.max(...logo.map((i) => i.y + i.size)) - minY;
+  const u = Math.min(0.86 / gw, (0.55 * BOX_A) / gh);
+  const ox = (1 - gw * u) / 2;
+  const oy = Math.max(0.02, (0.56 - (gh * u) / BOX_A) / 2);
+  const out = POSTER_SEATS.map((s) => ({ ...s }));
+  for (const it of logo) {
+    const idx = FORMS.findIndex((f) => f.file === `forms-0${it.id + 1}`);
+    if (idx < 0) continue;
+    out[idx] = {
+      x: ox + (it.x - minX) * u,
+      y: oy + ((it.y - minY) * u) / BOX_A,
+      w: it.size * u,
+    };
+  }
+  return out;
+}
 
 /**
  * The read-more click drives its own scroll: the browser's smooth scroll is
@@ -62,11 +107,54 @@ function readOn(e: React.MouseEvent<HTMLAnchorElement>) {
   requestAnimationFrame(step);
 }
 
-export function HeroPoster() {
+export function HeroPoster({ slides }: { slides?: HeroSlide[] }) {
   const heroRef = useRef<HTMLElement | null>(null);
   const boxRef = useRef<HTMLDivElement | null>(null);
   const markRef = useRef<HTMLHeadingElement | null>(null);
   const formRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const all: HeroSlide[] =
+    slides && slides.length > 0
+      ? slides
+      : [{ url: null, credit: null, logo: null }];
+  const [idx, setIdx] = useState(0);
+  // Where each form currently starts from (box fractions) — the poster
+  // arrangement until a slide with a logo composition re-seats them.
+  const seatsRef = useRef<Seat[]>(POSTER_SEATS.map((s) => ({ ...s })));
+  const frameRef = useRef<() => void>(() => {});
+
+  // The rotation: a new photo every 15 seconds, unless motion is reduced or
+  // there is nothing to rotate to.
+  useEffect(() => {
+    if (all.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setInterval(() => setIdx((i) => (i + 1) % all.length), 15000);
+    return () => clearInterval(t);
+  }, [all.length]);
+
+  // The forms re-seat themselves for the slide on show: a short flight from
+  // wherever they stand to the slide's arrangement, drawn through the same
+  // frame() the scroll animation uses, so the two never disagree.
+  useEffect(() => {
+    const target = seatsFor(all[idx]?.logo ?? null);
+    const from = seatsRef.current.map((s) => ({ ...s }));
+    const started = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - started) / 1800);
+      const e = ease(t);
+      seatsRef.current = from.map((f, i) => ({
+        x: lerp(f.x, target[i].x, e),
+        y: lerp(f.y, target[i].y, e),
+        w: lerp(f.w, target[i].w, e),
+      }));
+      frameRef.current();
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+    // all changes identity every render; the slide index is the real signal.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx]);
 
   useEffect(() => {
     const hero = heroRef.current;
@@ -135,17 +223,18 @@ export function HeroPoster() {
       FORMS.forEach((spec, i) => {
         const el = forms[i];
         if (!el) return;
+        const seat = seatsRef.current[i] ?? spec;
         const w0 = parseFloat(el.style.width) || 1;
         const qi = settle(0.03 + i * 0.028);
         place(
           el,
-          lerp(brect.left + spec.x * brect.width, dockLeft + (i % 3) * tile, qi),
+          lerp(brect.left + seat.x * brect.width, dockLeft + (i % 3) * tile, qi),
           lerp(
-            brect.top + spec.y * brect.height,
+            brect.top + seat.y * brect.height,
             (navH - dockH) / 2 + Math.floor(i / 3) * tile,
             qi,
           ),
-          lerp((spec.w * brect.width) / w0, tile / w0, qi),
+          lerp((seat.w * brect.width) / w0, tile / w0, qi),
         );
         if (spec.accent && el.firstElementChild) {
           (el.firstElementChild as HTMLElement).style.backgroundColor = `rgb(${YELLOW.map((c) =>
@@ -158,6 +247,7 @@ export function HeroPoster() {
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(frame);
     };
+    frameRef.current = frame;
     frame();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
@@ -170,16 +260,37 @@ export function HeroPoster() {
 
   return (
     <section ref={heroRef} className="relative h-dvh w-full">
-      <Image
-        src={closeUp}
-        alt="A child in bright pink sunglasses, standing close among others at a festival."
-        fill
-        preload
-        sizes="100vw"
-        // Held above centre: the faces sit in the top third of the frame, and
-        // a plain centre crop takes the tops of their heads off.
-        className="object-[center_30%] object-cover"
-      />
+      {/* The rotation: every photo stays mounted, one is on top. A slow
+          three-second fade carries each hand-over; the built-in close-up is
+          the slide with no url. */}
+      {all.map((s, i) => (
+        <Image
+          key={i}
+          src={s.url ?? closeUp}
+          alt={
+            s.url
+              ? ""
+              : "A child in bright pink sunglasses, standing close among others at a festival."
+          }
+          fill
+          preload={i === 0}
+          sizes="100vw"
+          // Held above centre: faces usually sit in the top third of a
+          // close-up, and a plain centre crop takes the tops of heads off.
+          className={`object-[center_30%] object-cover transition-opacity duration-[3000ms] ease-linear ${
+            i === idx ? "opacity-100" : "opacity-0"
+          }`}
+        />
+      ))}
+
+      {all[idx]?.credit && (
+        <p
+          key={idx}
+          className="text-cream/75 absolute right-4 bottom-4 z-10 text-[11px] tracking-wide"
+        >
+          Credits: {all[idx].credit}
+        </p>
+      )}
 
       {/* The photo's top edge is a bright sky band on some crops, and the
           menu floats there without a background until scrolling starts — a

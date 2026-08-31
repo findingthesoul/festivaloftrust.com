@@ -7,8 +7,10 @@ import { Agenda } from "../settings/agenda";
 import { EventSettings } from "../settings/event-settings";
 import { CoverUpload } from "../settings/cover-upload";
 import { LogoPicker } from "../settings/logo-picker";
+import { Photos } from "../settings/photos";
 import { card } from "@/components/ui";
 import { allLogos, logoSvg } from "@/lib/logos";
+import { photosFor } from "@/lib/photos";
 
 /**
  * The public page's own tab: the words it shows, the programme, the cover
@@ -29,8 +31,9 @@ export default async function Page({
   const { festival, access } = await festivalFor(marker, { organiserOnly: true });
 
   const agenda = await agendaFor(festival.id);
-  // Fails soft: without the 0018 migration there simply is no logo card data.
+  // Both fail soft: without their migrations the cards simply start empty.
   const logos = await allLogos().catch(() => []);
+  const photos = await photosFor(festival.id).catch(() => []);
 
   // The structure choice lives in the form's hidden event half, so the same
   // fetch as Settings — see that page for why it never throws.
@@ -71,6 +74,9 @@ export default async function Page({
         </section>
         <section className={`${card} p-5 sm:p-7`}>
           <CoverUpload festivalId={festival.id} current={festival.cover_url} />
+        </section>
+        <section className={`${card} p-5 sm:p-7`}>
+          <Photos festivalId={festival.id} photos={photos} />
         </section>
         <section className={`${card} p-5 sm:p-7`}>
           <LogoPicker
