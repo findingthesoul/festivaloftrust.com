@@ -176,15 +176,16 @@ export function CalculatorFrame({
           : null;
       const savedCur =
         typeof savedObj?.fotCurrency === "string" ? savedObj.fotCurrency : null;
-      // The multiplier the figures were saved at, preferred over what the
-      // stamp's code means today — an admin correcting an exchange rate
-      // changes the code's meaning, and the figures must follow.
+      // The multiplier the figures were saved at. Only the stamp's own
+      // number is trusted — never what the code means today, because an
+      // admin correcting an exchange rate changes the code's meaning. A
+      // stamp without a multiplier is from the era when conversions were
+      // broken and every figure was effectively a base-currency figure, so
+      // it reads as 1.
       const savedM =
         typeof savedObj?.fotMultiplier === "number" && savedObj.fotMultiplier > 0
           ? savedObj.fotMultiplier
-          : savedCur
-            ? mOf(savedCur)
-            : 1;
+          : 1;
       const factor = saved ? multiplier / savedM : 1;
       tool.setCurrency(
         chosen.symbol,
