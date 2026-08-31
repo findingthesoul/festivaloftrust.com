@@ -56,7 +56,8 @@ export default async function Page({
         Every photo in the workspace: what festivals uploaded, and the
         library you keep yourself. Place a photo on the home page rotation or
         on a story page&rsquo;s opening picture; taking it off a page never
-        deletes it.
+        deletes it. Click a photo where the faces are — the home page keeps
+        its shape composition on the other side.
       </p>
 
       <PhotoDesk

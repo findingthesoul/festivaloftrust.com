@@ -30,7 +30,7 @@ export default async function Home() {
   const slides: HeroSlide[] = [
     ...offered.slice(start),
     ...offered.slice(0, start),
-  ].map((s) => ({ url: s.url, credit: s.credit, logo: s.logo }));
+  ].map((s) => ({ url: s.url, credit: s.credit, logo: s.logo, focus: s.focus }));
   return (
     <>
       <HeroPoster slides={slides} />

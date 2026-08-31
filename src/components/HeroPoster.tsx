@@ -15,6 +15,8 @@ export type HeroSlide = {
   url: string | null;
   credit: string | null;
   logo: { id: number; x: number; y: number; size: number }[] | null;
+  /** Where the faces are (image fractions) — the forms keep away from it. */
+  focus?: { x: number; y: number } | null;
 };
 
 /**
@@ -48,14 +50,28 @@ const BOX_A = 1536 / 1290;
  * Forms and logo shapes pair one to one — generator shape id N is the file
  * forms-0(N+1).
  */
-function seatsFor(logo: HeroSlide["logo"]): Seat[] {
+function seatsFor(
+  logo: HeroSlide["logo"],
+  focus: { x: number; y: number } | null,
+  box: HTMLElement | null,
+): Seat[] {
   if (!logo || logo.length === 0) return POSTER_SEATS.map((s) => ({ ...s }));
   const minX = Math.min(...logo.map((i) => i.x));
   const minY = Math.min(...logo.map((i) => i.y));
   const gw = Math.max(...logo.map((i) => i.x + i.size)) - minX;
   const gh = Math.max(...logo.map((i) => i.y + i.size)) - minY;
   const u = Math.min(0.86 / gw, (0.55 * BOX_A) / gh);
-  const ox = (1 - gw * u) / 2;
+  let ox = (1 - gw * u) / 2;
+  // Keep the composition off the faces: when the photo says where they are,
+  // aim the cluster's centre at the emptier half of the screen, translated
+  // into box fractions (the box is the coordinate space everything flies in).
+  if (focus && box && typeof window !== "undefined") {
+    const b = box.getBoundingClientRect();
+    if (b.width > 0) {
+      const targetScreen = focus.x >= 0.5 ? 0.26 : 0.74;
+      ox = (targetScreen * window.innerWidth - b.left) / b.width - (gw * u) / 2;
+    }
+  }
   const oy = Math.max(0.02, (0.56 - (gh * u) / BOX_A) / 2);
   const out = POSTER_SEATS.map((s) => ({ ...s }));
   for (const it of logo) {
@@ -135,7 +151,11 @@ export function HeroPoster({ slides }: { slides?: HeroSlide[] }) {
   // wherever they stand to the slide's arrangement, drawn through the same
   // frame() the scroll animation uses, so the two never disagree.
   useEffect(() => {
-    const target = seatsFor(all[idx]?.logo ?? null);
+    const target = seatsFor(
+      all[idx]?.logo ?? null,
+      all[idx]?.focus ?? null,
+      boxRef.current,
+    );
     const from = seatsRef.current.map((s) => ({ ...s }));
     const started = performance.now();
     let raf = 0;

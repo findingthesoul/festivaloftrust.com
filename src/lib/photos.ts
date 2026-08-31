@@ -18,13 +18,16 @@ export type PhotoRow = {
   credit: string | null;
   page: PhotoPage | null;
   festival_id: string | null;
+  /** Where the faces are, as fractions of the image — null is unknown. */
+  focus_x: number | null;
+  focus_y: number | null;
 };
 
 export async function photosFor(festivalId: string): Promise<PhotoRow[]> {
   const supabase = await serverSupabase();
   const { data, error } = await supabase
     .from("photo")
-    .select("id, url, credit, page, festival_id")
+    .select("id, url, credit, page, festival_id, focus_x, focus_y")
     .eq("festival_id", festivalId)
     .order("created_at");
   if (error) throw new Error(`photos: ${error.message}`);
@@ -36,7 +39,7 @@ export async function allPhotos(): Promise<PhotoRow[]> {
   const supabase = await serverSupabase();
   const { data, error } = await supabase
     .from("photo")
-    .select("id, url, credit, page, festival_id")
+    .select("id, url, credit, page, festival_id, focus_x, focus_y")
     .order("created_at", { ascending: false });
   if (error) throw new Error(`photos: ${error.message}`);
   return (data ?? []) as PhotoRow[];
@@ -59,6 +62,8 @@ export type HomeSlide = {
   url: string;
   credit: string;
   logo: Item[] | null;
+  /** The photo's focal point (faces), for the shapes to stay away from. */
+  focus: { x: number; y: number } | null;
 };
 
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
@@ -77,13 +82,15 @@ export async function homeSlides(): Promise<HomeSlide[]> {
   const supabase = await serverSupabase();
   const { data: photos } = await supabase
     .from("photo")
-    .select("url, credit, festival_id")
+    .select("url, credit, festival_id, focus_x, focus_y")
     .eq("page", "home")
     .order("created_at");
   const rows = (photos ?? []) as {
     url: string;
     credit: string | null;
     festival_id: string | null;
+    focus_x: number | null;
+    focus_y: number | null;
   }[];
   if (rows.length === 0) return [];
 
@@ -120,6 +127,10 @@ export async function homeSlides(): Promise<HomeSlide[]> {
       url: p.url,
       credit: credit || by || "Festival of Trust",
       logo: p.festival_id ? (logoOf.get(p.festival_id)?.items ?? null) : null,
+      focus:
+        p.focus_x != null && p.focus_y != null
+          ? { x: Number(p.focus_x), y: Number(p.focus_y) }
+          : null,
     };
   });
 }

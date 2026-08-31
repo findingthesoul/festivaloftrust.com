@@ -110,14 +110,47 @@ export function PhotoDesk({
         .insert({ festival_id: c.festivalId, url: c.url }),
     );
 
+  // One click on the photo marks where the faces are; the home page keeps
+  // its shapes on the other side. Click the marker again-ish (anywhere) to
+  // move it — precision does not matter, the side does.
+  const setFocus = (p: PhotoRow, e: React.MouseEvent<HTMLElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    void run(
+      browserSupabase()
+        .from("photo")
+        .update({
+          focus_x: Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)),
+          focus_y: Math.min(1, Math.max(0, (e.clientY - r.top) / r.height)),
+        })
+        .eq("id", p.id),
+    );
+  };
+
   const card = (p: PhotoRow, inLibrary: boolean) => (
     <li key={p.id} className="border-ink/15 border bg-white/40">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={p.url}
-        alt=""
-        className="aspect-[3/2] w-full border-b border-ink/10 object-cover"
-      />
+      <button
+        type="button"
+        onClick={(e) => setFocus(p, e)}
+        title="Click where the faces are — the site keeps its shapes away from that spot"
+        className="relative block w-full cursor-crosshair"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={p.url}
+          alt=""
+          className="aspect-[3/2] w-full border-b border-ink/10 object-cover"
+        />
+        {p.focus_x != null && p.focus_y != null && (
+          <span
+            aria-hidden="true"
+            className="border-cream absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-black/30 shadow"
+            style={{
+              left: `${p.focus_x * 100}%`,
+              top: `${p.focus_y * 100}%`,
+            }}
+          />
+        )}
+      </button>
       <div className="space-y-2 p-3">
         <p className="text-sm font-medium">{nameOf(p)}</p>
         <input
