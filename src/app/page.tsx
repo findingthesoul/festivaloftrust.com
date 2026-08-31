@@ -3,11 +3,8 @@ import { HeroPoster, type HeroSlide } from "@/components/HeroPoster";
 import { homeSlides } from "@/lib/photos";
 
 // The hero rotates through photos festivals offered — those come and go
-// without a deploy.
+// without a deploy, and every visit starts somewhere else in the ring.
 export const dynamic = "force-dynamic";
-
-/** The close-up the site opened with, first in every rotation. */
-const BUILTIN: HeroSlide = { url: null, credit: "Cape Town 2026", logo: null };
 
 const WAYS = [
   {
@@ -24,20 +21,19 @@ const WAYS = [
 
 export default async function Home() {
   // Never fatal: a home page that cannot reach the photo list still opens
-  // with its own poster.
+  // with its own poster (the HeroPoster falls back to the close-up).
   const offered = await homeSlides().catch(() => []);
+  // A random starting point, not a shuffle: the ring keeps its order, so
+  // fifteen seconds always shows the neighbour, but each visit opens on a
+  // different photo.
+  const start = offered.length ? Math.floor(Math.random() * offered.length) : 0;
+  const slides: HeroSlide[] = [
+    ...offered.slice(start),
+    ...offered.slice(0, start),
+  ].map((s) => ({ url: s.url, credit: s.credit, logo: s.logo }));
   return (
     <>
-      <HeroPoster
-        slides={[
-          BUILTIN,
-          ...offered.map((s) => ({
-            url: s.url,
-            credit: s.credit,
-            logo: s.logo,
-          })),
-        ]}
-      />
+      <HeroPoster slides={slides} />
 
       {/* scroll-mt clears the fixed nav bar, which otherwise covers the top
           of the story when the Read on link jumps here. */}
