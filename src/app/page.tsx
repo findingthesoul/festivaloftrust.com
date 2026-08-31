@@ -22,15 +22,14 @@ const WAYS = [
 export default async function Home() {
   // Never fatal: a home page that cannot reach the photo list still opens
   // with its own poster (the HeroPoster falls back to the close-up).
+  // homeSlides already opens the ring at a random photo per request.
   const offered = await homeSlides().catch(() => []);
-  // A random starting point, not a shuffle: the ring keeps its order, so
-  // fifteen seconds always shows the neighbour, but each visit opens on a
-  // different photo.
-  const start = offered.length ? Math.floor(Math.random() * offered.length) : 0;
-  const slides: HeroSlide[] = [
-    ...offered.slice(start),
-    ...offered.slice(0, start),
-  ].map((s) => ({ url: s.url, credit: s.credit, logo: s.logo, focus: s.focus }));
+  const slides: HeroSlide[] = offered.map((s) => ({
+    url: s.url,
+    credit: s.credit,
+    logo: s.logo,
+    focus: s.focus,
+  }));
   return (
     <>
       <HeroPoster slides={slides} />

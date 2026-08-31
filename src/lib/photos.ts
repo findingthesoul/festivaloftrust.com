@@ -115,7 +115,7 @@ export async function homeSlides(): Promise<HomeSlide[]> {
       .map((l) => [l.claimed_by as string, l.form]),
   );
 
-  return rows.map((p) => {
+  const slides = rows.map((p) => {
     const f = p.festival_id ? festOf.get(p.festival_id) : undefined;
     const when = f?.starts_on ? dateFormat.format(new Date(f.starts_on)) : null;
     const where = [f?.place, when].filter(Boolean).join(" ");
@@ -133,4 +133,7 @@ export async function homeSlides(): Promise<HomeSlide[]> {
           : null,
     };
   });
+  // The ring opens at a random photo each request — order kept, door moved.
+  const start = Math.floor(Math.random() * slides.length);
+  return [...slides.slice(start), ...slides.slice(0, start)];
 }
