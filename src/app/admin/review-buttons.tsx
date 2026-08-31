@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { decideFestival, decideOrganiser } from "./actions";
+import { decideFestival, decideOrganiser, removeFromHome } from "./actions";
 
 export function OrganiserButtons({ id }: { id: string }) {
   const [pending, start] = useTransition();
@@ -99,5 +99,19 @@ export function FestivalButtons({
       </div>
       {error && <p className="max-w-xs text-right text-sm text-red-700">{error}</p>}
     </div>
+  );
+}
+
+export function HomePhotoButtons({ id }: { id: string }) {
+  const [pending, start] = useTransition();
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={() => start(async () => void (await removeFromHome(id)))}
+      className="border-ink/25 hover:border-ink/50 border px-3 py-1.5 text-sm disabled:opacity-50"
+    >
+      Take off the home page
+    </button>
   );
 }

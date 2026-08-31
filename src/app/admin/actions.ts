@@ -96,3 +96,20 @@ export async function decideFestival(id: string, decision: "live" | "draft") {
   // Only the public page is in doubt, so say which half went wrong.
   return threadError ? { error: `saved, but The Thread said: ${threadError}` } : {};
 }
+
+/**
+ * Take a photo out of the home page rotation. The offer stays with the
+ * festival — its organiser can offer it again — but the workspace decides
+ * what the front door wears.
+ */
+export async function removeFromHome(photoId: string) {
+  if (!(await requireAdmin())) return { error: "not an admin" };
+  const supabase = await serverSupabase();
+  const { error } = await supabase
+    .from("photo")
+    .update({ home: false })
+    .eq("id", photoId);
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return error ? { error: error.message } : {};
+}

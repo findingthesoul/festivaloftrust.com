@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { serverSupabase } from "@/lib/supabase/server";
 import { standing } from "@/lib/organiser";
 import Link from "next/link";
-import { FestivalButtons, OrganiserButtons } from "./review-buttons";
+import { FestivalButtons, HomePhotoButtons, OrganiserButtons } from "./review-buttons";
 
 export const metadata: Metadata = { title: "Review", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -48,7 +48,12 @@ export default async function Page({
   // Deliberately NOT folded into "Your festivals": that list is what you own or
   // work on, and an admin seeing everybody's there would make the word "your"
   // a lie. Two questions, two screens.
-  const [{ data: allOrganisers }, { data: everyFestivalRaw }, { data: memberships }] = await Promise.all([
+  const [
+    { data: allOrganisers },
+    { data: everyFestivalRaw },
+    { data: memberships },
+    { data: homePhotoRows },
+  ] = await Promise.all([
     supabase
       .from("organiser")
       .select("id, email, full_name, organisation")
@@ -62,6 +67,13 @@ export default async function Page({
       .select("id, name, marker, place, status, starts_on, owner_id")
       .order("created_at", { ascending: false }),
     supabase.from("festival_member").select("user_id"),
+    // The home page's wardrobe: every photo festivals have offered. Fails
+    // soft to an empty list where the photo table is not migrated yet.
+    supabase
+      .from("photo")
+      .select("id, url, credit, festival_id")
+      .eq("home", true)
+      .order("created_at"),
   ]);
 
   const organisers = allOrganisers ?? [];
@@ -81,6 +93,16 @@ export default async function Page({
   ]);
   const inactive = organisers.filter((o) => !activeIds.has(o.id));
 
+  const festivalName = new Map(
+    (everyFestivalRaw ?? []).map((f) => [f.id, f.name as string]),
+  );
+  const homePhotos = ((homePhotoRows ?? []) as {
+    id: string;
+    url: string;
+    credit: string | null;
+    festival_id: string;
+  }[]).map((p) => ({ ...p, festival: festivalName.get(p.festival_id) ?? "a festival" }));
+
   const pendingPeople = people ?? [];
   const pendingFestivals = festivals ?? [];
   const live = liveFestivals ?? [];
@@ -98,6 +120,7 @@ export default async function Page({
     { key: "live", label: "Live", count: live.length },
     { key: "all", label: "Every festival", count: everyFestival.length },
     { key: "inactive", label: "Inactive", count: inactive.length },
+    { key: "home", label: "Home photos", count: homePhotos.length },
   ] as const;
 
   // Default to whatever needs a person first — somebody waiting to be let in,
@@ -144,6 +167,40 @@ export default async function Page({
           </Link>
         ))}
       </nav>
+
+      {active === "home" && (
+        <section className="mt-10">
+          {homePhotos.length === 0 ? (
+            <p className="text-ink/60">
+              Nothing offered yet. Organisers offer photos on their
+              festival&rsquo;s Webpage tab; everything offered rotates on the
+              home page and is listed here.
+            </p>
+          ) : (
+            <ul className="grid gap-6 sm:grid-cols-2">
+              {homePhotos.map((p) => (
+                <li key={p.id} className="border-ink/15 border bg-white/40">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={p.url}
+                    alt=""
+                    className="aspect-[3/2] w-full border-b border-ink/10 object-cover"
+                  />
+                  <div className="flex items-start justify-between gap-3 p-4">
+                    <div>
+                      <p className="font-medium">{p.festival}</p>
+                      <p className="text-ink/60 mt-0.5 text-sm">
+                        {p.credit ?? "no credit"}
+                      </p>
+                    </div>
+                    <HomePhotoButtons id={p.id} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       {active === "inactive" && (
         <section className="mt-10">
