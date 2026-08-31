@@ -169,8 +169,8 @@ export function HeroPoster({ slides }: { slides?: HeroSlide[] }) {
     // from riding the photo up to sitting still under the nav, with no
     // hand-over jump between positioning schemes. The box itself stays in the
     // photo's flow as the anchor the start positions are measured from.
-    const takeOver = (el: HTMLElement) => {
-      el.style.width = `${el.getBoundingClientRect().width}px`;
+    const takeOver = (el: HTMLElement, minWidth = 0) => {
+      el.style.width = `${Math.max(el.getBoundingClientRect().width, minWidth)}px`;
       el.style.position = "fixed";
       el.style.left = "0";
       el.style.top = "0";
@@ -179,7 +179,13 @@ export function HeroPoster({ slides }: { slides?: HeroSlide[] }) {
       el.style.willChange = "transform";
     };
     takeOver(mark);
-    for (const el of forms) if (el) takeOver(el);
+    // A mask rasterises at layout size; transform scale only magnifies the
+    // pixels it got. The poster's smallest forms grow far past their layout
+    // size when a logo composition seats them large, and arrive blurry — so
+    // every form's layout width is generous enough that the flight only
+    // ever scales DOWN.
+    const boxW = box.getBoundingClientRect().width;
+    for (const el of forms) if (el) takeOver(el, 0.6 * boxW);
 
     const place = (el: HTMLElement, x: number, y: number, k: number) => {
       el.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${k})`;
