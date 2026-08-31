@@ -67,7 +67,6 @@ export async function FestivalHeader({
         active={active}
         canSeeMoney={access.canSeeMoney}
         isOrganiser={access.role === "organiser"}
-        status={festival.status}
       />
     </>
   );

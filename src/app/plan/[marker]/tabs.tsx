@@ -21,13 +21,11 @@ export function FestivalTabs({
   active,
   canSeeMoney,
   isOrganiser,
-  status,
 }: {
   marker: string;
   active: Tab;
   canSeeMoney: boolean;
   isOrganiser: boolean;
-  status: "draft" | "submitted" | "live";
 }) {
   const tabs: {
     key: Tab;
@@ -63,14 +61,6 @@ export function FestivalTabs({
       key: "webpage",
       label: "Webpage",
       href: `/plan/${marker}/webpage`,
-      show: isOrganiser,
-    },
-    {
-      // The label is the act, not the state: an organiser reads it to know what
-      // pressing it will do.
-      key: "publish",
-      label: status === "live" ? "Unpublish" : "Publish",
-      href: `/plan/${marker}/publish`,
       show: isOrganiser,
     },
   ];

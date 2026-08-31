@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { agendaFor } from "@/lib/festivals";
+import { agendaFor, registrationOpensAt } from "@/lib/festivals";
 import { listThreadTemplates, type FibreThreadTemplate } from "@/lib/fibre";
 import { FestivalHeader } from "../festival-header";
 import { festivalFor } from "../guard";
@@ -7,6 +7,8 @@ import { Agenda } from "../settings/agenda";
 import { EventSettings } from "../settings/event-settings";
 import { CoverUpload } from "../settings/cover-upload";
 import { LogoPicker } from "../settings/logo-picker";
+import { PublishControls } from "../publish/publish-controls";
+import { RegistrationControls } from "../publish/registration-controls";
 import { card } from "@/components/ui";
 import { allLogos, logoSvg } from "@/lib/logos";
 import { photosFor } from "@/lib/photos";
@@ -33,6 +35,8 @@ export default async function Page({
   // Both fail soft: without their migrations the cards simply start empty.
   const logos = await allLogos().catch(() => []);
   const photos = await photosFor(festival.id).catch(() => []);
+  const opensAt =
+    festival.status === "live" ? await registrationOpensAt(festival.id) : null;
 
   // The structure choice lives in the form's hidden event half, so the same
   // fetch as Settings — see that page for why it never throws.
@@ -93,6 +97,21 @@ export default async function Page({
               .filter((l) => !l.claimed_by)
               .map((l, i) => ({ id: l.id, html: logoSvg(l.form, `avlogo${i}`) }))}
           />
+        </section>
+        {festival.status === "live" && (
+          <section className={`${card} p-5 sm:p-7`}>
+            <h2 className="text-xl font-bold">Registration</h2>
+            <RegistrationControls
+              festival={festival}
+              opensAtIso={opensAt}
+              open={opensAt !== null && new Date(opensAt) <= new Date()}
+            />
+          </section>
+        )}
+        {/* The page's fate, at the page's foot: publishing is what the
+            webpage tab decides, so the lever lives here, last. */}
+        <section className={`${card} p-5 sm:p-7`}>
+          <PublishControls marker={marker} status={festival.status} />
         </section>
       </div>
     </main>
