@@ -84,12 +84,13 @@ export function FestivalTabs({
             key={t.key}
             href={t.href}
             aria-current={t.key === active ? "page" : undefined}
-            className={
+            className={`flex items-center gap-2 whitespace-nowrap ${
               t.key === active
-                ? "border-green -mb-px border-b-2 px-4 py-2.5 text-sm font-bold whitespace-nowrap"
-                : "text-ink/60 hover:text-ink -mb-px border-b-2 border-transparent px-4 py-2.5 text-sm whitespace-nowrap transition-colors"
-            }
+                ? "border-green -mb-px border-b-2 px-4 py-2.5 text-sm font-bold"
+                : "text-ink/60 hover:text-ink -mb-px border-b-2 border-transparent px-4 py-2.5 text-sm transition-colors"
+            }`}
           >
+            <TabIcon tab={t.key} className="h-4.5 w-4.5" />
             {t.label}
           </Link>
         ))}
@@ -122,7 +123,7 @@ export function FestivalTabs({
 }
 
 /** One stroke icon per section — drawn, not imported, to stay dependency-free. */
-function TabIcon({ tab }: { tab: Tab }) {
+function TabIcon({ tab, className = "h-5.5 w-5.5" }: { tab: Tab; className?: string }) {
   const paths: Record<Tab, React.ReactNode> = {
     planner: (
       <>
@@ -167,7 +168,7 @@ function TabIcon({ tab }: { tab: Tab }) {
     <svg
       viewBox="0 0 24 24"
       aria-hidden="true"
-      className="h-5.5 w-5.5"
+      className={className}
       fill="none"
       stroke="currentColor"
       strokeWidth="1.8"
