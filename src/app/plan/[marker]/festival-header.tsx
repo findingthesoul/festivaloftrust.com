@@ -16,7 +16,10 @@ export async function FestivalHeader({
   // organiser row is not theirs to read — so the line simply does not appear
   // rather than showing a blank or an id.
   const owner = await organiserFor(festival.owner_id);
-  const ownerName = owner?.full_name ?? owner?.email ?? null;
+  // The organisation carries the festival, not the person — the name only
+  // stands in while no organisation is filled in on the profile.
+  const ownerName =
+    owner?.organisation?.trim() || owner?.full_name || owner?.email || null;
 
   return (
     <>

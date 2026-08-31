@@ -516,14 +516,24 @@ export async function agendaFor(festivalId: string): Promise<AgendaItem[]> {
  */
 export async function organiserFor(
   ownerId: string,
-): Promise<{ full_name: string | null; email: string } | null> {
+): Promise<{
+  full_name: string | null;
+  organisation: string | null;
+  email: string;
+} | null> {
   const supabase = await serverSupabase();
   const { data } = await supabase
     .from("organiser")
-    .select("full_name, email")
+    .select("full_name, organisation, email")
     .eq("id", ownerId)
     .maybeSingle();
-  return (data as { full_name: string | null; email: string } | null) ?? null;
+  return (
+    (data as {
+      full_name: string | null;
+      organisation: string | null;
+      email: string;
+    } | null) ?? null
+  );
 }
 
 /** New items land at the end: one past the highest position there is. */

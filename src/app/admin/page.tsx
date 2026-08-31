@@ -51,7 +51,7 @@ export default async function Page({
   const [{ data: allOrganisers }, { data: everyFestivalRaw }, { data: memberships }] = await Promise.all([
     supabase
       .from("organiser")
-      .select("id, email, full_name")
+      .select("id, email, full_name, organisation")
       .eq("status", "approved")
       .order("full_name", { ascending: true, nullsFirst: false }),
     // No embed: festival.owner_id and organiser.id both point at auth.users,
@@ -302,7 +302,10 @@ export default async function Page({
                         owners — and an unknown owner is said out loud rather
                         than left blank, because blank reads as nobody's. */}
                     <p className="text-ink/50 mt-1 text-sm">
-                      {owner?.full_name ?? owner?.email ?? "owner no longer an approved organiser"}
+                      {owner?.organisation?.trim() ||
+                        owner?.full_name ||
+                        owner?.email ||
+                        "owner no longer an approved organiser"}
                     </p>
                   </div>
                   <span className="text-ink/60 shrink-0 text-sm capitalize">{f.status}</span>
