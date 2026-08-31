@@ -67,7 +67,7 @@ export function AccountMenu({
           />
           <div
             role="menu"
-            className="border-ink/12 bg-cream absolute right-0 z-20 mt-2 w-60 rounded-xl border p-2 text-sm shadow-lg"
+            className="border-ink/12 bg-cream text-ink absolute right-0 z-20 mt-2 w-60 rounded-xl border p-2 text-sm shadow-lg"
           >
             <p className="text-ink/55 truncate px-2.5 py-2 text-xs">{email}</p>
             <Link
