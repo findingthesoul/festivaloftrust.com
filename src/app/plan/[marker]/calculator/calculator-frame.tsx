@@ -55,6 +55,16 @@ export function CalculatorFrame({
   const [cur, setCur] = useState(current);
   const [note, setNote] = useState<string | null>(null);
 
+  // What one base unit becomes in a given currency: exchange rate times
+  // price level. Unknown codes multiply by 1.
+  const mOf = useCallback(
+    (c: string) => {
+      const found = currencies.find((x) => x.code === c);
+      return found ? found.rate * found.ratio : 1;
+    },
+    [currencies],
+  );
+
   const save = useCallback(
     async (curCode?: string) => {
       const win = frame.current?.contentWindow as
@@ -64,13 +74,19 @@ export function CalculatorFrame({
       if (typeof win?.snapshot !== "function") return;
 
       setState("saving");
-      // The snapshot carries which currency its figures are in — restore()
-      // ignores the extra key, but the next load reads it to know whether
-      // the stored money still matches the festival's currency.
+      // The snapshot carries which currency its figures are in — and at what
+      // multiplier, because a code's meaning changes when the admin corrects
+      // an exchange rate. restore() ignores the extra keys; the next load
+      // reads them to know whether the stored money still matches.
       const snap = win.snapshot();
+      const code = curCode ?? cur;
       const stamped =
         snap && typeof snap === "object"
-          ? { ...(snap as Record<string, unknown>), fotCurrency: curCode ?? cur }
+          ? {
+              ...(snap as Record<string, unknown>),
+              fotCurrency: code,
+              fotMultiplier: mOf(code),
+            }
           : snap;
       const result = await saveCalculator(marker, stamped);
       if (result.error) {
@@ -81,7 +97,7 @@ export function CalculatorFrame({
       setState("saved");
       setNote(null);
     },
-    [marker, cur],
+    [marker, cur, mOf],
   );
 
   const onLoad = useCallback(async () => {
@@ -152,17 +168,24 @@ export function CalculatorFrame({
         canEdit: boolean,
       ) => void;
     };
-    const mOf = (c: string) => {
-      const found = currencies.find((x) => x.code === c);
-      return found ? found.rate * found.ratio : 1;
-    };
     const multiplier = chosen ? chosen.rate * chosen.ratio : 1;
     if (chosen && typeof tool.setCurrency === "function") {
-      const savedCur =
-        saved && typeof saved === "object" && "fotCurrency" in saved
-          ? String((saved as Record<string, unknown>).fotCurrency)
+      const savedObj =
+        saved && typeof saved === "object"
+          ? (saved as Record<string, unknown>)
           : null;
-      const factor = saved ? multiplier / (savedCur ? mOf(savedCur) : 1) : 1;
+      const savedCur =
+        typeof savedObj?.fotCurrency === "string" ? savedObj.fotCurrency : null;
+      // The multiplier the figures were saved at, preferred over what the
+      // stamp's code means today — an admin correcting an exchange rate
+      // changes the code's meaning, and the figures must follow.
+      const savedM =
+        typeof savedObj?.fotMultiplier === "number" && savedObj.fotMultiplier > 0
+          ? savedObj.fotMultiplier
+          : savedCur
+            ? mOf(savedCur)
+            : 1;
+      const factor = saved ? multiplier / savedM : 1;
       tool.setCurrency(
         chosen.symbol,
         multiplier,
@@ -171,7 +194,9 @@ export function CalculatorFrame({
       );
       // Converted or merely unstamped: write the repaired figures back so
       // this runs once, not on every open.
-      if (saved && (factor !== 1 || savedCur !== cur)) void save(cur);
+      if (saved && (factor !== 1 || savedCur !== cur || savedM !== multiplier)) {
+        void save(cur);
+      }
     }
     const withPrices = win as typeof tool & {
       setBasePrices?: (p: CalcPrices, m: number) => void;
@@ -245,10 +270,6 @@ export function CalculatorFrame({
               // inputs, artists, funders — converts by the step between the
               // old multiplier and the new one. R20 to the euro at half the
               // price level: a €10.000 line becomes R100.000, not R10.000.
-              const mOf = (c: string) => {
-                const found = currencies.find((x) => x.code === c);
-                return found ? found.rate * found.ratio : 1;
-              };
               const factor = mOf(code) / mOf(cur);
               const win = frame.current?.contentWindow as
                 | (Window & {
@@ -298,6 +319,29 @@ export function CalculatorFrame({
           </a>
         )}
       </div>
+      {/* The conversion, said out loud. A currency whose fundamentals were
+          never filled multiplies by 1 and looks exactly like a bug — this
+          line makes the difference visible instead of deniable. */}
+      {cur !== "EUR" &&
+        (() => {
+          const c = currencies.find((x) => x.code === cur);
+          if (!c) return null;
+          const m = c.rate * c.ratio;
+          return m === 1 ? (
+            <p className="mt-2 text-sm font-medium text-red-700">
+              {c.code} multiplies by 1 right now — its exchange rate and price
+              level are still at their defaults. Set them on the Fundamentals
+              tab (e.g. rate 20 and price level 0.5 for South Africa), then
+              switch the currency away and back to convert the figures.
+            </p>
+          ) : (
+            <p className="text-ink/50 mt-2 text-xs">
+              €1 → {c.symbol}
+              {c.rate} at price level {c.ratio}: figures are ×{m} against the
+              base prices.
+            </p>
+          );
+        })()}
       {note && <p className="mt-2 text-sm text-red-700">{note}</p>}
 
       <iframe
