@@ -46,7 +46,7 @@ export default async function Home() {
               page depends on, so it reads as display type, not body copy. */}
           <p className="text-[clamp(1.6rem,4.5vw,2.75rem)] leading-[1.15] font-bold tracking-[-0.02em] text-balance">
             Trust seems to be disappearing everywhere.
-            <span className="text-green block">
+            <span className="text-teal block">
               But look closer, and the picture is not that grim.
             </span>
           </p>
