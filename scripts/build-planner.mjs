@@ -179,7 +179,7 @@ patch(
     if (t.id === "fundSave" && typeof window.onFundamentalsSave === "function") {
       $("fundNote").textContent = "Saving\\u2026";
       Promise.resolve(window.onFundamentalsSave(FUND)).then(r => {
-        $("fundNote").textContent = r && r.error ? r.error : "Saved";
+        $("fundNote").textContent = r && r.error ? r.error : "Saved \\u2014 reload the page so everything reads the new numbers.";
       });
     }
   });
@@ -280,7 +280,7 @@ patch(
   `      Promise.resolve(window.onFundamentalsSave(FUND)).then(r => {`,
   `      const prices = {};
       fundPanel.querySelectorAll("[data-price]").forEach(el => { prices[el.dataset.price] = Number(el.value); });
-      Promise.resolve(window.onFundamentalsSave({ currencies: FUND, prices })).then(r => {`,
+      Promise.resolve(window.onFundamentalsSave({ currencies: FUND, prices })).catch(() => ({ error: "Could not save \\u2014 this page is older than the site. Reload the page and try again." })).then(r => {`,
 );
 
 
