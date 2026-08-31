@@ -170,11 +170,11 @@ patch(
   $("fundRows") || null;
   fundPanel.addEventListener("input", e => {
     const t = e.target;
-    if (t.dataset && t.dataset.k) FUND[Number(t.dataset.i)][t.dataset.k] = t.dataset.k === "ratio" ? Number(t.value) : t.value;
+    if (t.dataset && t.dataset.k) FUND[Number(t.dataset.i)][t.dataset.k] = t.dataset.k === "ratio" || t.dataset.k === "rate" ? Number(t.value) : t.value;
   });
   fundPanel.addEventListener("click", e => {
     const t = e.target;
-    if (t.id === "fundAdd") { FUND.push({ code: "", symbol: "", label: "", ratio: 1 }); drawFund(); }
+    if (t.id === "fundAdd") { FUND.push({ code: "", symbol: "", label: "", rate: 1, ratio: 1 }); drawFund(); }
     if (t.dataset && t.dataset.del !== undefined && t.dataset.del !== "") { FUND.splice(Number(t.dataset.del), 1); drawFund(); }
     if (t.id === "fundSave" && typeof window.onFundamentalsSave === "function") {
       $("fundNote").textContent = "Saving\\u2026";

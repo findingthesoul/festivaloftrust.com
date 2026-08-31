@@ -267,6 +267,14 @@ export function CalculatorFrame({
             value={cur}
             onChange={async (e) => {
               const code = e.target.value;
+              // A pending debounced save still holds the OLD currency in its
+              // closure — fired after the conversion below, it would stamp
+              // converted figures with the old code and set up a double
+              // conversion on the next load. Cancel it before anything else.
+              if (timer.current) {
+                clearTimeout(timer.current);
+                timer.current = null;
+              }
               // The money on screen changes currency, so every amount —
               // inputs, artists, funders — converts by the step between the
               // old multiplier and the new one. R20 to the euro at half the
@@ -297,6 +305,12 @@ export function CalculatorFrame({
               if (r.error) {
                 setNote(r.error);
                 return;
+              }
+              // A keystroke during the awaits above may have re-armed the
+              // old closure's timer — cancel once more before the reload.
+              if (timer.current) {
+                clearTimeout(timer.current);
+                timer.current = null;
               }
               // Reload so the tool reseeds base prices at the new
               // multiplier and restores the converted snapshot.

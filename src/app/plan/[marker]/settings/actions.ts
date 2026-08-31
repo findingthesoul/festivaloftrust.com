@@ -321,26 +321,47 @@ export async function chooseLogo(
   marker: string,
   logoId: string,
 ): Promise<{ error?: string }> {
-  const festival = await festivalByMarker(marker);
-  if (!festival) return { error: "not found" };
+  const festival = await organiserOf(marker);
+  if (!festival) return { error: "not yours to choose" };
   const supabase = await serverSupabase();
-  // A festival wears one logo at a time — hand back the current one first.
+  // A festival wears one logo at a time, so the swap is release-then-claim
+  // — but remember what was worn, so a lost race does not leave the
+  // festival bare: if the claim fails, the old logo is taken back.
+  const { data: worn } = await supabase
+    .from("logo")
+    .select("id")
+    .eq("claimed_by", festival.id)
+    .maybeSingle();
   await supabase.from("logo").update({ claimed_by: null }).eq("claimed_by", festival.id);
   const { error, count } = await supabase
     .from("logo")
     .update({ claimed_by: festival.id }, { count: "exact" })
     .eq("id", logoId)
     .is("claimed_by", null);
-  if (error) return { error: error.message };
-  if (!count) return { error: "another festival chose this one just now — pick a different form" };
+  if (error || !count) {
+    if (worn) {
+      await supabase
+        .from("logo")
+        .update({ claimed_by: festival.id })
+        .eq("id", (worn as { id: string }).id)
+        .is("claimed_by", null);
+    }
+    revalidatePath(`/plan/${marker}/settings`);
+    revalidatePath(`/plan/${marker}/webpage`);
+    return {
+      error:
+        error?.message ??
+        "another festival chose this one just now — pick a different form",
+    };
+  }
   revalidatePath(`/plan/${marker}/settings`);
   revalidatePath(`/plan/${marker}/webpage`);
   return {};
 }
 
 export async function releaseLogo(marker: string): Promise<{ error?: string }> {
-  const festival = await festivalByMarker(marker);
-  if (!festival) return { error: "not found" };
+  const festival = await organiserOf(marker);
+  if (!festival) return { error: "not yours to release" };
   const supabase = await serverSupabase();
   const { error } = await supabase
     .from("logo")

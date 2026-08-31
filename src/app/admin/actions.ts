@@ -153,7 +153,7 @@ export async function toggleCoverHome(festivalId: string, on: boolean) {
     .eq("festival_id", festivalId)
     .eq("url", festival.cover_url)
     .maybeSingle();
-  let error: { message: string } | null = null;
+  let error: { message: string; code?: string } | null = null;
   if (existing) {
     ({ error } = await supabase
       .from("photo")
@@ -172,6 +172,9 @@ export async function toggleCoverHome(festivalId: string, on: boolean) {
       credit: o?.organisation?.trim() || o?.full_name || festival.name,
       page: "home",
     }));
+    // A double-click races itself into the unique index — the other click
+    // already did the job, which is success, not an error.
+    if (error?.code === "23505") error = null;
   }
   revalidatePath("/admin");
   revalidatePath("/");
