@@ -25,10 +25,13 @@ const PAGES: { key: PhotoPage; label: string }[] = [
  */
 export function PhotoDesk({
   photos,
+  covers,
   festivalNames,
   onlyFestival,
 }: {
   photos: PhotoRow[];
+  /** Festival cover images not yet pulled into the photo list. */
+  covers: { festivalId: string; url: string; name: string }[];
   festivalNames: Record<string, string>;
   onlyFestival: string | null;
 }) {
@@ -94,6 +97,18 @@ export function PhotoDesk({
   const library = photos.filter(
     (p) => !p.page && (!onlyFestival || p.festival_id === onlyFestival),
   );
+  const coverRows = covers.filter(
+    (c) => !onlyFestival || c.festivalId === onlyFestival,
+  );
+
+  // A cover becomes a list photo of its festival the moment the desk takes
+  // it — from there it behaves like any library photo.
+  const pullCover = (c: { festivalId: string; url: string }) =>
+    void run(
+      browserSupabase()
+        .from("photo")
+        .insert({ festival_id: c.festivalId, url: c.url }),
+    );
 
   const card = (p: PhotoRow, inLibrary: boolean) => (
     <li key={p.id} className="border-ink/15 border bg-white/40">
@@ -220,6 +235,38 @@ export function PhotoDesk({
           <ul className="mt-5 grid gap-5 sm:grid-cols-2 md:grid-cols-3">
             {library.map((p) => card(p, true))}
           </ul>
+        )}
+
+        {coverRows.length > 0 && (
+          <div className="mt-10">
+            <h3 className="font-bold">Festival covers</h3>
+            <p className="text-ink/50 mt-1 text-sm">
+              Every festival&rsquo;s cover photo — take one into the library
+              to credit and place it.
+            </p>
+            <ul className="mt-4 grid gap-5 sm:grid-cols-2 md:grid-cols-3">
+              {coverRows.map((c) => (
+                <li key={c.url} className="border-ink/15 border bg-white/40">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={c.url}
+                    alt=""
+                    className="aspect-[3/2] w-full border-b border-ink/10 object-cover"
+                  />
+                  <div className="flex items-center justify-between gap-3 p-3">
+                    <p className="text-sm font-medium">{c.name}</p>
+                    <button
+                      type="button"
+                      onClick={() => pullCover(c)}
+                      className="border-ink/25 hover:border-ink/60 shrink-0 rounded border bg-white px-2.5 py-1 text-xs font-medium transition-colors"
+                    >
+                      Take into the library
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </section>
 

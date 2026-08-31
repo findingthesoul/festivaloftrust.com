@@ -25,10 +25,21 @@ export default async function Page({
 
   const photos = await allPhotos().catch(() => []);
   const supabase = await serverSupabase();
-  const { data: fests } = await supabase.from("festival").select("id, name");
-  const names = Object.fromEntries(
-    ((fests ?? []) as { id: string; name: string }[]).map((f) => [f.id, f.name]),
-  );
+  const { data: fests } = await supabase
+    .from("festival")
+    .select("id, name, cover_url");
+  const rows = (fests ?? []) as {
+    id: string;
+    name: string;
+    cover_url: string | null;
+  }[];
+  const names = Object.fromEntries(rows.map((f) => [f.id, f.name]));
+  // Festival covers are photos too — offered as a source, minus any cover
+  // already pulled into the list.
+  const inList = new Set(photos.map((p) => p.url));
+  const covers = rows
+    .filter((f) => f.cover_url && !inList.has(f.cover_url))
+    .map((f) => ({ festivalId: f.id, url: f.cover_url as string, name: f.name }));
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
@@ -50,6 +61,7 @@ export default async function Page({
 
       <PhotoDesk
         photos={photos}
+        covers={covers}
         festivalNames={names}
         onlyFestival={onlyFestival ?? null}
       />
