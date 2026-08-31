@@ -3,7 +3,13 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { BrandLockup } from "@/components/BrandLockup";
 import { ShapeGrid } from "@/components/ShapeGrid";
-import { agendaFor, publicFestival, registrationFor } from "@/lib/festivals";
+import {
+  agendaFor,
+  attendeesFor,
+  publicFestival,
+  registrationFor,
+  registrations,
+} from "@/lib/festivals";
 import { EnrolPopup, RegisterForm } from "./register-form";
 import { RichText } from "@/components/RichText";
 
@@ -67,6 +73,37 @@ export default async function Page({
   const { festival, preview } = found;
   const registration = await registrationFor(festival);
   const agenda = festival.show_public_agenda ? await agendaFor(festival.id) : [];
+
+  // Who is coming — names only, and only when the organiser switched it on.
+  // Admitted guests from the platform plus the site's own book; nobody still
+  // waiting for a decision, and never a technical id in place of a name.
+  let guests: string[] = [];
+  if (festival.share_participants_public) {
+    try {
+      const [people, attendees] = await Promise.all([
+        registrations(festival),
+        attendeesFor(festival.id),
+      ]);
+      const bookByEmail = new Map(
+        attendees.map((a) => [a.email.toLowerCase(), a] as const),
+      );
+      const seen = new Set<string>();
+      for (const e of people) {
+        if (e.awaiting_approval) continue;
+        const email = (e.email ?? "").toLowerCase();
+        const book = email ? bookByEmail.get(email) : undefined;
+        if (book) seen.add(book.id);
+        const name = e.full_name?.trim() || book?.name;
+        if (name) guests.push(name);
+      }
+      for (const a of attendees) {
+        if (!seen.has(a.id)) guests.push(a.name);
+      }
+    } catch {
+      // The page still opens; the list simply stays empty this visit.
+      guests = [];
+    }
+  }
 
   return (
     <main className="flex-1">
@@ -240,6 +277,24 @@ export default async function Page({
               <div className="mt-3 space-y-3 text-sm leading-relaxed text-pretty">
                 <RichText text={festival.organiser_note} />
               </div>
+            </div>
+          )}
+
+          {/* The guests, by name, when the organiser shares them. */}
+          {festival.share_participants_public && guests.length > 0 && (
+            <div className="border-ink/15 mt-6 rounded-xl border bg-white/50 p-6 sm:p-7">
+              <h2 className="text-xl font-bold">Who is coming</h2>
+              <p className="text-ink/60 mt-1 text-xs">
+                {guests.length} {guests.length === 1 ? "person" : "people"} so far
+              </p>
+              <ul className="mt-3 flex flex-wrap gap-x-1.5 gap-y-1 text-sm leading-relaxed">
+                {guests.map((name, i) => (
+                  <li key={i}>
+                    {name}
+                    {i < guests.length - 1 && <span className="text-ink/40">,</span>}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
