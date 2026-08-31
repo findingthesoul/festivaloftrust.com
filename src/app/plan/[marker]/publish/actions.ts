@@ -23,6 +23,7 @@ export async function askToPublish(marker: string): Promise<{ error?: string }> 
   if (!festival) return { error: "not yours to publish" };
   const result = await submitForReview(festival.id);
   revalidatePath(`/plan/${marker}/publish`);
+  revalidatePath(`/plan/${marker}/webpage`);
   return result;
 }
 
@@ -49,6 +50,7 @@ export async function unpublish(marker: string): Promise<{ error?: string }> {
   const off = await unpublishFromThread(festival);
 
   revalidatePath(`/plan/${marker}/publish`);
+  revalidatePath(`/plan/${marker}/webpage`);
   revalidatePath(`/${marker}`);
   revalidatePath("/upcoming");
   // The festival is down either way; only the public page is in doubt.
@@ -78,6 +80,7 @@ export async function openRegistrationAt(
 
   const result = await openRegistration(festival, when);
   revalidatePath(`/plan/${marker}/publish`);
+  revalidatePath(`/plan/${marker}/webpage`);
   revalidatePath(`/${marker}`);
   return result;
 }
@@ -87,6 +90,7 @@ export async function stopRegistration(marker: string): Promise<{ error?: string
   if (!festival) return { error: "not yours to close" };
   const result = await closeRegistration(festival);
   revalidatePath(`/plan/${marker}/publish`);
+  revalidatePath(`/plan/${marker}/webpage`);
   revalidatePath(`/${marker}`);
   return result;
 }
