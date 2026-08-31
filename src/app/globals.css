@@ -39,3 +39,11 @@ body {
      The wordmark itself is outlined, so it never depends on this stack. */
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
+
+/* The mobile festival dock (see plan/[marker]/tabs.tsx) floats over the
+   page bottom; any main that carries one gets the room back. */
+@media (max-width: 639px) {
+  main:has([data-festival-dock]) {
+    padding-bottom: 6rem;
+  }
+}
