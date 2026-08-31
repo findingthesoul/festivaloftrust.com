@@ -7,7 +7,6 @@ import { Agenda } from "../settings/agenda";
 import { EventSettings } from "../settings/event-settings";
 import { CoverUpload } from "../settings/cover-upload";
 import { LogoPicker } from "../settings/logo-picker";
-import { Photos } from "../settings/photos";
 import { card } from "@/components/ui";
 import { allLogos, logoSvg } from "@/lib/logos";
 import { photosFor } from "@/lib/photos";
@@ -73,10 +72,13 @@ export default async function Page({
           />
         </section>
         <section className={`${card} p-5 sm:p-7`}>
-          <CoverUpload festivalId={festival.id} current={festival.cover_url} />
-        </section>
-        <section className={`${card} p-5 sm:p-7`}>
-          <Photos festivalId={festival.id} photos={photos} />
+          <CoverUpload
+            festivalId={festival.id}
+            current={festival.cover_url}
+            coverPhoto={
+              photos.find((p) => p.url === festival.cover_url) ?? null
+            }
+          />
         </section>
         <section className={`${card} p-5 sm:p-7`}>
           <LogoPicker
