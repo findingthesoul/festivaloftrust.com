@@ -11,9 +11,10 @@ export const dynamic = "force-dynamic";
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ organiser?: string; tab?: string }>;
+  searchParams: Promise<{ organiser?: string; tab?: string; q?: string }>;
 }) {
-  const { organiser: pickedOrganiser, tab } = await searchParams;
+  const { organiser: pickedOrganiser, tab, q } = await searchParams;
+  const query = q?.trim().toLowerCase() ?? "";
   const s = await standing();
   // Not a redirect: someone who is not an admin should not learn that this
   // page exists.
@@ -78,8 +79,17 @@ export default async function Page({
 
   const organisers = allOrganisers ?? [];
   const byOwner = new Map(organisers.map((o) => [o.id, o]));
+  // The search covers what a reviewer knows a festival by: its name, its
+  // address, its place, and whoever carries it.
+  const matches = (f: { name: string; marker: string; place: string | null; owner_id: string }) => {
+    if (!query) return true;
+    const o = byOwner.get(f.owner_id);
+    return [f.name, f.marker, f.place, o?.organisation, o?.full_name, o?.email]
+      .filter(Boolean)
+      .some((v) => (v as string).toLowerCase().includes(query));
+  };
   const everyFestival = (everyFestivalRaw ?? []).filter(
-    (f) => !pickedOrganiser || f.owner_id === pickedOrganiser,
+    (f) => (!pickedOrganiser || f.owner_id === pickedOrganiser) && matches(f),
   );
   const pickedName = pickedOrganiser
     ? (byOwner.get(pickedOrganiser)?.full_name ?? byOwner.get(pickedOrganiser)?.email ?? "them")
@@ -329,7 +339,19 @@ export default async function Page({
 
           {/* A plain GET form: the choice is in the address, so it survives a
               reload and can be linked to. No client JavaScript for a filter. */}
-          <form method="get" className="flex items-center gap-2">
+          <form method="get" className="flex flex-wrap items-center gap-2">
+            <input type="hidden" name="tab" value="all" />
+            <label htmlFor="festival-search" className="sr-only">
+              Search festivals
+            </label>
+            <input
+              id="festival-search"
+              name="q"
+              type="search"
+              defaultValue={q ?? ""}
+              placeholder="Search name, place, organiser…"
+              className="border-ink/20 w-56 rounded-md border bg-white px-2.5 py-1 text-sm"
+            />
             <label htmlFor="organiser" className="text-ink/60 text-sm">
               Organiser
             </label>

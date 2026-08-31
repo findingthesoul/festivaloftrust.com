@@ -143,7 +143,7 @@ export function PhotoDesk({
         {p.focus_x != null && p.focus_y != null && (
           <span
             aria-hidden="true"
-            className="border-cream absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-black/30 shadow"
+            className="border-cream absolute h-8 w-8 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-black/30 shadow"
             style={{
               left: `${p.focus_x * 100}%`,
               top: `${p.focus_y * 100}%`,
