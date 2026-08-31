@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { serverSupabase } from "@/lib/supabase/server";
 import { standing } from "@/lib/organiser";
 import { publishToThread, unpublishFromThread } from "@/lib/festivals";
+import { putManifest } from "@/lib/fibre";
 
 /**
  * Review actions.
@@ -179,4 +180,25 @@ export async function toggleCoverHome(festivalId: string, on: boolean) {
   revalidatePath("/admin");
   revalidatePath("/");
   return error ? { error: error.message } : {};
+}
+
+/**
+ * Push fibre.app.json's scope request to the platform. The Fibre's key
+ * screen only offers scopes the manifest asked for, so a scope added in the
+ * repo reaches the mint dialog through this — pressed by the admin, sent
+ * with the app's own key.
+ */
+export async function syncFibreManifest() {
+  if (!(await requireAdmin())) return { error: "not an admin" };
+  try {
+    const { default: manifest } = await import("../../../fibre.app.json");
+    await putManifest({
+      scopes_requested: manifest.scopes_requested,
+      entity_mappings: manifest.entity_mappings,
+      activity_types: manifest.activity_types,
+    });
+    return {};
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
 }

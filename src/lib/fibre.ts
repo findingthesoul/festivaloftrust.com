@@ -475,3 +475,16 @@ export const listEnrolments = (threadId: string) =>
   call<{ enrolments: FibreEnrolment[] }>(
     `/apps/${SLUG}/thread/threads/${threadId}/enrolments`,
   );
+
+/**
+ * Push this app's manifest to the platform. The scope picker on The Fibre's
+ * key screen offers only what the manifest requested — so a new scope starts
+ * here, not there. The app key may update its own app's manifest.
+ */
+export async function putManifest(manifest: {
+  scopes_requested?: string[];
+  activity_types?: unknown[];
+  entity_mappings?: unknown[];
+}): Promise<unknown> {
+  return call(`/apps/${SLUG}/manifest`, { method: "PUT", body: manifest });
+}

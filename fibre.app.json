@@ -2,8 +2,9 @@
   "$schema": "https://thefibre.app/schemas/fibre-app-manifest.v1.json",
   "app_slug": "fot-planner",
   "app_name": "Festival planner",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Plans a Festival of Trust across the nine steps of the work, running on Fibre Flow.",
+  "contact_email": "sjoerd@soul.com",
   "scopes_requested": [
     "read:flows",
     "write:flow_runs",
@@ -15,6 +16,7 @@
     "read:programs",
     "write:programs",
     "read:enrolments",
+    "review:enrolments",
     "write:messages"
   ],
   "entity_mappings": [

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { serverSupabase } from "@/lib/supabase/server";
 import { standing } from "@/lib/organiser";
 import Link from "next/link";
-import { CoverHomeToggle, FestivalButtons, HomePhotoButtons, OrganiserButtons } from "./review-buttons";
+import { CoverHomeToggle, FestivalButtons, HomePhotoButtons, OrganiserButtons, SyncManifestButton } from "./review-buttons";
 
 export const metadata: Metadata = { title: "Review", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -436,6 +436,15 @@ export default async function Page({
         )}
       </section>
       )}
+
+      <footer className="border-ink/10 mt-16 border-t pt-5">
+        <SyncManifestButton />
+        <p className="text-ink/45 mt-2 max-w-xl text-xs leading-relaxed">
+          Tells The Fibre which scopes this site&rsquo;s app asks for — press
+          it after a scope is added to the manifest, then mint a fresh key
+          there.
+        </p>
+      </footer>
     </main>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { decideFestival, decideOrganiser, removeFromHome, toggleCoverHome } from "./actions";
+import { decideFestival, decideOrganiser, removeFromHome, syncFibreManifest, toggleCoverHome } from "./actions";
 
 export function OrganiserButtons({ id }: { id: string }) {
   const [pending, start] = useTransition();
@@ -143,5 +143,33 @@ export function CoverHomeToggle({
     >
       ✓
     </button>
+  );
+}
+
+/** The quiet admin lever: push the app manifest (and its scopes) to The Fibre. */
+export function SyncManifestButton() {
+  const [pending, start] = useTransition();
+  const [note, setNote] = useState<string | null>(null);
+  return (
+    <span className="inline-flex items-center gap-3">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() =>
+          start(async () => {
+            const r = await syncFibreManifest();
+            setNote(
+              r?.error
+                ? r.error
+                : "Sent — the key screen on The Fibre now offers the manifest's scopes.",
+            );
+          })
+        }
+        className="border-ink/25 hover:border-ink/50 border px-3 py-1.5 text-sm disabled:opacity-50"
+      >
+        {pending ? "Sending…" : "Sync Fibre manifest"}
+      </button>
+      {note && <span className="text-ink/60 text-sm">{note}</span>}
+    </span>
   );
 }
