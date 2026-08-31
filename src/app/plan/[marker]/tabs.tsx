@@ -7,7 +7,13 @@ import Link from "next/link";
  * access rules, and a host who cannot see the money must not be able to reach
  * the calculator by clicking a tab that never re-checks.
  */
-export type Tab = "planner" | "calculator" | "registrations" | "settings" | "publish";
+export type Tab =
+  | "planner"
+  | "calculator"
+  | "registrations"
+  | "settings"
+  | "webpage"
+  | "publish";
 
 export function FestivalTabs({
   marker,
@@ -40,6 +46,12 @@ export function FestivalTabs({
       key: "settings",
       label: "Settings",
       href: `/plan/${marker}/settings`,
+      show: isOrganiser,
+    },
+    {
+      key: "webpage",
+      label: "Webpage",
+      href: `/plan/${marker}/webpage`,
       show: isOrganiser,
     },
     {

@@ -70,6 +70,7 @@ export async function inviteCollaborator(
   });
 
   revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/plan/${marker}/webpage`);
   if (mailError) {
     // They are still invited — the row exists and will be claimed whenever
     // they sign in. Only the nudge failed, and saying so beats silence.
@@ -85,6 +86,7 @@ export async function cancelInvite(marker: string, id: string) {
   if (!(await organiserOf(marker))) return;
   await withdrawInvite(id);
   revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/plan/${marker}/webpage`);
 }
 
 export async function dropMember(marker: string, userId: string) {
@@ -92,6 +94,7 @@ export async function dropMember(marker: string, userId: string) {
   if (!festival) return;
   await removeMember(festival.id, userId);
   revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/plan/${marker}/webpage`);
 }
 
 export async function submit(marker: string) {
@@ -99,6 +102,7 @@ export async function submit(marker: string) {
   if (!festival) return;
   await submitForReview(festival.id);
   revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/plan/${marker}/webpage`);
 }
 
 /**
@@ -175,6 +179,7 @@ export async function saveSettings(
   });
 
   revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/plan/${marker}/webpage`);
   revalidatePath(`/${marker}`);
   if (wanted && wanted !== festival.marker) {
     // The page it was just saved on no longer exists under that name.
@@ -236,6 +241,7 @@ export async function addAgenda(
 
   const r = await addAgendaItem(festival.id, title, description);
   revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/plan/${marker}/webpage`);
   revalidatePath(`/${marker}`);
   return r;
 }
@@ -254,6 +260,7 @@ export async function saveAgenda(
 
   const r = await updateAgendaItem(id, title, description);
   revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/plan/${marker}/webpage`);
   revalidatePath(`/${marker}`);
   return r;
 }
@@ -267,6 +274,7 @@ export async function removeAgenda(
 
   const r = await deleteAgendaItem(id);
   revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/plan/${marker}/webpage`);
   revalidatePath(`/${marker}`);
   return r;
 }
@@ -326,6 +334,7 @@ export async function chooseLogo(
   if (error) return { error: error.message };
   if (!count) return { error: "another festival chose this one just now — pick a different form" };
   revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/plan/${marker}/webpage`);
   return {};
 }
 
@@ -339,5 +348,6 @@ export async function releaseLogo(marker: string): Promise<{ error?: string }> {
     .eq("claimed_by", festival.id);
   if (error) return { error: error.message };
   revalidatePath(`/plan/${marker}/settings`);
+  revalidatePath(`/plan/${marker}/webpage`);
   return {};
 }

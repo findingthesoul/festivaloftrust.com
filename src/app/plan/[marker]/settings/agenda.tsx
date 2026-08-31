@@ -33,7 +33,7 @@ export function Agenda({
       <p className="text-ink/55 mt-1 text-sm">
         {shown
           ? "Shown on the event page."
-          : "Written here, shown on the event page once “Show the public agenda” is on in the event settings above."}
+          : "Written here, shown on the event page once “Show the public agenda” is on above."}
       </p>
 
       {items.length > 0 && (
