@@ -8,6 +8,7 @@ import Link from "next/link";
  * the calculator by clicking a tab that never re-checks.
  */
 export type Tab =
+  | "festivals"
   | "planner"
   | "calculator"
   | "registrations"
@@ -35,6 +36,9 @@ export function FestivalTabs({
     href: string;
     show: boolean;
   }[] = [
+    // The way back is a tab, not a breadcrumb: the list of festivals is the
+    // first place in the row, on desktop and under the thumb alike.
+    { key: "festivals", label: "Festivals", href: "/festivals", show: true },
     { key: "planner", label: "Planner", href: `/plan/${marker}`, show: true },
     {
       key: "calculator",
@@ -125,6 +129,19 @@ export function FestivalTabs({
 /** One stroke icon per section — drawn, not imported, to stay dependency-free. */
 function TabIcon({ tab, className = "h-5.5 w-5.5" }: { tab: Tab; className?: string }) {
   const paths: Record<Tab, React.ReactNode> = {
+    festivals: (
+      <>
+        <rect x="3.5" y="3.5" width="4.6" height="4.6" />
+        <rect x="9.7" y="3.5" width="4.6" height="4.6" />
+        <rect x="15.9" y="3.5" width="4.6" height="4.6" />
+        <rect x="3.5" y="9.7" width="4.6" height="4.6" />
+        <rect x="9.7" y="9.7" width="4.6" height="4.6" />
+        <rect x="15.9" y="9.7" width="4.6" height="4.6" />
+        <rect x="3.5" y="15.9" width="4.6" height="4.6" />
+        <rect x="9.7" y="15.9" width="4.6" height="4.6" />
+        <rect x="15.9" y="15.9" width="4.6" height="4.6" />
+      </>
+    ),
     planner: (
       <>
         <path d="M9 20l-6-2V5l6 2 6-2 6 2v13l-6-2-6 2z" />

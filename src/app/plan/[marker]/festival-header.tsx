@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { FestivalTabs, type Tab } from "./tabs";
 import { organiserFor, type Access, type Festival } from "@/lib/festivals";
 
@@ -23,12 +22,6 @@ export async function FestivalHeader({
 
   return (
     <>
-      <Link
-        href="/festivals"
-        className="text-ink/60 hover:text-ink text-sm transition-colors"
-      >
-        ← Your festivals
-      </Link>
       {ownerName && (
         <p className="text-ink/55 mt-4 text-sm">{ownerName}</p>
       )}
