@@ -71,7 +71,10 @@ export function CheckinList({
 
     const onCode = (raw: string) => {
       const id = UUID.exec(raw)?.[0];
-      if (!id) return;
+      if (!id) {
+        setNote("That QR code is not a ticket for this festival.");
+        return;
+      }
       const now = Date.now();
       if (lastCode.current.code === id && now - lastCode.current.at < 4000) return;
       lastCode.current = { code: id, at: now };
@@ -85,20 +88,40 @@ export function CheckinList({
     (async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
+          video: {
+            facingMode: "environment",
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
         });
         if (stop || !video.current) return;
         video.current.srcObject = stream;
         await video.current.play();
 
+        // BarcodeDetector is a trap on desktop browsers: the constructor
+        // exists while the implementation does not, and detect() answers []
+        // forever. Only trust it when it names qr_code as supported — and
+        // keep the JavaScript decoder loaded as the working fallback.
         const Detector = (
           window as Window & {
-            BarcodeDetector?: new (o: { formats: string[] }) => {
-              detect: (v: HTMLVideoElement) => Promise<{ rawValue: string }[]>;
+            BarcodeDetector?: {
+              new (o: { formats: string[] }): {
+                detect: (v: HTMLVideoElement) => Promise<{ rawValue: string }[]>;
+              };
+              getSupportedFormats?: () => Promise<string[]>;
             };
           }
         ).BarcodeDetector;
-        const detector = Detector ? new Detector({ formats: ["qr_code"] }) : null;
+        let detector: { detect: (v: HTMLVideoElement) => Promise<{ rawValue: string }[]> } | null =
+          null;
+        if (Detector) {
+          try {
+            const formats = (await Detector.getSupportedFormats?.()) ?? [];
+            if (formats.includes("qr_code")) {
+              detector = new Detector({ formats: ["qr_code"] });
+            }
+          } catch {}
+        }
         const jsqr = detector ? null : (await import("jsqr")).default;
         const canvas = document.createElement("canvas");
 
