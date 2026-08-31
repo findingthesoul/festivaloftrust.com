@@ -72,7 +72,7 @@ export default async function Page({
     supabase
       .from("photo")
       .select("id, url, credit, festival_id")
-      .eq("home", true)
+      .eq("page", "home")
       .order("created_at"),
   ]);
 
@@ -100,8 +100,13 @@ export default async function Page({
     id: string;
     url: string;
     credit: string | null;
-    festival_id: string;
-  }[]).map((p) => ({ ...p, festival: festivalName.get(p.festival_id) ?? "a festival" }));
+    festival_id: string | null;
+  }[]).map((p) => ({
+    ...p,
+    festival: p.festival_id
+      ? (festivalName.get(p.festival_id) ?? "a festival")
+      : "Workspace library",
+  }));
 
   const pendingPeople = people ?? [];
   const pendingFestivals = festivals ?? [];
@@ -170,6 +175,14 @@ export default async function Page({
 
       {active === "home" && (
         <section className="mt-10">
+          <p className="mb-6">
+            <Link href="/admin/photos" className="font-medium underline decoration-2 underline-offset-4">
+              Open the photo desk
+            </Link>{" "}
+            <span className="text-ink/55 text-sm">
+              — the library, uploads, and placing photos on any page.
+            </span>
+          </p>
           {homePhotos.length === 0 ? (
             <p className="text-ink/60">
               Nothing offered yet. Organisers offer photos on their
@@ -365,7 +378,15 @@ export default async function Page({
                         "owner no longer an approved organiser"}
                     </p>
                   </div>
-                  <span className="text-ink/60 shrink-0 text-sm capitalize">{f.status}</span>
+                  <span className="flex shrink-0 items-center gap-4">
+                    <Link
+                      href={`/admin/photos?festival=${f.id}`}
+                      className="text-ink/60 hover:text-ink text-sm underline decoration-2 underline-offset-4 transition-colors"
+                    >
+                      Photos
+                    </Link>
+                    <span className="text-ink/60 text-sm capitalize">{f.status}</span>
+                  </span>
                 </li>
               );
             })}

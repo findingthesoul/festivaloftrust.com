@@ -11,7 +11,7 @@ export function PageHero({
   title,
   intro,
 }: {
-  photo: StaticImageData;
+  photo: StaticImageData | string;
   photoAlt?: string;
   title: string;
   intro: string;

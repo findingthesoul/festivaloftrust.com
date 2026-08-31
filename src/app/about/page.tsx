@@ -2,18 +2,23 @@ import type { Metadata } from "next";
 import closeUp from "@/assets/close-up.jpg";
 import { CardSheets } from "@/components/CardSheets";
 import { PageHero } from "@/components/PageHero";
+import { pagePhoto } from "@/lib/photos";
 import { NineSteps } from "@/components/NineSteps";
 
 export const metadata: Metadata = { title: "About" };
 
-export default function Page() {
+// The photo desk can dress this page without a deploy.
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+  const chosen = await pagePhoto("about").catch(() => null);
   return (
     <main className="w-full flex-1">
       {/* Placeholder photo until the page's own picture arrives — one
           import to swap. */}
 
       <CardSheets
-        hero={<PageHero photo={closeUp} title="About" intro="Festival of Trust is a grassroots movement: finding trust where it already lives, and building it where it is missing." />}
+        hero={<PageHero photo={chosen ?? closeUp} title="About" intro="Festival of Trust is a grassroots movement: finding trust where it already lives, and building it where it is missing." />}
         sheets={[
           {
             tone: "yellow",

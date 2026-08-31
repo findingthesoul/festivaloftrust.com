@@ -3,28 +3,56 @@ import type { Item } from "@/app/gen/core";
 import type { LogoForm } from "@/lib/logos";
 
 /**
- * The festival photo lists, and the home page's rotation built from them:
- * every photo tagged home, with a credit line and — when the festival has
- * claimed one — its logo composition, so the hero's forms can re-seat
- * themselves per photo.
+ * Photos, and where they hang. Every festival keeps a list; the workspace
+ * keeps a library of its own (rows with no festival). A photo's `page` says
+ * which public page it dresses: the home page rotates through everything
+ * placed on 'home', and the story pages wear the newest photo placed on
+ * theirs.
  */
+
+export type PhotoPage = "home" | "society" | "organisations" | "about";
 
 export type PhotoRow = {
   id: string;
   url: string;
   credit: string | null;
-  home: boolean;
+  page: PhotoPage | null;
+  festival_id: string | null;
 };
 
 export async function photosFor(festivalId: string): Promise<PhotoRow[]> {
   const supabase = await serverSupabase();
   const { data, error } = await supabase
     .from("photo")
-    .select("id, url, credit, home")
+    .select("id, url, credit, page, festival_id")
     .eq("festival_id", festivalId)
     .order("created_at");
   if (error) throw new Error(`photos: ${error.message}`);
   return (data ?? []) as PhotoRow[];
+}
+
+/** Every photo there is — the desk's view. */
+export async function allPhotos(): Promise<PhotoRow[]> {
+  const supabase = await serverSupabase();
+  const { data, error } = await supabase
+    .from("photo")
+    .select("id, url, credit, page, festival_id")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(`photos: ${error.message}`);
+  return (data ?? []) as PhotoRow[];
+}
+
+/** The newest photo placed on a story page, or null to keep the built-in. */
+export async function pagePhoto(page: PhotoPage): Promise<string | null> {
+  const supabase = await serverSupabase();
+  const { data } = await supabase
+    .from("photo")
+    .select("url")
+    .eq("page", page)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as { url: string } | null)?.url ?? null;
 }
 
 export type HomeSlide = {
@@ -42,30 +70,30 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
 /**
  * Runs signed out, so it only leans on what the world may read: photos,
  * logos, and live festivals. A festival the public cannot see simply
- * contributes no place or date to its credit line.
+ * contributes no place or date to its credit line; a library photo carries
+ * only its own credit.
  */
 export async function homeSlides(): Promise<HomeSlide[]> {
   const supabase = await serverSupabase();
   const { data: photos } = await supabase
     .from("photo")
     .select("url, credit, festival_id")
-    .eq("home", true)
+    .eq("page", "home")
     .order("created_at");
   const rows = (photos ?? []) as {
     url: string;
     credit: string | null;
-    festival_id: string;
+    festival_id: string | null;
   }[];
   if (rows.length === 0) return [];
 
-  const ids = [...new Set(rows.map((p) => p.festival_id))];
-  const [{ data: fests }, { data: logos }] = await Promise.all([
-    supabase
-      .from("festival")
-      .select("id, name, place, starts_on")
-      .in("id", ids),
-    supabase.from("logo").select("form, claimed_by").in("claimed_by", ids),
-  ]);
+  const ids = [...new Set(rows.map((p) => p.festival_id).filter(Boolean))] as string[];
+  const [{ data: fests }, { data: logos }] = ids.length
+    ? await Promise.all([
+        supabase.from("festival").select("id, name, place, starts_on").in("id", ids),
+        supabase.from("logo").select("form, claimed_by").in("claimed_by", ids),
+      ])
+    : [{ data: [] }, { data: [] }];
   const festOf = new Map(
     ((fests ?? []) as {
       id: string;
@@ -81,7 +109,7 @@ export async function homeSlides(): Promise<HomeSlide[]> {
   );
 
   return rows.map((p) => {
-    const f = festOf.get(p.festival_id);
+    const f = p.festival_id ? festOf.get(p.festival_id) : undefined;
     const when = f?.starts_on ? dateFormat.format(new Date(f.starts_on)) : null;
     const where = [f?.place, when].filter(Boolean).join(" ");
     const by = p.credit?.trim();
@@ -90,8 +118,8 @@ export async function homeSlides(): Promise<HomeSlide[]> {
       .join(", ");
     return {
       url: p.url,
-      credit: credit || "Festival of Trust",
-      logo: logoOf.get(p.festival_id)?.items ?? null,
+      credit: credit || by || "Festival of Trust",
+      logo: p.festival_id ? (logoOf.get(p.festival_id)?.items ?? null) : null,
     };
   });
 }

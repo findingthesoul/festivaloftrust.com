@@ -74,7 +74,7 @@ export function Photos({
     }
     const { error: e } = await browserSupabase()
       .from("photo")
-      .update({ home: on })
+      .update({ page: on ? "home" : null })
       .eq("id", p.id);
     setError(e?.message ?? null);
     if (!e) router.refresh();
@@ -121,7 +121,7 @@ export function Photos({
                 <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm">
                   <input
                     type="checkbox"
-                    checked={p.home}
+                    checked={p.page === "home"}
                     onChange={(e) => void setHome(p, e.target.checked)}
                     className="accent-current"
                   />

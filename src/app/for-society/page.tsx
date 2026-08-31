@@ -2,16 +2,21 @@ import type { Metadata } from "next";
 import photo from "@/assets/society.jpg";
 import { CardSheets } from "@/components/CardSheets";
 import { PageHero } from "@/components/PageHero";
+import { pagePhoto } from "@/lib/photos";
 import { NineSteps } from "@/components/NineSteps";
 
 export const metadata: Metadata = { title: "For society" };
 
-export default function Page() {
+// The photo desk can dress this page without a deploy.
+export const dynamic = "force-dynamic";
+
+export default async function Page() {
+  const chosen = await pagePhoto("society").catch(() => null);
   return (
     <main className="w-full flex-1">
 
       <CardSheets
-        hero={<PageHero photo={photo} photoAlt="A community celebrating under bunting, dressed in white, laughing." title="For society" intro="How a community hosts a Festival of Trust in its own place, with the backing of a funder." />}
+        hero={<PageHero photo={chosen ?? photo} photoAlt="A community celebrating under bunting, dressed in white, laughing." title="For society" intro="How a community hosts a Festival of Trust in its own place, with the backing of a funder." />}
         sheets={[
           {
             tone: "yellow",

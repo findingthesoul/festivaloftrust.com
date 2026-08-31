@@ -107,7 +107,7 @@ export async function removeFromHome(photoId: string) {
   const supabase = await serverSupabase();
   const { error } = await supabase
     .from("photo")
-    .update({ home: false })
+    .update({ page: null })
     .eq("id", photoId);
   revalidatePath("/admin");
   revalidatePath("/");
