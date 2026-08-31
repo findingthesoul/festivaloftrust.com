@@ -55,23 +55,34 @@ export function CalculatorFrame({
   const [cur, setCur] = useState(current);
   const [note, setNote] = useState<string | null>(null);
 
-  const save = useCallback(async () => {
-    const win = frame.current?.contentWindow as
-      | (Window & { snapshot?: () => unknown })
-      | null
-      | undefined;
-    if (typeof win?.snapshot !== "function") return;
+  const save = useCallback(
+    async (curCode?: string) => {
+      const win = frame.current?.contentWindow as
+        | (Window & { snapshot?: () => unknown })
+        | null
+        | undefined;
+      if (typeof win?.snapshot !== "function") return;
 
-    setState("saving");
-    const result = await saveCalculator(marker, win.snapshot());
-    if (result.error) {
-      setState("error");
-      setNote(result.error);
-      return;
-    }
-    setState("saved");
-    setNote(null);
-  }, [marker]);
+      setState("saving");
+      // The snapshot carries which currency its figures are in — restore()
+      // ignores the extra key, but the next load reads it to know whether
+      // the stored money still matches the festival's currency.
+      const snap = win.snapshot();
+      const stamped =
+        snap && typeof snap === "object"
+          ? { ...(snap as Record<string, unknown>), fotCurrency: curCode ?? cur }
+          : snap;
+      const result = await saveCalculator(marker, stamped);
+      if (result.error) {
+        setState("error");
+        setNote(result.error);
+        return;
+      }
+      setState("saved");
+      setNote(null);
+    },
+    [marker, cur],
+  );
 
   const onLoad = useCallback(async () => {
     const win = frame.current?.contentWindow as
@@ -123,19 +134,44 @@ export function CalculatorFrame({
     panel?.style.setProperty("display", "none");
 
     // Currency: the symbol always; the ratio scales the default prices only
-    // when the festival has no saved figures yet — saved figures are already
-    // in the festival's own currency and must not be touched.
+    // when the festival has no saved figures yet. Saved figures carry the
+    // currency they were saved in — when it differs from the festival's,
+    // they convert once, here. Figures from before the stamp existed are
+    // euro figures whatever the symbol said (the old switch changed only
+    // the symbol), so a missing stamp converts by the full multiplier.
     const chosen = currencies.find((c) => c.code === cur);
     const tool = win as Window & {
-      setCurrency?: (symbol: string, ratio: number, scale: boolean) => void;
+      setCurrency?: (
+        symbol: string,
+        ratio: number,
+        scale: boolean,
+        convert?: number,
+      ) => void;
       setFundamentals?: (
         fund: { currencies: CalcCurrency[]; prices: CalcPrices },
         canEdit: boolean,
       ) => void;
     };
+    const mOf = (c: string) => {
+      const found = currencies.find((x) => x.code === c);
+      return found ? found.rate * found.ratio : 1;
+    };
     const multiplier = chosen ? chosen.rate * chosen.ratio : 1;
     if (chosen && typeof tool.setCurrency === "function") {
-      tool.setCurrency(chosen.symbol, multiplier, !saved);
+      const savedCur =
+        saved && typeof saved === "object" && "fotCurrency" in saved
+          ? String((saved as Record<string, unknown>).fotCurrency)
+          : null;
+      const factor = saved ? multiplier / (savedCur ? mOf(savedCur) : 1) : 1;
+      tool.setCurrency(
+        chosen.symbol,
+        multiplier,
+        !saved,
+        saved && factor !== 1 ? factor : undefined,
+      );
+      // Converted or merely unstamped: write the repaired figures back so
+      // this runs once, not on every open.
+      if (saved && (factor !== 1 || savedCur !== cur)) void save(cur);
     }
     const withPrices = win as typeof tool & {
       setBasePrices?: (p: CalcPrices, m: number) => void;
@@ -230,8 +266,9 @@ export function CalculatorFrame({
               if (factor !== 1 && typeof win?.setCurrency === "function") {
                 win.setCurrency(symbol, mOf(code), false, factor);
                 // The converted figures are the festival's figures now —
-                // saved before the reload restores them.
-                await save();
+                // saved under the new currency before the reload restores
+                // them.
+                await save(code);
               }
               setCur(code);
               const r = await setFestivalCurrency(marker, code);

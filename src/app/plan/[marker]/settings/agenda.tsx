@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import type { AgendaItem } from "@/lib/festivals";
 import { input, primary, quiet } from "@/components/ui";
 import { addAgenda, removeAgenda, saveAgenda } from "./actions";
+import { WysiwygArea } from "./wysiwyg-area";
 
 /**
  * The programme, written here and shown on the event page when the setting
@@ -48,14 +49,14 @@ export function Agenda({
                   aria-label="Item title"
                   className={`${input} font-medium`}
                 />
-                <textarea
-                  name="description"
-                  rows={2}
-                  defaultValue={item.description ?? ""}
-                  aria-label="Item description"
-                  placeholder="What happens, in a line or two."
-                  className={`${input} mt-2`}
-                />
+                <div className="mt-2">
+                  <WysiwygArea
+                    id={`agenda-desc-${item.id}`}
+                    name="description"
+                    defaultValue={item.description ?? ""}
+                    placeholder="What happens, in a line or two."
+                  />
+                </div>
                 <div className="mt-2 flex gap-3">
                   <button type="submit" disabled={pending} className={quiet}>
                     Save item
@@ -93,13 +94,14 @@ export function Agenda({
           placeholder="10:00 — Opening circle"
           className={`${input} font-medium`}
         />
-        <textarea
-          name="description"
-          rows={2}
-          aria-label="New item description"
-          placeholder="What happens, in a line or two."
-          className={`${input} mt-2`}
-        />
+        <div className="mt-2">
+          <WysiwygArea
+            id="agenda-desc-new"
+            name="description"
+            defaultValue=""
+            placeholder="What happens, in a line or two."
+          />
+        </div>
         <div className="mt-3">
           <button type="submit" disabled={pending} className={primary}>
             {pending ? "Saving…" : "Add to the agenda"}

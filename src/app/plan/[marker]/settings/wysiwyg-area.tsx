@@ -33,9 +33,25 @@ function marksToHtml(text: string): string {
       if (lines.every((l) => l.trim().startsWith("- "))) {
         return `<ul>${lines.map((l) => `<li>${inlineHtml(l.trim().slice(2))}</li>`).join("")}</ul>`;
       }
-      const h = lines.length === 1 && /^#{1,3} ?/.exec(lines[0].trim());
-      if (h) return `<h3>${inlineHtml(lines[0].trim().slice(h[0].length))}</h3>`;
-      return `<p>${lines.map(inlineHtml).join("<br>")}</p>`;
+      // Mirrors RichText: a heading line needs no blank line around it.
+      let html = "";
+      let para: string[] = [];
+      const flush = () => {
+        if (para.length) html += `<p>${para.map(inlineHtml).join("<br>")}</p>`;
+        para = [];
+      };
+      for (const raw of lines) {
+        const l = raw.trim();
+        const h = /^#{1,3} ?/.exec(l);
+        if (h) {
+          flush();
+          html += `<h3>${inlineHtml(l.slice(h[0].length))}</h3>`;
+        } else {
+          para.push(raw);
+        }
+      }
+      flush();
+      return html;
     })
     .join("");
 }
@@ -112,6 +128,16 @@ export function WysiwygArea({
 
   useEffect(() => {
     if (box.current) box.current.innerHTML = marksToHtml(defaultValue);
+    // A form reset puts native fields back to their defaults on its own; the
+    // editable area has to be told. Cancel buttons and the agenda's add-form
+    // both count on this.
+    const form = hidden.current?.form;
+    const onReset = () => {
+      if (box.current) box.current.innerHTML = marksToHtml(defaultValue);
+      setEmpty(!defaultValue.trim());
+    };
+    form?.addEventListener("reset", onReset);
+    return () => form?.removeEventListener("reset", onReset);
     // The stored value only changes through typing; the default never does.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

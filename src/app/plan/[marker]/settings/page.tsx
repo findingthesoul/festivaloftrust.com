@@ -19,10 +19,14 @@ export const dynamic = "force-dynamic";
 
 export default async function Page({
   params,
+  searchParams,
 }: {
   params: Promise<{ marker: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { marker } = await params;
+  // Two tabs, one page grown too long: the event itself, and its webpage.
+  const tab = (await searchParams).tab === "webpage" ? "webpage" : "event";
   // A host helps run the festival; they do not administer it.
   const { festival, access } = await festivalFor(marker, { organiserOnly: true });
 
@@ -68,47 +72,81 @@ export default async function Page({
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
       <FestivalHeader festival={festival} access={access} active="settings" />
 
-      <div className="mt-8 space-y-6">
+      <nav className="border-ink/15 mt-8 flex gap-1 border-b" aria-label="Settings sections">
+        {(
+          [
+            ["event", "The event"],
+            ["webpage", "The webpage"],
+          ] as const
+        ).map(([key, label]) => (
+          <a
+            key={key}
+            href={
+              key === "event"
+                ? `/plan/${marker}/settings`
+                : `/plan/${marker}/settings?tab=webpage`
+            }
+            aria-current={tab === key ? "page" : undefined}
+            className={`border border-b-0 px-4 py-2 text-sm font-medium ${
+              tab === key
+                ? "border-ink/15 bg-white/60"
+                : "border-transparent text-ink/50 hover:text-ink"
+            }`}
+          >
+            {label}
+          </a>
+        ))}
+      </nav>
+
+      <div className="mt-6 space-y-6">
         <section className={`${card} p-5 sm:p-7`}>
           <EventSettings
             festival={festival}
             templates={templates}
             templatesProblem={templatesProblem}
+            part={tab}
           />
         </section>
-        <section className={`${card} p-5 sm:p-7`}>
-          <Agenda
-            marker={marker}
-            items={agenda}
-            shown={festival.show_public_agenda}
-          />
-        </section>
-        <section className={`${card} p-5 sm:p-7`}>
-          <CoverUpload festivalId={festival.id} current={festival.cover_url} />
-        </section>
-        <section className={`${card} p-5 sm:p-7`}>
-          <LogoPicker
-            marker={marker}
-            current={(() => {
-              const mine = logos.find((l) => l.claimed_by === festival.id);
-              return mine ? { id: mine.id, html: logoSvg(mine.form, "curlogo") } : null;
-            })()}
-            available={logos
-              .filter((l) => !l.claimed_by)
-              .map((l, i) => ({ id: l.id, html: logoSvg(l.form, `avlogo${i}`) }))}
-          />
-        </section>
-        <section className={`${card} p-5 sm:p-7`}>
-          <Collaborators
-            marker={marker}
-            members={members}
-            invites={invites}
-            meId={user.id}
-          />
-        </section>
-        <section className={`${card} border-red/30 p-5 sm:p-7`}>
-          <DeleteFestival marker={marker} isLive={festival.status === "live"} />
-        </section>
+        {tab === "webpage" ? (
+          <>
+            <section className={`${card} p-5 sm:p-7`}>
+              <Agenda
+                marker={marker}
+                items={agenda}
+                shown={festival.show_public_agenda}
+              />
+            </section>
+            <section className={`${card} p-5 sm:p-7`}>
+              <CoverUpload festivalId={festival.id} current={festival.cover_url} />
+            </section>
+            <section className={`${card} p-5 sm:p-7`}>
+              <LogoPicker
+                marker={marker}
+                current={(() => {
+                  const mine = logos.find((l) => l.claimed_by === festival.id);
+                  return mine ? { id: mine.id, html: logoSvg(mine.form, "curlogo") } : null;
+                })()}
+                available={logos
+                  .filter((l) => !l.claimed_by)
+                  .map((l, i) => ({ id: l.id, html: logoSvg(l.form, `avlogo${i}`) }))}
+              />
+            </section>
+          </>
+        ) : (
+          <>
+            <section className={`${card} p-5 sm:p-7`}>
+              <Collaborators
+                marker={marker}
+                members={members}
+                invites={invites}
+                meId={user.id}
+              />
+            </section>
+            <section className={`${card} border-red/30 p-5 sm:p-7`}>
+              <DeleteFestival marker={marker} isLive={festival.status === "live"} />
+            </section>
+          </>
+        )}
       </div>
     </main>
   );

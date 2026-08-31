@@ -20,11 +20,19 @@ export function EventSettings({
   festival,
   templates,
   templatesProblem,
+  part = "event",
 }: {
   festival: Festival;
   templates: FibreThreadTemplate[];
   /** Why there is nothing to choose from, when there is nothing. */
   templatesProblem?: string | null;
+  /**
+   * Which half the tab shows. Both halves stay in the form — a save always
+   * carries every field, so nothing hidden is wiped — but only one is
+   * visible: "event" is the festival itself, "webpage" is how its public
+   * page reads.
+   */
+  part?: "event" | "webpage";
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -90,14 +98,18 @@ export function EventSettings({
         })
       }
     >
-      <h2 className="text-xl font-bold">The event</h2>
+      <h2 className="text-xl font-bold">
+        {part === "event" ? "The event" : "The webpage"}
+      </h2>
       <p className="text-ink/55 mt-1 text-sm">
-        {festival.thread_id
-          ? "Changes here also change the public page."
-          : "Kept until the festival is published, then carried to its public page."}
+        {part === "webpage"
+          ? "The words the public page shows."
+          : festival.thread_id
+            ? "Changes here also change the public page."
+            : "Kept until the festival is published, then carried to its public page."}
       </p>
 
-      <div className="mt-7 grid gap-6 sm:grid-cols-2">
+      <div hidden={part !== "event"} className="mt-7 grid gap-6 sm:grid-cols-2">
         <Field label="Title" htmlFor="name" className="sm:col-span-2">
           <input
             id="name"
@@ -110,7 +122,12 @@ export function EventSettings({
         </Field>
 
         <MarkerField current={festival.marker} title={title} />
+      </div>
 
+      <div
+        hidden={part !== "webpage"}
+        className="mt-7 grid gap-6 sm:grid-cols-2"
+      >
         <Field
           label="Description"
           htmlFor="summary"
@@ -152,7 +169,9 @@ export function EventSettings({
             placeholder="Where to be, from when, and anything to bring."
           />
         </Field>
+      </div>
 
+      <div hidden={part !== "event"} className="mt-6 grid gap-6 sm:grid-cols-2">
         {/* One day. The Thread is told the end is the start, rather than asking
             a question a Festival of Trust never has two answers to. */}
         <Field label="Date" htmlFor="starts_on">
@@ -274,7 +293,10 @@ export function EventSettings({
         </Field>
       </div>
 
-      <fieldset className="border-ink/12 mt-8 border-t pt-2">
+      <fieldset
+        hidden={part !== "event"}
+        className="border-ink/12 mt-8 border-t pt-2"
+      >
         <legend className="sr-only">Registration</legend>
         <div className="divide-ink/10 divide-y">
           <Toggle
@@ -289,6 +311,15 @@ export function EventSettings({
             title="List it publicly"
             hint="Unlisted festivals stay reachable by their direct link."
           />
+        </div>
+      </fieldset>
+
+      <fieldset
+        hidden={part !== "webpage"}
+        className="border-ink/12 mt-8 border-t pt-2"
+      >
+        <legend className="sr-only">What the page shows</legend>
+        <div className="divide-ink/10 divide-y">
           <Toggle
             name="show_public_agenda"
             defaultChecked={festival.show_public_agenda}

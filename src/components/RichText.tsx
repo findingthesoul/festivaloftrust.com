@@ -41,39 +41,54 @@ function inline(text: string) {
 
 export function RichText({ text }: { text: string }) {
   const blocks = text.replace(/\r\n/g, "\n").split(/\n{2,}/);
-  return (
-    <>
-      {blocks.map((block, i) => {
-        const lines = block.split("\n").filter((l) => l.trim() !== "");
-        if (lines.length === 0) return null;
-        if (lines.every((l) => l.trim().startsWith("- "))) {
-          return (
-            <ul key={i} className="list-disc space-y-1.5 pl-5">
-              {lines.map((l, j) => (
-                <li key={j}>{inline(l.trim().slice(2))}</li>
-              ))}
-            </ul>
-          );
-        }
-        const heading = lines.length === 1 && /^#{1,3} ?/.exec(lines[0].trim());
-        if (heading) {
-          return (
-            <h3 key={i} className="text-xl font-bold tracking-[-0.01em]">
-              {inline(lines[0].trim().slice(heading[0].length))}
-            </h3>
-          );
-        }
-        return (
-          <p key={i}>
-            {lines.map((l, j) => (
-              <Fragment key={j}>
-                {j > 0 && <br />}
-                {inline(l)}
-              </Fragment>
-            ))}
-          </p>
+  const out: React.ReactNode[] = [];
+  let key = 0;
+  for (const block of blocks) {
+    const lines = block.split("\n").filter((l) => l.trim() !== "");
+    if (lines.length === 0) continue;
+    if (lines.every((l) => l.trim().startsWith("- "))) {
+      out.push(
+        <ul key={key++} className="list-disc space-y-1.5 pl-5">
+          {lines.map((l, j) => (
+            <li key={j}>{inline(l.trim().slice(2))}</li>
+          ))}
+        </ul>,
+      );
+      continue;
+    }
+    // A heading needs no blank line around it: any line opening with # marks
+    // becomes one, and the lines between headings group into paragraphs.
+    let para: string[] = [];
+    const flush = () => {
+      if (!para.length) return;
+      const run = para;
+      para = [];
+      out.push(
+        <p key={key++}>
+          {run.map((l, j) => (
+            <Fragment key={j}>
+              {j > 0 && <br />}
+              {inline(l)}
+            </Fragment>
+          ))}
+        </p>,
+      );
+    };
+    for (const raw of lines) {
+      const l = raw.trim();
+      const h = /^#{1,3} ?/.exec(l);
+      if (h) {
+        flush();
+        out.push(
+          <h3 key={key++} className="text-xl font-bold tracking-[-0.01em]">
+            {inline(l.slice(h[0].length))}
+          </h3>,
         );
-      })}
-    </>
-  );
+      } else {
+        para.push(raw);
+      }
+    }
+    flush();
+  }
+  return <>{out}</>;
 }
