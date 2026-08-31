@@ -32,6 +32,22 @@ export default async function Home() {
   }));
   return (
     <>
+      {/* Structured data: who this organisation is, for search engines. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            name: "Festival of Trust",
+            url: "https://www.festivaloftrust.com",
+            logo: "https://www.festivaloftrust.com/icon.svg",
+            sameAs: ["https://www.instagram.com/festivaloftrust/"],
+            description:
+              "A grassroots movement that finds trust where it already lives, celebrates it in the open, and helps build it where it is missing.",
+          }),
+        }}
+      />
       <HeroPoster slides={slides} />
 
       {/* scroll-mt clears the fixed nav bar, which otherwise covers the top

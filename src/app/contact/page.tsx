@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { PageShell } from "@/components/PageShell";
 
-export const metadata: Metadata = { title: "Contact" };
+export const metadata: Metadata = {
+  title: "Contact",
+  description: "Reach the people behind the Festival of Trust.",
+  alternates: { canonical: "/contact" },
+};
 
 export default function Page() {
   return (

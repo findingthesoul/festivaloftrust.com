@@ -5,7 +5,12 @@ import { PageHero } from "@/components/PageHero";
 import { pagePhoto } from "@/lib/photos";
 import { NineSteps } from "@/components/NineSteps";
 
-export const metadata: Metadata = { title: "About" };
+export const metadata: Metadata = {
+  title: "About",
+  description:
+    "The story of the Festival of Trust: a grassroots movement that finds trust where it already lives, celebrates it in the open, and helps build it where it is missing.",
+  alternates: { canonical: "/about" },
+};
 
 // The photo desk can dress this page without a deploy.
 export const dynamic = "force-dynamic";

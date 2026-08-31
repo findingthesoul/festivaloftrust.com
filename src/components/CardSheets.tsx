@@ -320,6 +320,9 @@ export function CardSheets({
       window.removeEventListener("scroll", frame);
       window.removeEventListener("resize", frame);
     };
+    // hero is a mount-time layout fact, not a live dependency — its element
+    // identity changes every parent render and would restart the animation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheets]);
 
   return (

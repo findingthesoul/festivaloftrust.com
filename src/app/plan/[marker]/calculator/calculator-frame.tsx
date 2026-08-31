@@ -241,7 +241,7 @@ export function CalculatorFrame({
         schedule();
       });
     }
-  }, [marker, prefill, save, currencies, cur, isAdmin, prices, mOf]);
+  }, [marker, prefill, save, currencies, cur, isAdmin, prices]);
 
   useEffect(() => {
     return () => {

@@ -4,7 +4,12 @@ import Link from "next/link";
 import { allLogos, fallbackLogoSvg, logoSvg } from "@/lib/logos";
 import { upcomingFestivals } from "@/lib/festivals";
 
-export const metadata: Metadata = { title: "Upcoming" };
+export const metadata: Metadata = {
+  title: "Upcoming",
+  description:
+    "Upcoming Festivals of Trust: where the movement lands next — dates, places, and how to be there.",
+  alternates: { canonical: "/upcoming" },
+};
 
 // The calendar moves without a deploy: a festival publishes, a date passes.
 export const dynamic = "force-dynamic";

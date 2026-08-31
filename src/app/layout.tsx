@@ -12,6 +12,8 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.festivaloftrust.com"),
   title: { default: title, template: `%s — ${title}` },
   description,
+  // Self-referencing canonical on every page that does not set its own.
+  alternates: { canonical: "./" },
   openGraph: {
     title,
     description,
@@ -19,8 +21,21 @@ export const metadata: Metadata = {
     siteName: title,
     locale: "en_GB",
     type: "website",
+    images: [
+      {
+        url: "/photos/cape-town-close-up.jpg",
+        width: 1200,
+        height: 900,
+        alt: "A child in bright pink sunglasses, standing close among others at a festival.",
+      },
+    ],
   },
-  twitter: { card: "summary_large_image", title, description },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: ["/photos/cape-town-close-up.jpg"],
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

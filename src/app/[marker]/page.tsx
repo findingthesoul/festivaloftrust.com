@@ -9,6 +9,21 @@ import { RichText } from "@/components/RichText";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * The summary speaks the site's few marks; a meta description or a piece of
+ * structured data wants plain words. Strip the marks, tighten the space,
+ * keep it a sentence-or-three long.
+ */
+function plainSummary(text: string | null): string | undefined {
+  if (!text) return undefined;
+  const plain = text
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/[*#]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return plain ? plain.slice(0, 300) : undefined;
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -23,10 +38,11 @@ export async function generateMetadata({
     // A draft is visible to its own people and to nobody else. Keeping it out
     // of search results is the other half of that.
     robots: preview ? { index: false, follow: false } : undefined,
-    description: festival.summary ?? undefined,
+    description: plainSummary(festival.summary),
+    alternates: preview ? undefined : { canonical: `/${marker}` },
     openGraph: {
       title: festival.name,
-      description: festival.summary ?? undefined,
+      description: plainSummary(festival.summary),
       images: festival.cover_url ? [festival.cover_url] : undefined,
     },
   };
@@ -54,6 +70,44 @@ export default async function Page({
 
   return (
     <main className="flex-1">
+      {/* Structured data: the event as search engines read one. Drafts are
+          noindexed, so they carry none. */}
+      {!preview && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Event",
+              name: festival.name,
+              ...(festival.starts_on
+                ? { startDate: festival.starts_on, endDate: festival.starts_on }
+                : {}),
+              eventAttendanceMode:
+                "https://schema.org/OfflineEventAttendanceMode",
+              ...(festival.place
+                ? {
+                    location: {
+                      "@type": "Place",
+                      name: festival.place,
+                      address: festival.place,
+                    },
+                  }
+                : {}),
+              ...(festival.cover_url ? { image: [festival.cover_url] } : {}),
+              ...(plainSummary(festival.summary)
+                ? { description: plainSummary(festival.summary) }
+                : {}),
+              organizer: {
+                "@type": "Organization",
+                name: "Festival of Trust",
+                url: "https://www.festivaloftrust.com",
+              },
+              url: `https://www.festivaloftrust.com/${festival.marker}`,
+            }),
+          }}
+        />
+      )}
       {preview && (
         <p className="bg-ink text-cream px-6 py-2.5 text-center text-sm">
           Draft — only the people working on this festival can see this page.
