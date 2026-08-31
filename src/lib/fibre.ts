@@ -425,6 +425,7 @@ export type FibreEnrolment = {
   status?: string;
   full_name?: string | null;
   email?: string | null;
+  checked_in_at?: string | null;
   id: string;
   enrolment_id: string;
   person_id: string;
@@ -487,4 +488,28 @@ export async function putManifest(manifest: {
   entity_mappings?: unknown[];
 }): Promise<unknown> {
   return call(`/apps/${SLUG}/manifest`, { method: "PUT", body: manifest });
+}
+
+/** A scanned Thread ticket, resolved: whose it is and where they stand. */
+export type FibreDoorTicket = {
+  id: string;
+  full_name: string | null;
+  status: string | null;
+  payment_status: string | null;
+  checked_in_at: string | null;
+};
+
+/** The door, platform side — both behind review:enrolments. */
+export async function resolveCheckin(code: string): Promise<FibreDoorTicket> {
+  return call<FibreDoorTicket>(`/apps/${SLUG}/thread/checkin/${code}`);
+}
+
+export async function checkinEnrolment(
+  rowId: string,
+  undo = false,
+): Promise<unknown> {
+  return call(`/apps/${SLUG}/thread/enrolments/${rowId}/checkin`, {
+    method: "POST",
+    body: { undo },
+  });
 }

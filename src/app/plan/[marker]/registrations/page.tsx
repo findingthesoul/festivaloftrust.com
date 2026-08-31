@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { festivalFor } from "../guard";
 import { FestivalHeader } from "../festival-header";
-import { attendeesFor, registrationFor, registrations } from "@/lib/festivals";
+import { attendeesFor, registrationFor, registrationOpensAt, registrations } from "@/lib/festivals";
 import { RegistrationList, type GuestRow } from "./registration-list";
 import { card } from "@/components/ui";
 import { OpenToggle } from "./open-toggle";
+import { RegistrationControls } from "../publish/registration-controls";
 
 export const metadata: Metadata = { title: "Registrations", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -19,6 +20,8 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
   const people = await registrations(festival);
   const registration = await registrationFor(festival);
   const attendees = await attendeesFor(festival.id);
+  const opensAt =
+    festival.status === "live" ? await registrationOpensAt(festival.id) : null;
 
   // One list from two books: the platform now names its rows and says who
   // still waits for a decision; the site's own book adds the phone. Matched
@@ -75,6 +78,13 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
       {festival.thread_id && registration && (
         <section className={`${card} mt-8 p-5 print:hidden sm:p-6`}>
           <OpenToggle marker={festival.marker} open={registration.open} />
+          <div className="border-ink/10 mt-5 border-t pt-5">
+            <RegistrationControls
+              festival={festival}
+              opensAtIso={opensAt}
+              open={opensAt !== null && new Date(opensAt) <= new Date()}
+            />
+          </div>
         </section>
       )}
 

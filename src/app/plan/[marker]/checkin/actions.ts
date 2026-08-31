@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { accessTo, festivalByMarker } from "@/lib/festivals";
+import { checkinEnrolment, resolveCheckin } from "@/lib/fibre";
 import { bookSupabase } from "@/lib/supabase/service";
 
 /**
@@ -84,4 +85,41 @@ export async function checkInTicket(
   ticketId: string,
 ): Promise<CheckResult> {
   return setArrived(marker, ticketId, true);
+}
+
+/** Check a platform enrolment in or out, on the platform's own book. */
+export async function setEnrolmentArrived(
+  marker: string,
+  enrolmentRowId: string,
+  on: boolean,
+): Promise<CheckResult> {
+  const festival = await teamFestival(marker);
+  if (!festival) return { error: "not yours" };
+  try {
+    await checkinEnrolment(enrolmentRowId, !on);
+    revalidatePath(`/plan/${marker}/checkin`);
+    return { arrived: on };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
+}
+
+/** A scanned Thread ticket: resolve the code, admit its person. */
+export async function checkInThreadCode(
+  marker: string,
+  code: string,
+): Promise<CheckResult> {
+  const festival = await teamFestival(marker);
+  if (!festival) return { error: "not yours" };
+  try {
+    const ticket = await resolveCheckin(code);
+    if (ticket.status === "declined") {
+      return { error: `${ticket.full_name ?? "This guest"} was declined — not admitted.` };
+    }
+    await checkinEnrolment(ticket.id, false);
+    revalidatePath(`/plan/${marker}/checkin`);
+    return { arrived: true, name: ticket.full_name ?? undefined };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : String(e) };
+  }
 }

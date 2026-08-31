@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 
-/** Publishing moved onto the Webpage tab; the old address follows it. */
+/** Publishing moved to the top of Settings; the old address follows it. */
 export default async function Page({
   params,
 }: {
   params: Promise<{ marker: string }>;
 }) {
   const { marker } = await params;
-  redirect(`/plan/${marker}/webpage`);
+  redirect(`/plan/${marker}/settings`);
 }

@@ -42,7 +42,8 @@ export default async function Page({
       name: e.full_name?.trim() || book?.name || "Guest",
       email: e.email ?? book?.email ?? null,
       attendeeId: book?.id ?? null,
-      arrived: !!book?.arrived_at,
+      enrolmentRowId: e.id,
+      arrived: !!e.checked_in_at || !!book?.arrived_at,
     });
   }
   for (const a of attendees) {
@@ -52,6 +53,7 @@ export default async function Page({
       name: a.name,
       email: a.email,
       attendeeId: a.id,
+      enrolmentRowId: null,
       arrived: !!a.arrived_at,
     });
   }

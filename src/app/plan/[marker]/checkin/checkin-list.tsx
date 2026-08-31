@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { checkInPlatformGuest, checkInTicket, setArrived } from "./actions";
+import { checkInPlatformGuest, checkInThreadCode, checkInTicket, setArrived, setEnrolmentArrived } from "./actions";
 import { input } from "@/components/ui";
 
 export type DoorGuest = {
@@ -11,10 +11,14 @@ export type DoorGuest = {
   email: string | null;
   /** The book row, when the site knows this guest; the door can make one. */
   attendeeId: string | null;
+  /** The platform's enrolment row, when the platform knows this guest. */
+  enrolmentRowId: string | null;
   arrived: boolean;
 };
 
 const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+// The Thread's own tickets carry a 32-hex check-in code in their address.
+const THREAD_CODE = /checkin\/([0-9a-f]{32})/i;
 
 /**
  * The list at the door, and the camera above it. Scanning prefers the
@@ -49,9 +53,13 @@ export function CheckinList({
 
   const toggle = (g: DoorGuest) =>
     start(async () => {
-      const r = g.attendeeId
-        ? await setArrived(marker, g.attendeeId, !g.arrived)
-        : await checkInPlatformGuest(marker, { name: g.name, email: g.email });
+      // The platform's guests check in on the platform's book, so The
+      // Thread's door and ours agree; the site's own guests use the site's.
+      const r = g.enrolmentRowId
+        ? await setEnrolmentArrived(marker, g.enrolmentRowId, !g.arrived)
+        : g.attendeeId
+          ? await setArrived(marker, g.attendeeId, !g.arrived)
+          : await checkInPlatformGuest(marker, { name: g.name, email: g.email });
       if (r.error) {
         setNote(r.error);
         return;
@@ -70,7 +78,10 @@ export function CheckinList({
     let timer: ReturnType<typeof setTimeout> | null = null;
 
     const onCode = (raw: string) => {
-      const id = UUID.exec(raw)?.[0];
+      // Two kinds of ticket arrive at one door: the site's own (a UUID in
+      // the address) and The Thread's (a 32-hex check-in code).
+      const threadCode = THREAD_CODE.exec(raw)?.[1];
+      const id = threadCode ?? UUID.exec(raw)?.[0];
       if (!id) {
         setNote("That QR code is not a ticket for this festival.");
         return;
@@ -79,7 +90,9 @@ export function CheckinList({
       if (lastCode.current.code === id && now - lastCode.current.at < 4000) return;
       lastCode.current = { code: id, at: now };
       start(async () => {
-        const r = await checkInTicket(marker, id);
+        const r = threadCode
+          ? await checkInThreadCode(marker, threadCode)
+          : await checkInTicket(marker, id);
         setNote(r.error ? r.error : `${r.name ?? "Guest"} is in ✓`);
         if (!r.error) router.refresh();
       });

@@ -9,6 +9,7 @@ import { Collaborators } from "./collaborators";
 import { EventSettings } from "./event-settings";
 import { card } from "@/components/ui";
 import { DeleteFestival } from "./delete-festival";
+import { PublishControls } from "../publish/publish-controls";
 
 export const metadata: Metadata = { title: "Settings", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -62,6 +63,10 @@ export default async function Page({
       <FestivalHeader festival={festival} access={access} active="settings" />
 
       <div className="mt-8 space-y-6">
+        {/* The biggest switch first: whether the festival is public at all. */}
+        <section className={`${card} p-5 sm:p-7`}>
+          <PublishControls marker={marker} status={festival.status} />
+        </section>
         <section className={`${card} p-5 sm:p-7`}>
           <EventSettings
             festival={festival}
