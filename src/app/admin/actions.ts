@@ -113,3 +113,67 @@ export async function removeFromHome(photoId: string) {
   revalidatePath("/");
   return error ? { error: error.message } : {};
 }
+
+/**
+ * The one-click pick on the festival overview: the festival's cover joins
+ * (or leaves) the home page rotation. Joining creates the photo-list row if
+ * the cover was never pulled in, crediting the festival's organisation so
+ * the home page has something to print.
+ */
+export async function toggleCoverHome(festivalId: string, on: boolean) {
+  if (!(await requireAdmin())) return { error: "not an admin" };
+  const supabase = await serverSupabase();
+  const { data: fest } = await supabase
+    .from("festival")
+    .select("id, name, cover_url, owner_id")
+    .eq("id", festivalId)
+    .maybeSingle();
+  const festival = fest as {
+    id: string;
+    name: string;
+    cover_url: string | null;
+    owner_id: string;
+  } | null;
+  if (!festival?.cover_url) return { error: "this festival has no cover yet" };
+
+  if (!on) {
+    const { error } = await supabase
+      .from("photo")
+      .update({ page: null })
+      .eq("festival_id", festivalId)
+      .eq("url", festival.cover_url);
+    revalidatePath("/admin");
+    revalidatePath("/");
+    return error ? { error: error.message } : {};
+  }
+
+  const { data: existing } = await supabase
+    .from("photo")
+    .select("id")
+    .eq("festival_id", festivalId)
+    .eq("url", festival.cover_url)
+    .maybeSingle();
+  let error: { message: string } | null = null;
+  if (existing) {
+    ({ error } = await supabase
+      .from("photo")
+      .update({ page: "home" })
+      .eq("id", (existing as { id: string }).id));
+  } else {
+    const { data: owner } = await supabase
+      .from("organiser")
+      .select("organisation, full_name")
+      .eq("id", festival.owner_id)
+      .maybeSingle();
+    const o = owner as { organisation: string | null; full_name: string | null } | null;
+    ({ error } = await supabase.from("photo").insert({
+      festival_id: festivalId,
+      url: festival.cover_url,
+      credit: o?.organisation?.trim() || o?.full_name || festival.name,
+      page: "home",
+    }));
+  }
+  revalidatePath("/admin");
+  revalidatePath("/");
+  return error ? { error: error.message } : {};
+}

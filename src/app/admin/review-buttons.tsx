@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { decideFestival, decideOrganiser, removeFromHome } from "./actions";
+import { decideFestival, decideOrganiser, removeFromHome, toggleCoverHome } from "./actions";
 
 export function OrganiserButtons({ id }: { id: string }) {
   const [pending, start] = useTransition();
@@ -112,6 +112,36 @@ export function HomePhotoButtons({ id }: { id: string }) {
       className="border-ink/25 hover:border-ink/50 border px-3 py-1.5 text-sm disabled:opacity-50"
     >
       Take off the home page
+    </button>
+  );
+}
+
+/**
+ * The round pick on a festival's cover: checked means the cover is in the
+ * home page rotation.
+ */
+export function CoverHomeToggle({
+  festivalId,
+  on,
+}: {
+  festivalId: string;
+  on: boolean;
+}) {
+  const [pending, start] = useTransition();
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      title={on ? "Take the cover off the home page" : "Put the cover on the home page"}
+      aria-pressed={on}
+      onClick={() => start(async () => void (await toggleCoverHome(festivalId, !on)))}
+      className={`absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full border text-sm shadow-sm transition-colors disabled:opacity-50 ${
+        on
+          ? "bg-green border-green text-cream"
+          : "border-ink/30 text-ink/40 hover:border-ink/60 hover:text-ink/70 bg-white/90"
+      }`}
+    >
+      ✓
     </button>
   );
 }

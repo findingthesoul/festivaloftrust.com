@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { serverSupabase } from "@/lib/supabase/server";
 import { standing } from "@/lib/organiser";
 import Link from "next/link";
-import { FestivalButtons, HomePhotoButtons, OrganiserButtons } from "./review-buttons";
+import { CoverHomeToggle, FestivalButtons, HomePhotoButtons, OrganiserButtons } from "./review-buttons";
 
 export const metadata: Metadata = { title: "Review", robots: { index: false } };
 export const dynamic = "force-dynamic";
@@ -64,7 +64,7 @@ export default async function Page({
     // by hand below rather than adding one for a listing.
     supabase
       .from("festival")
-      .select("id, name, marker, place, status, starts_on, owner_id")
+      .select("id, name, marker, place, status, starts_on, owner_id, cover_url")
       .order("created_at", { ascending: false }),
     supabase.from("festival_member").select("user_id"),
     // The home page's wardrobe: every photo festivals have offered. Fails
@@ -107,6 +107,10 @@ export default async function Page({
       ? (festivalName.get(p.festival_id) ?? "a festival")
       : "Workspace library",
   }));
+
+  // Which cover images are in the home rotation right now, for the round
+  // pick on the overview.
+  const homeUrls = new Set(homePhotos.map((p) => p.url));
 
   const pendingPeople = people ?? [];
   const pendingFestivals = festivals ?? [];
@@ -361,7 +365,22 @@ export default async function Page({
               const owner = byOwner.get(f.owner_id);
               return (
                 <li key={f.id} className="flex items-start justify-between gap-6 py-5">
-                  <div className="min-w-0">
+                  <div className="flex min-w-0 items-start gap-4">
+                    {f.cover_url && (
+                      <div className="relative w-28 shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={f.cover_url}
+                          alt=""
+                          className="border-ink/15 aspect-[3/2] w-full border object-cover"
+                        />
+                        <CoverHomeToggle
+                          festivalId={f.id}
+                          on={homeUrls.has(f.cover_url)}
+                        />
+                      </div>
+                    )}
+                    <div className="min-w-0">
                     <p className="font-bold">{f.name}</p>
                     <p className="text-ink/60 font-mono text-sm">
                       /{f.marker}
@@ -377,6 +396,7 @@ export default async function Page({
                         owner?.email ||
                         "owner no longer an approved organiser"}
                     </p>
+                    </div>
                   </div>
                   <span className="flex shrink-0 items-center gap-4">
                     <Link

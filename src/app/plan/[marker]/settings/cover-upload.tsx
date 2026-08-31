@@ -69,7 +69,10 @@ export function CoverUpload({
     <div>
       <p className="font-medium">Cover image</p>
       <p className="text-ink/60 mt-1 text-sm leading-relaxed text-pretty">
-        Real, warm, close-up. It stands for the festival wherever it appears.
+        Real, warm, close-up. It stands for the festival wherever it appears —
+        and it can be selected as a photo for festivaloftrust.com&rsquo;s own
+        pages, credited to your festival. Only upload a photo you have the
+        right to share that way.
       </p>
 
       {current && (
