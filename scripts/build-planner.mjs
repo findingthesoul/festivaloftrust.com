@@ -144,14 +144,21 @@ patch(
   fundPanel.id = "pageFund";
   fundPanel.style.display = "none";
   fundPanel.innerHTML = '<div class="panel"><h2>Fundamentals</h2>' +
-    '<p class="hint">Currencies, and each one\\u2019s ratio against the base prices. A festival that chooses a currency starts from the base defaults times its ratio \\u2014 0.5 means half the base rates.</p>' +
+    '<p class="hint">Two numbers per currency: the exchange rate (how many of it one euro buys) and the price level (0.5 means local prices are half the base). A festival in that currency shows every amount times both.</p>' +
     '<div id="fundRows"></div>' +
     '<p style="margin-top:10px"><button type="button" id="fundAdd">Add currency</button> ' +
     '<button type="button" id="fundSave">Save</button> <span id="fundNote" class="hint"></span></p></div>';
   $("pageOffer").parentNode.insertBefore(fundPanel, $("pageOffer").nextSibling);
   let FUND = [];
   function drawFund() {
-    $("fundRows").innerHTML = FUND.map((c, i) =>
+    $("fundRows").innerHTML =
+      '<div style="display:flex;gap:8px;align-items:center" class="hint">' +
+      '<span style="width:64px">Code</span><span style="width:52px">Symbol</span>' +
+      '<span style="flex:1">Name</span>' +
+      '<span style="width:80px">\\u20AC1 buys</span>' +
+      '<span style="width:80px">Price level</span>' +
+      '<span style="width:28px"></span></div>' +
+      FUND.map((c, i) =>
       '<div style="display:flex;gap:8px;margin:6px 0;align-items:center">' +
       '<input style="width:64px" data-i="' + i + '" data-k="code" maxlength="3" placeholder="EUR" value="' + (c.code || "") + '">' +
       '<input style="width:52px" data-i="' + i + '" data-k="symbol" placeholder="\\u20AC" value="' + (c.symbol || "") + '">' +
