@@ -10,6 +10,7 @@
  */
 
 import { serverSupabase } from "@/lib/supabase/server";
+import { bookSupabase } from "@/lib/supabase/service";
 import {
   startRun,
   getThread,
@@ -758,26 +759,38 @@ export async function publicFestival(
 async function recordAttendee(
   festival: Festival,
   input: { name: string; email: string; phone?: string | null; requestId: string },
-) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) {
+): Promise<string | null> {
+  const admin = await bookSupabase();
+  if (!admin) {
     console.error("[festivals] attendee book skipped — service credentials missing");
-    return;
+    return null;
   }
-  const { createClient } = await import("@supabase/supabase-js");
-  const admin = createClient(url, key, { auth: { persistSession: false } });
-  const { error } = await admin.from("festival_attendee").insert({
-    festival_id: festival.id,
-    name: input.name,
-    email: input.email,
-    phone: input.phone ?? null,
-    request_id: input.requestId,
-  });
-  // 23505 is the request_id unique index: the same registration retried.
-  if (error && error.code !== "23505") {
+  const { data, error } = await admin
+    .from("festival_attendee")
+    .insert({
+      festival_id: festival.id,
+      name: input.name,
+      email: input.email,
+      phone: input.phone ?? null,
+      request_id: input.requestId,
+    })
+    .select("id")
+    .single();
+  // 23505 is the request_id unique index: the same registration retried —
+  // the ticket is the existing row's.
+  if (error && error.code === "23505") {
+    const { data: existing } = await admin
+      .from("festival_attendee")
+      .select("id")
+      .eq("request_id", input.requestId)
+      .maybeSingle();
+    return (existing as { id: string } | null)?.id ?? null;
+  }
+  if (error) {
     console.error("[festivals] attendee book write failed", error.message);
+    return null;
   }
+  return (data as { id: string } | null)?.id ?? null;
 }
 
 /**
@@ -789,13 +802,14 @@ export type Attendee = {
   email: string;
   phone: string | null;
   created_at: string;
+  arrived_at: string | null;
 };
 
 export async function attendeesFor(festivalId: string): Promise<Attendee[]> {
   const supabase = await serverSupabase();
   const { data, error } = await supabase
     .from("festival_attendee")
-    .select("id, name, email, phone, created_at")
+    .select("id, name, email, phone, created_at, arrived_at")
     .eq("festival_id", festivalId)
     .order("created_at", { ascending: true });
   if (error) {
@@ -839,7 +853,7 @@ export async function registrationFor(
 export async function registerAttendee(
   festival: Festival,
   input: { name: string; email: string; phone?: string | null; requestId: string },
-): Promise<{ error?: string }> {
+): Promise<{ error?: string; ticket?: string }> {
   if (!festival.thread_id || !process.env.FIBRE_APP_KEY) {
     return { error: "Registration is not open yet." };
   }
@@ -859,8 +873,8 @@ export async function registerAttendee(
       policy_version: "festivaloftrust.com/privacy 2026-08-29",
       request_id: input.requestId,
     });
-    await recordAttendee(festival, input);
-    return {};
+    const ticket = await recordAttendee(festival, input);
+    return ticket ? { ticket } : {};
   } catch (e) {
     const detail = e instanceof FibreError ? e.detail : String(e);
     console.error("[festivals] registration failed", {

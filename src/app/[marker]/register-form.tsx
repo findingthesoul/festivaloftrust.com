@@ -41,6 +41,19 @@ export function RegisterForm({
             ? "Your registration is with the organisers — they confirm by email."
             : "That's it. A confirmation is on its way to your inbox."}
         </p>
+        {state.ticket && (
+          <a
+            href={state.ticket}
+            className="bg-ink text-cream mt-5 inline-block rounded-lg px-5 py-2.5 text-sm font-medium transition-opacity hover:opacity-85"
+          >
+            Open your ticket ↗
+          </a>
+        )}
+        {state.ticket && (
+          <p className="text-ink/55 mt-2 text-xs">
+            Save or screenshot it — the QR code checks you in at the door.
+          </p>
+        )}
       </div>
     );
   }

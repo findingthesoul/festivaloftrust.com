@@ -119,7 +119,7 @@ export function AccountMenu({
                 href="/admin/photos"
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="hover:bg-ink/5 block rounded-lg px-2.5 py-2"
+                className="hover:bg-ink/5 hidden rounded-lg px-2.5 py-2 sm:block"
               >
                 Photo desk
               </Link>
@@ -129,7 +129,7 @@ export function AccountMenu({
                 href="/gen"
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="hover:bg-ink/5 block rounded-lg px-2.5 py-2"
+                className="hover:bg-ink/5 hidden rounded-lg px-2.5 py-2 sm:block"
               >
                 Shape generator
               </Link>

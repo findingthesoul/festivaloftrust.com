@@ -57,6 +57,17 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">
       <div className="print:hidden">
         <FestivalHeader festival={festival} access={access} active="registrations" />
+        <p className="mt-6">
+          <a
+            href={`/plan/${marker}/checkin`}
+            className="bg-green text-cream inline-block rounded-lg px-5 py-2.5 text-sm font-bold transition-opacity hover:opacity-85"
+          >
+            Door check-in →
+          </a>
+          <span className="text-ink/55 ml-3 text-sm">
+            The guest list for a phone at the entrance, with a QR scanner.
+          </span>
+        </p>
       </div>
 
       {/* The doors, where the guest list is watched. Only once there is a

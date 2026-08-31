@@ -5,6 +5,8 @@ import { liveFestival, registerAttendee } from "@/lib/festivals";
 export type RegisterState = {
   status: "idle" | "done" | "error";
   message?: string;
+  /** The guest's ticket address — the QR shown at the door. */
+  ticket?: string;
 };
 
 /**
@@ -45,5 +47,8 @@ export async function register(
     requestId: requestId.length >= 8 ? requestId : crypto.randomUUID(),
   });
   if (r.error) return { status: "error", message: r.error };
-  return { status: "done" };
+  return {
+    status: "done",
+    ticket: r.ticket ? `/${festival.marker}/ticket/${r.ticket}` : undefined,
+  };
 }
