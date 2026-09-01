@@ -221,6 +221,12 @@ export function CheckinList({
       </div>
 
       {scanning && (
+        <p className="text-ink/55 mt-3 text-sm">
+          One door at a time: while the camera scans, the hand check-in is
+          off — stop scanning to tap a name.
+        </p>
+      )}
+      {scanning && (
         <div className="border-ink/15 mt-4 overflow-hidden rounded-xl border bg-black">
           {/* The mirror is for selfies; a document scan reads straight. */}
           <video ref={video} playsInline muted className="max-h-80 w-full object-cover" />
@@ -255,7 +261,7 @@ export function CheckinList({
             </div>
             <button
               type="button"
-              disabled={pending}
+              disabled={pending || scanning}
               onClick={() => toggle(g)}
               className={`shrink-0 rounded-lg px-4 py-2 text-sm font-bold transition-opacity hover:opacity-85 disabled:opacity-50 ${
                 g.arrived
