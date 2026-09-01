@@ -7,6 +7,8 @@ export async function sendEmail(input: {
   to: string;
   subject: string;
   html: string;
+  /** filename + base64 content, straight through to Resend. */
+  attachments?: { filename: string; content: string }[];
 }): Promise<{ error?: string }> {
   const key = process.env.RESEND_API_KEY;
   if (!key) {
@@ -26,6 +28,7 @@ export async function sendEmail(input: {
       to: input.to,
       subject: input.subject,
       html: input.html,
+      ...(input.attachments?.length ? { attachments: input.attachments } : {}),
     }),
     cache: "no-store",
   });
