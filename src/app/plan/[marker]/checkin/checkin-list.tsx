@@ -36,6 +36,18 @@ export function CheckinList({
   const [q, setQ] = useState("");
   const [pending, start] = useTransition();
   const [note, setNote] = useState<string | null>(null);
+  // The scan's answer, written across the whole screen for a moment — the
+  // person at the door sees it from an arm's length, phone tilted away.
+  const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showFlash = (ok: boolean, text: string) => {
+    if (flashTimer.current) clearTimeout(flashTimer.current);
+    setFlash({ ok, text });
+    try {
+      navigator.vibrate?.(ok ? 80 : [60, 60, 60]);
+    } catch {}
+    flashTimer.current = setTimeout(() => setFlash(null), 2200);
+  };
   const [scanning, setScanning] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
   const lastCode = useRef<{ code: string; at: number }>({ code: "", at: 0 });
@@ -88,6 +100,7 @@ export function CheckinList({
       start(async () => {
         const r = await checkInThreadCode(marker, code);
         setNote(r.error ? r.error : `${r.name ?? "Guest"} is in ✓`);
+        showFlash(!r.error, r.error ? r.error : (r.name ?? "Guest"));
         if (!r.error) router.refresh();
       });
     };
@@ -170,6 +183,25 @@ export function CheckinList({
 
   return (
     <div>
+      {flash && (
+        <div
+          aria-live="assertive"
+          className={`fixed inset-0 z-[100] flex flex-col items-center justify-center px-8 text-center ${
+            flash.ok ? "bg-green" : "bg-red"
+          } text-cream`}
+          onClick={() => setFlash(null)}
+        >
+          <span className="text-[clamp(4rem,20vw,9rem)] leading-none" aria-hidden="true">
+            {flash.ok ? "✓" : "✕"}
+          </span>
+          <p className="mt-4 text-[clamp(1.5rem,6vw,3rem)] leading-tight font-bold text-balance">
+            {flash.text}
+          </p>
+          <p className="mt-3 text-sm opacity-80">
+            {flash.ok ? "Checked in" : "Not admitted"}
+          </p>
+        </div>
+      )}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold">The door</h2>
