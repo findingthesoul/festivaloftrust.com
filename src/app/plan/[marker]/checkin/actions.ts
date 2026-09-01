@@ -109,6 +109,21 @@ export async function checkInThreadCode(
     if (ticket.status === "declined") {
       return { error: `${ticket.full_name ?? "This guest"} was declined — not admitted.` };
     }
+    // A ticket only opens the door once. The second scan is the red screen:
+    // same QR shown twice is exactly what a door wants to notice.
+    if (ticket.checked_in_at) {
+      let at = "";
+      try {
+        at = ` at ${new Intl.DateTimeFormat("en-GB", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: festival.timezone,
+        }).format(new Date(ticket.checked_in_at))}`;
+      } catch {}
+      return {
+        error: `${ticket.full_name ?? "This guest"} was already checked in${at}.`,
+      };
+    }
     await checkinEnrolment(ticket.id, false);
     revalidatePath(`/plan/${marker}/checkin`);
     return { arrived: true, name: ticket.full_name ?? undefined };
