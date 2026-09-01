@@ -158,32 +158,32 @@ export async function resendTicket(
       }).format(new Date(festival.starts_on))
     : null;
 
-  const html = `
-    <div style="font-family:Helvetica,Arial,sans-serif;max-width:480px;margin:0 auto;color:#181717">
-      <p style="letter-spacing:.12em;font-size:12px;color:#077c4c;font-weight:bold">YOUR TICKET — ${festival.name.toUpperCase()}</p>
-      <p>Hi ${guest.name},</p>
-      <p>Here is your ticket for <b>${festival.name}</b>${when ? ` on ${when}` : ""}${festival.place ? ` in ${festival.place}` : ""}.</p>
+  const { emailShell } = await import("@/lib/email");
+  const html = emailShell({
+    title: `Your ticket \u2014 ${festival.name}`,
+    bodyHtml: `
+      <p style="margin:0 0 14px">Hi ${guest.name},</p>
+      <p style="margin:0 0 18px">Here is your ticket for <b>${festival.name}</b>${when ? ` on ${when}` : ""}${festival.place ? ` in ${festival.place}` : ""}.</p>
       ${
         code
-          ? `<div style="border:1px solid #e3d3ba;border-radius:16px;padding:20px;text-align:center;margin:20px 0">
-               <p style="font-size:14px;color:#555">Show this QR at the door.</p>
+          ? `<div style="border:1px solid #e3d3ba;border-radius:16px;padding:20px;text-align:center;margin:0 0 18px">
+               <p style="margin:0 0 10px;font-size:14px;color:#7a6f61">Show this QR at the door.</p>
                <img src="${fibreBase}/api/v1/thread/public/checkin/${code}/qr.png" alt="Your check-in QR" width="240" height="240" style="max-width:100%">
              </div>`
           : ""
       }
       ${
         ticketUrl
-          ? `<p><a href="${ticketUrl}" style="background:#077c4c;color:#feecd2;padding:12px 22px;text-decoration:none;font-weight:bold;display:inline-block">Open your ticket</a></p>`
+          ? `<p style="margin:0 0 14px"><a href="${ticketUrl}" style="background:#077c4c;color:#feecd2;padding:12px 22px;text-decoration:none;font-weight:bold;display:inline-block;border-radius:8px">Open your ticket</a></p>`
           : ""
       }
       ${
         appleUrl || googleUrl
-          ? `<p style="margin-top:16px">${appleUrl ? `<a href="${appleUrl}" style="margin-right:14px">Add to Apple Wallet</a>` : ""}${googleUrl ? `<a href="${googleUrl}">Add to Google Wallet</a>` : ""}</p>`
+          ? `<p style="margin:0 0 14px">${appleUrl ? `<a href="${appleUrl}" style="color:#181717;margin-right:14px">Add to Apple Wallet</a>` : ""}${googleUrl ? `<a href="${googleUrl}" style="color:#181717">Add to Google Wallet</a>` : ""}</p>`
           : ""
       }
-      <p style="color:#777;font-size:13px">${qrAttachment ? "The QR is attached to this email too. " : ""}A screenshot of the QR works just as well. See you there!</p>
-      <p style="color:#777;font-size:13px">— Festival of Trust</p>
-    </div>`;
+      <p style="margin:0;color:#7a6f61;font-size:13px">${qrAttachment ? "The QR is attached to this email too. " : ""}A screenshot of the QR works just as well. See you there!</p>`,
+  });
 
   const sent = await sendEmail({
     to: guest.email,
