@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import type { AgendaItem } from "@/lib/festivals";
 import { input, primary, quiet } from "@/components/ui";
 import { addAgenda, removeAgenda, saveAgenda } from "./actions";
@@ -20,12 +21,19 @@ export function Agenda({
   items: AgendaItem[];
   shown: boolean;
 }) {
+  const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const addForm = useRef<HTMLFormElement>(null);
 
   const run = (work: () => Promise<{ error?: string }>) =>
-    start(async () => setError((await work()).error ?? null));
+    start(async () => {
+      const r = await work();
+      setError(r.error ?? null);
+      // The action revalidates, but this closure is what asks the router to
+      // look — without it a saved item only appeared after a manual reload.
+      if (!r.error) router.refresh();
+    });
 
   return (
     <div>

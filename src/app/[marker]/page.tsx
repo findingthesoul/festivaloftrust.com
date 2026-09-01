@@ -90,6 +90,7 @@ export default async function Page({
       const seen = new Set<string>();
       for (const e of people) {
         if (e.awaiting_approval) continue;
+    if (e.status === "declined" || e.status === "cancelled") continue;
         const email = (e.email ?? "").toLowerCase();
         const book = email ? bookByEmail.get(email) : undefined;
         if (book) seen.add(book.id);

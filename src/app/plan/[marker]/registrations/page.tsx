@@ -17,11 +17,15 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
   // Empty until the festival has a public page and somebody enrols. The
   // platform returns the person and their payment status and nothing else —
   // the registration answers stay behind the data wall, by its choice.
-  const people = await registrations(festival);
-  const registration = await registrationFor(festival);
-  const attendees = await attendeesFor(festival.id);
-  const opensAt =
-    festival.status === "live" ? await registrationOpensAt(festival.id) : null;
+  // Four independent questions, one round trip's wait instead of four.
+  const [people, registration, attendees, opensAt] = await Promise.all([
+    registrations(festival),
+    registrationFor(festival),
+    attendeesFor(festival.id),
+    festival.status === "live"
+      ? registrationOpensAt(festival.id)
+      : Promise.resolve(null),
+  ]);
 
   // One list from two books: the platform now names its rows and says who
   // still waits for a decision; the site's own book adds the phone. Matched
@@ -30,7 +34,10 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
     attendees.map((a) => [a.email.toLowerCase(), a] as const),
   );
   const seen = new Set<string>();
-  const rows: GuestRow[] = people.map((e) => {
+  const admittedOrWaiting = people.filter(
+    (e) => e.status !== "declined" && e.status !== "cancelled",
+  );
+  const rows: GuestRow[] = admittedOrWaiting.map((e) => {
     const email = (e.email ?? "").toLowerCase();
     const book = email ? bookByEmail.get(email) : undefined;
     if (book) seen.add(book.id);

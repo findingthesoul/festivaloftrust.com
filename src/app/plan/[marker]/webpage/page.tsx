@@ -29,27 +29,31 @@ export default async function Page({
   const { marker } = await params;
   const { festival, access } = await festivalFor(marker, { organiserOnly: true });
 
-  const agenda = await agendaFor(festival.id);
-  // Both fail soft: without their migrations the cards simply start empty.
-  const logos = await allLogos().catch(() => []);
-  const photos = await photosFor(festival.id).catch(() => []);
-
-  // The structure choice lives in the form's hidden event half, so the same
-  // fetch as Settings — see that page for why it never throws.
-  let templates: FibreThreadTemplate[] = [];
-  let templatesProblem: string | null = null;
-  if (!process.env.FIBRE_APP_KEY) {
-    templatesProblem = "not connected to The Fibre";
-  } else {
-    try {
-      templates = (await listThreadTemplates()).templates;
-      if (templates.length === 0) {
-        templatesProblem = "no structures in this workspace yet";
-      }
-    } catch {
-      templatesProblem = "could not reach The Fibre just now";
+  const templatesFetch = (async (): Promise<{
+    templates: FibreThreadTemplate[];
+    templatesProblem: string | null;
+  }> => {
+    if (!process.env.FIBRE_APP_KEY) {
+      return { templates: [], templatesProblem: "not connected to The Fibre" };
     }
-  }
+    try {
+      const templates = (await listThreadTemplates()).templates;
+      return {
+        templates,
+        templatesProblem:
+          templates.length === 0 ? "no structures in this workspace yet" : null,
+      };
+    } catch {
+      return { templates: [], templatesProblem: "could not reach The Fibre just now" };
+    }
+  })();
+  const [agenda, logos, photos, tpl] = await Promise.all([
+    agendaFor(festival.id),
+    allLogos().catch(() => []),
+    photosFor(festival.id).catch(() => []),
+    templatesFetch,
+  ]);
+  const { templates, templatesProblem } = tpl;
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">

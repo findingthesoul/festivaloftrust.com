@@ -23,40 +23,33 @@ export default async function Page({
   // A host helps run the festival; they do not administer it.
   const { festival, access } = await festivalFor(marker, { organiserOnly: true });
 
-  const { members, invites } = await collaborators(festival.id);
-  // Who "you" is in the collaborator list. festivalFor has already proved a
-  // signed-in organiser, so this is narrowing rather than a real check — but
-  // a non-null assertion here would outlive the reason for it.
-  const user = await currentUser();
-  if (!user) notFound();
-
-  // The structures a festival can be built from.
-  //
-  // Fetched whether or not the festival is published. It is only CHOOSABLE
-  // before publishing — a template seeds a thread's items when the page is
-  // created, so applying one later would duplicate them — but a published
-  // festival should still say what it was built from rather than showing an
-  // absent field and no reason for it.
-  //
-  // Never fatal: if Fibre is unreachable or unconfigured the settings screen
-  // still has to open. An empty list simply means no choice is shown.
-  let templates: FibreThreadTemplate[] = [];
-  // Why the list is empty matters. "None exist" and "we could not ask" look
-  // identical to an organiser staring at a missing field, and the second is
-  // usually a key pointed at the wrong workspace.
-  let templatesProblem: string | null = null;
-  if (!process.env.FIBRE_APP_KEY) {
-    templatesProblem = "not connected to The Fibre";
-  } else {
-    try {
-      templates = (await listThreadTemplates()).templates;
-      if (templates.length === 0) {
-        templatesProblem = "no structures in this workspace yet";
-      }
-    } catch {
-      templatesProblem = "could not reach The Fibre just now";
+  // One guard, then every question at once — the templates ask The Fibre,
+  // which must never serialise behind the local reads.
+  const templatesFetch = (async (): Promise<{
+    templates: FibreThreadTemplate[];
+    templatesProblem: string | null;
+  }> => {
+    if (!process.env.FIBRE_APP_KEY) {
+      return { templates: [], templatesProblem: "not connected to The Fibre" };
     }
-  }
+    try {
+      const templates = (await listThreadTemplates()).templates;
+      return {
+        templates,
+        templatesProblem:
+          templates.length === 0 ? "no structures in this workspace yet" : null,
+      };
+    } catch {
+      return { templates: [], templatesProblem: "could not reach The Fibre just now" };
+    }
+  })();
+  const [{ members, invites }, user, tpl] = await Promise.all([
+    collaborators(festival.id),
+    currentUser(),
+    templatesFetch,
+  ]);
+  if (!user) notFound();
+  const { templates, templatesProblem } = tpl;
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">

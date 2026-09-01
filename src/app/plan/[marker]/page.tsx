@@ -20,10 +20,12 @@ export default async function Page({
   const { marker } = await params;
   const { festival, access } = await festivalFor(marker);
 
-  const connection = await connectionStatus();
+  const [connection, run] = await Promise.all([
+    connectionStatus(),
+    findRun(festival.id),
+  ]);
   // The run is found by the festival's own id, never by its marker — the marker
   // can change, the identity cannot.
-  const run = await findRun(festival.id);
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-6 py-12 sm:px-10 sm:py-16">

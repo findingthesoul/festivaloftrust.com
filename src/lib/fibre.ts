@@ -94,7 +94,20 @@ async function call<T>(
   });
 
   const text = await res.text();
-  const parsed: unknown = text ? JSON.parse(text) : null;
+  let parsed: unknown = null;
+  try {
+    parsed = text ? JSON.parse(text) : null;
+  } catch {
+    // A proxy's HTML error page, a truncated body: name the failure in our
+    // own words instead of letting a SyntaxError reach an organiser.
+    throw new FibreError(
+      res.status,
+      res.ok
+        ? "the platform answered with something that is not JSON"
+        : text.slice(0, 160) || res.statusText || `status ${res.status}`,
+      text,
+    );
+  }
 
   if (!res.ok) {
     // Two error shapes in play: app-key auth failures are RFC 9457 problem
