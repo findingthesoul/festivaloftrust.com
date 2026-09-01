@@ -65,14 +65,22 @@ export async function resendTicket(
   const { sendEmail } = await import("@/lib/email");
 
   let code: string | null = null;
+  // Which half fails matters: a row without a code and no row at all are
+  // different diagnoses, and the amber note below names the one that hit.
+  let codeGap: string | null = null;
   try {
     const rows = await registrations(festival);
-    code =
-      rows.find(
-        (e) => (e.email ?? "").toLowerCase() === guest.email.toLowerCase(),
-      )?.checkin_code ?? null;
-  } catch {
-    code = null;
+    const mine = rows.find(
+      (e) => (e.email ?? "").toLowerCase() === guest.email.toLowerCase(),
+    );
+    code = mine?.checkin_code ?? null;
+    if (!code) {
+      codeGap = mine
+        ? "the platform lists this enrolment without a check-in code — its listing may predate the door build"
+        : "no platform enrolment carries this email address";
+    }
+  } catch (e) {
+    codeGap = `the platform listing failed: ${e instanceof Error ? e.message : String(e)}`;
   }
 
   const fibreBase = process.env.FIBRE_API_URL ?? "https://thefibre-api.fly.dev";
@@ -165,10 +173,7 @@ export async function resendTicket(
   // Sent, but a ticket without its QR is worth saying out loud: the
   // platform's listing gave no check-in code for this guest.
   if (!code) {
-    return {
-      error:
-        "Sent — but without a QR: the platform lists no check-in code for this guest yet.",
-    };
+    return { error: `Sent — but without a QR: ${codeGap ?? "no check-in code found"}.` };
   }
   return {};
 }
