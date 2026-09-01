@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { admit, turnAway } from "./actions";
+import { admit, resendTicket, turnAway } from "./actions";
 
 /**
  * The guest list as a list of guests: name, email, phone, selectable rows,
@@ -19,6 +19,8 @@ export type GuestRow = {
   awaiting: boolean;
   /** The platform's enrolment row id, when the platform knows this guest. */
   enrolmentRowId: string | null;
+  /** The site's own book row, when it has one — the ticket page's address. */
+  attendeeId: string | null;
 };
 
 export function RegistrationList({
@@ -36,6 +38,7 @@ export function RegistrationList({
   const [printMode, setPrintMode] = useState<"list" | "tags">("list");
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [sentTo, setSent] = useState<string | null>(null);
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -52,6 +55,17 @@ export function RegistrationList({
     setPrintMode(mode);
     setTimeout(() => window.print(), 50);
   };
+
+  const sendTicket = (row: GuestRow) =>
+    start(async () => {
+      const r = await resendTicket(marker, {
+        email: row.email,
+        name: row.name,
+        attendeeId: row.attendeeId,
+      });
+      setError(r.error ?? null);
+      if (!r.error) setSent(row.id);
+    });
 
   const decide = (row: GuestRow, yes: boolean) =>
     start(async () => {
@@ -132,6 +146,17 @@ export function RegistrationList({
                   <td className="py-2.5">{a.email}</td>
                   <td className="text-ink/70 py-2.5">{a.phone ?? "—"}</td>
                   <td className="py-2.5 text-right">
+                    {a.email && (
+                      <button
+                        type="button"
+                        disabled={pending}
+                        onClick={() => sendTicket(a)}
+                        title="Email this guest their ticket"
+                        className="text-ink/55 hover:text-ink mr-3 text-xs underline decoration-2 underline-offset-4 transition-colors disabled:opacity-50"
+                      >
+                        {sentTo === a.id ? "Ticket sent ✓" : "Send ticket"}
+                      </button>
+                    )}
                     {a.awaiting &&
                       (canReview && a.enrolmentRowId ? (
                         <span className="flex justify-end gap-2">

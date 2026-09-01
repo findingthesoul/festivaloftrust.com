@@ -41,6 +41,7 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
       phone: book?.phone ?? null,
       awaiting: !!e.awaiting_approval,
       enrolmentRowId: e.id,
+      attendeeId: book?.id ?? null,
     };
   });
   for (const a of attendees) {
@@ -52,6 +53,7 @@ export default async function Page({ params }: { params: Promise<{ marker: strin
         phone: a.phone,
         awaiting: false,
         enrolmentRowId: null,
+        attendeeId: a.id,
       });
     }
   }

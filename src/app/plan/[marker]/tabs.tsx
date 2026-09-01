@@ -121,15 +121,15 @@ function TabIcon({ tab, className = "h-5.5 w-5.5" }: { tab: Tab; className?: str
   const paths: Record<Tab, React.ReactNode> = {
     festivals: (
       <>
-        <rect x="3.5" y="3.5" width="4.6" height="4.6" />
-        <rect x="9.7" y="3.5" width="4.6" height="4.6" />
-        <rect x="15.9" y="3.5" width="4.6" height="4.6" />
-        <rect x="3.5" y="9.7" width="4.6" height="4.6" />
-        <rect x="9.7" y="9.7" width="4.6" height="4.6" />
-        <rect x="15.9" y="9.7" width="4.6" height="4.6" />
-        <rect x="3.5" y="15.9" width="4.6" height="4.6" />
-        <rect x="9.7" y="15.9" width="4.6" height="4.6" />
-        <rect x="15.9" y="15.9" width="4.6" height="4.6" />
+        <rect x="4" y="4" width="3.6" height="3.6" fill="currentColor" stroke="none" />
+        <rect x="10.2" y="4" width="3.6" height="3.6" fill="currentColor" stroke="none" />
+        <rect x="16.4" y="4" width="3.6" height="3.6" fill="currentColor" stroke="none" />
+        <rect x="4" y="10.2" width="3.6" height="3.6" fill="currentColor" stroke="none" />
+        <rect x="10.2" y="10.2" width="3.6" height="3.6" fill="currentColor" stroke="none" />
+        <rect x="16.4" y="10.2" width="3.6" height="3.6" fill="currentColor" stroke="none" />
+        <rect x="4" y="16.4" width="3.6" height="3.6" fill="currentColor" stroke="none" />
+        <rect x="10.2" y="16.4" width="3.6" height="3.6" fill="currentColor" stroke="none" />
+        <rect x="16.4" y="16.4" width="3.6" height="3.6" fill="currentColor" stroke="none" />
       </>
     ),
     planner: (
