@@ -64,18 +64,40 @@ export async function resendTicket(
   const { registrations } = await import("@/lib/festivals");
   const { sendEmail } = await import("@/lib/email");
 
+  const findCode = async () => {
+    const rows = await registrations(festival);
+    const mine = rows.find(
+      (e) => (e.email ?? "").toLowerCase() === guest.email.toLowerCase(),
+    );
+    return { found: !!mine, code: mine?.checkin_code ?? null };
+  };
+
   let code: string | null = null;
   // Which half fails matters: a row without a code and no row at all are
   // different diagnoses, and the amber note below names the one that hit.
   let codeGap: string | null = null;
   try {
-    const rows = await registrations(festival);
-    const mine = rows.find(
-      (e) => (e.email ?? "").toLowerCase() === guest.email.toLowerCase(),
-    );
-    code = mine?.checkin_code ?? null;
-    if (!code) {
-      codeGap = mine
+    let { found, code: c } = await findCode();
+    // Sending a ticket to someone the platform does not know means the
+    // organiser wants them as a guest — so enrol them, which is where the
+    // check-in code is born. A guest declined earlier comes back as one
+    // awaiting the decision again, never silently admitted.
+    if (!found) {
+      const { registerAttendee } = await import("@/lib/festivals");
+      const made = await registerAttendee(festival, {
+        name: guest.name,
+        email: guest.email,
+        requestId: crypto.randomUUID(),
+      });
+      if (made.error) {
+        codeGap = `this guest has no enrolment, and enrolling them failed: ${made.error}`;
+      } else {
+        ({ found, code: c } = await findCode());
+      }
+    }
+    code = c;
+    if (!code && !codeGap) {
+      codeGap = found
         ? "the platform lists this enrolment without a check-in code — its listing may predate the door build"
         : "no platform enrolment carries this email address";
     }
