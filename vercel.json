@@ -4,5 +4,8 @@
       "path": "/api/cron/open-registration",
       "schedule": "*/15 * * * *"
     }
+  ],
+  "regions": [
+    "fra1"
   ]
 }

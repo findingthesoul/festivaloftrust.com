@@ -18,6 +18,21 @@ if (typeof window !== "undefined") {
 }
 
 const BASE = process.env.FIBRE_API_URL ?? "https://thefibre-api.fly.dev";
+
+/**
+ * A short memory for the platform's slow, slow-moving answers. Instance-
+ * local (each warm serverless instance keeps its own), so it trades at most
+ * a few seconds of staleness for skipping a network round trip on every
+ * tab. Writes that change a cached thing delete its key.
+ */
+const memo = new Map<string, { at: number; v: unknown }>();
+async function cached<T>(key: string, ttlMs: number, fn: () => Promise<T>): Promise<T> {
+  const hit = memo.get(key);
+  if (hit && Date.now() - hit.at < ttlMs) return hit.v as T;
+  const v = await fn();
+  memo.set(key, { at: Date.now(), v });
+  return v;
+}
 const SLUG = "fot-planner";
 
 export type StepStatus = "not_started" | "in_progress" | "done";
@@ -133,7 +148,9 @@ async function call<T>(
 
 /** Verify the key and see what it may do. */
 export const whoami = () =>
-  call<{ app_slug: string; workspace_id: string; scopes: string[] }>("/apps/whoami");
+  cached("whoami", 300_000, () =>
+    call<{ app_slug: string; workspace_id: string; scopes: string[] }>("/apps/whoami"),
+  );
 
 export type FibreFlow = {
   id: string;
@@ -148,7 +165,7 @@ export type FibreFlow = {
 
 /** Note the response key is `flows`, not `items`. */
 export const listFlows = () =>
-  call<{ flows: FibreFlow[] }>(`/apps/${SLUG}/flow/flows`);
+  cached("flows", 300_000, () => call<{ flows: FibreFlow[] }>(`/apps/${SLUG}/flow/flows`));
 
 export const getRun = (runId: string) =>
   call<FibreRun>(`/apps/${SLUG}/flow/runs/${runId}`);
@@ -357,10 +374,14 @@ export type FibreThreadTemplate = {
 };
 
 export const listThreadTemplates = () =>
-  call<{ templates: FibreThreadTemplate[] }>(`/apps/${SLUG}/thread/templates`);
+  cached("templates", 300_000, () =>
+    call<{ templates: FibreThreadTemplate[] }>(`/apps/${SLUG}/thread/templates`),
+  );
 
 export const getThread = (id: string) =>
-  call<FibreThread>(`/apps/${SLUG}/thread/threads/${id}`);
+  cached(`thread:${id}`, 20_000, () =>
+    call<FibreThread>(`/apps/${SLUG}/thread/threads/${id}`),
+  );
 
 export const listThreads = () =>
   call<{ threads: FibreThread[] }>(`/apps/${SLUG}/thread/threads`);
@@ -391,11 +412,14 @@ export const patchThread = (
     share_participants_public: boolean;
     share_participants_participants: boolean;
   }>,
-) =>
-  call<FibreThread>(`/apps/${SLUG}/thread/threads/${id}`, {
+) => {
+  // The write outdates the short memory of this thread.
+  memo.delete(`thread:${id}`);
+  return call<FibreThread>(`/apps/${SLUG}/thread/threads/${id}`, {
     method: "PATCH",
     body: patch,
   });
+};
 
 /**
  * Credit someone who helps run a festival on its public page — the Hosts &
