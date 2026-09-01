@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { FestivalTabs, type Tab } from "./tabs";
 import { organiserFor, type Access, type Festival } from "@/lib/festivals";
 
@@ -15,6 +16,20 @@ export async function FestivalHeader({
   // organiser row is not theirs to read — so the line simply does not appear
   // rather than showing a blank or an id.
   const owner = await organiserFor(festival.owner_id);
+  // Festival day: the door moves up beside the title, where thumbs are.
+  // Judged in the festival's own timezone — the day it is THERE.
+  const isFestivalDay = (() => {
+    if (!festival.starts_on) return false;
+    try {
+      return (
+        new Intl.DateTimeFormat("en-CA", { timeZone: festival.timezone }).format(
+          new Date(),
+        ) === festival.starts_on
+      );
+    } catch {
+      return new Date().toISOString().slice(0, 10) === festival.starts_on;
+    }
+  })();
   // The organisation carries the festival, not the person — the name only
   // stands in while no organisation is filled in on the profile.
   const ownerName =
@@ -32,6 +47,15 @@ export async function FestivalHeader({
         {/* The page as the public meets it — or, while it is a draft, the
             preview only its own people can open. Same address either way,
             which is the point of looking. */}
+        <span className="mt-1 flex shrink-0 items-center gap-4">
+        {isFestivalDay && (
+          <Link
+            href={`/plan/${festival.marker}/checkin`}
+            className="bg-green text-cream rounded-lg px-4 py-2 text-sm font-bold transition-opacity hover:opacity-85"
+          >
+            Door check-in →
+          </Link>
+        )}
         <a
           href={`/${festival.marker}`}
           target="_blank"
@@ -61,6 +85,7 @@ export async function FestivalHeader({
             <path d="M10 14 21 3" />
           </svg>
         </a>
+        </span>
       </div>
       <FestivalTabs
         marker={festival.marker}
