@@ -311,9 +311,15 @@ export function build(seed: number, opts: Options) {
   // Wildness varies how hard the tail shrinks (drawn up front so the same
   // seed keeps the same base layout as the slider moves).
   const tailJitter = [rand(), rand()];
-  const tailSizes = [0.62, 0.45].map((s, i) =>
-    Math.min(0.95, Math.max(0.25, s * (1 + (tailJitter[i] - 0.5) * 1.0 * wild))),
-  );
+  const tailSizes = [0.62, 0.45].map((s, i) => {
+    const shrunk = Math.min(0.95, Math.max(0.25, s * (1 + (tailJitter[i] - 0.5) * 1.0 * wild)));
+    // At the nine-grid end the size ladder holds whole: every form 1x and
+    // the anchor 2x — the original sheet's grammar, and the look the
+    // festival cards wear. The shrink is the slider's to introduce, fading
+    // in fully by a third of the way out.
+    const hold = Math.max(0, 1 - wild / 0.35);
+    return shrunk + (1 - shrunk) * hold;
+  });
 
   const layTail = ([dx, dy]: [number, number], strict: boolean): Item[] | null => {
     const items: Item[] = [];
