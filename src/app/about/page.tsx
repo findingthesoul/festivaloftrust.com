@@ -35,8 +35,8 @@ export default async function Page() {
               <>
                 <p>
                   An independent format, with soul inside: a grassroots
-                  movement, created and carried by Tahirih and Sjoerd, and
-                  brought to the world by Solidarity Lab.
+                  movement, created and carried by a group of members of the
+                  soul.com community.
                 </p>
                 <p>
                   A Festival of Trust is a one-day (or multi-part) gathering
