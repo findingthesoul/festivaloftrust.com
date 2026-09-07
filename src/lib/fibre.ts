@@ -131,6 +131,17 @@ async function call<T>(
     const p = parsed as
       | { detail?: string; title?: string; error?: unknown }
       | null;
+    // A workspace put in the archive answers 403 on every app path. The cure
+    // is a person reactivating it on the platform — not a key rotation, and
+    // the raw problem document would send someone hunting the wrong fault.
+    const problemType = (p as { type?: string } | null)?.type;
+    if (typeof problemType === "string" && problemType.includes("workspace-archived")) {
+      throw new FibreError(
+        res.status,
+        "The Fibre workspace is archived — reactivate it on thefibre.app, the key itself is fine.",
+        parsed,
+      );
+    }
     const fromError =
       typeof p?.error === "string"
         ? p.error
@@ -320,7 +331,9 @@ export type FibreThread = {
  */
 export function threadPublicUrl(thread: FibreThread): string | null {
   if (!thread.organiser?.slug || !thread.slug) return null;
-  const base = process.env.FIBRE_THREAD_URL ?? "https://thread.thefibre.app";
+  // THE CUT (platform v0.67.1): The Thread moved off *.thefibre.app to its
+  // own apex. The old host answers 404 now.
+  const base = process.env.FIBRE_THREAD_URL ?? "https://app.thethread.app";
   return `${base}/${thread.organiser.slug}/${thread.slug}`;
 }
 
