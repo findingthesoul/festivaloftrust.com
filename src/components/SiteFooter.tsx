@@ -76,7 +76,8 @@ export function SiteFooter() {
         </div>
 
         <div className="border-cream/15 mt-10 flex flex-wrap items-start justify-between gap-x-10 gap-y-6 border-t pt-8">
-          <div className="max-w-md text-sm leading-relaxed">
+          <div className="grid max-w-3xl flex-1 gap-x-12 gap-y-8 text-sm leading-relaxed sm:grid-cols-2">
+            <div>
             <p className="text-cream/70">
               Festival of Trust is an initiative of Solidarity Lab B.V.
               (Rotterdam, the Netherlands), partner of{" "}
@@ -97,10 +98,10 @@ export function SiteFooter() {
               </a>
             </p>
 
-            {/* Whose approach carries this. The logo file lands at
-                public/brand/soul-com.png; until it does, the words stand
-                alone. */}
-            <div className="mt-8 flex max-w-xl items-start gap-4">
+            </div>
+
+            {/* Whose approach carries this — the second column of the pair. */}
+            <div className="flex items-start gap-4">
               {/* The mark is dark lettering, so it stands on a light chip
                   rather than being filtered into something it is not. */}
               <a
