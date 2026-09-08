@@ -96,6 +96,27 @@ export function SiteFooter() {
                 hello@festivaloftrust.com
               </a>
             </p>
+
+            {/* Whose approach carries this. The logo file lands at
+                public/brand/soul-com.png; until it does, the words stand
+                alone. */}
+            <div className="mt-8 flex max-w-xl items-start gap-4">
+              <a href="https://soul.com" className="shrink-0 transition-opacity hover:opacity-70">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/brand/soul-com.png"
+                  alt="soul.com"
+                  className="h-8 w-auto"
+                />
+              </a>
+              <p className="text-cream/60 text-xs leading-relaxed text-pretty">
+                Festival of Trust is inspired and powered by the soul.com
+                approach. The initiative has soul inside. As members of the
+                soul.com community, we recognise soul.com as a source of
+                inspiration and contribute to the further growth and
+                development of the community.
+              </p>
+            </div>
           </div>
 
           <ul className="flex gap-3">
