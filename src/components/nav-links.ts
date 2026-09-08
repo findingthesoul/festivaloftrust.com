@@ -13,6 +13,7 @@ export const NAV = [
 /** Public pages for the sitemap: the nav plus entry points not shown in it. */
 export const PUBLIC_PATHS = [
   ...NAV.map((n) => n.href),
+  "/decade",
   "/join",
   "/terms",
   "/privacy",

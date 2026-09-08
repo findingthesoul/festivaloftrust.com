@@ -13,6 +13,7 @@ const MENU = [
     { href: "/for-society", label: "Society" },
     { href: "/for-organisations", label: "Organisations" },
     { href: "/funding", label: "Funding" },
+    { href: "/decade", label: "The Decade" },
   ],
   [
     { href: "/about", label: "About" },
