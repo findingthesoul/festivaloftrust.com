@@ -102,11 +102,9 @@ export function SiteFooter() {
 
             {/* Whose approach carries this — the second column of the pair. */}
             <div className="flex items-start gap-4">
-              {/* The mark is dark lettering, so it stands on a light chip
-                  rather than being filtered into something it is not. */}
               <a
                 href="https://soul.com"
-                className="bg-cream shrink-0 rounded-lg p-2.5 transition-opacity hover:opacity-80"
+                className="shrink-0 transition-opacity hover:opacity-80"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
