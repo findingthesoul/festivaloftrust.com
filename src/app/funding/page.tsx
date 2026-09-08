@@ -26,7 +26,7 @@ const WAYS = [
     accent: "bg-indigo",
     title: "Fund a series",
     body: "One festival grows a pocket; a sequence connects them. Funding partners can carry a whole run of festivals — like the national building days in South Africa in 2027, where the local soul.com team will organise six Festivals of Trust across different zones. One partner, six pockets of trust, one movement.",
-    cta: null,
+    cta: { href: "/contact", label: "Talk to us" },
   },
 ];
 
