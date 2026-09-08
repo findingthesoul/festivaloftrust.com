@@ -101,13 +101,17 @@ export function SiteFooter() {
                 public/brand/soul-com.png; until it does, the words stand
                 alone. */}
             <div className="mt-8 flex max-w-xl items-start gap-4">
-              <a href="https://soul.com" className="shrink-0 transition-opacity hover:opacity-70">
+              {/* The mark is dark lettering, so it stands on a light chip
+                  rather than being filtered into something it is not. */}
+              <a
+                href="https://soul.com"
+                className="bg-cream shrink-0 rounded-lg p-2.5 transition-opacity hover:opacity-80"
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/brand/soul-inside-white.png"
                   alt="soul.com inside"
-                  className="h-10 w-auto"
-                  style={{ filter: "brightness(0) invert(1)" }}
+                  className="h-9 w-auto"
                 />
               </a>
               <p className="text-cream/60 text-xs leading-relaxed text-pretty">
