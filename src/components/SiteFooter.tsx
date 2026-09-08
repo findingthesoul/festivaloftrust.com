@@ -104,9 +104,10 @@ export function SiteFooter() {
               <a href="https://soul.com" className="shrink-0 transition-opacity hover:opacity-70">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/brand/soul-com.png"
-                  alt="soul.com"
-                  className="h-8 w-auto"
+                  src="/brand/soul-inside-white.png"
+                  alt="soul.com inside"
+                  className="h-10 w-auto"
+                  style={{ filter: "brightness(0) invert(1)" }}
                 />
               </a>
               <p className="text-cream/60 text-xs leading-relaxed text-pretty">
