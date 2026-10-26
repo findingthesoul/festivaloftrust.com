@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   build,
   DEFAULT_OPTIONS,
+  ORIGINAL_FILLS,
   PALETTE,
   svgFor,
   svgForItems,
@@ -51,6 +52,8 @@ export function Generator({ shared = true }: { shared?: boolean } = {}) {
   // Save target: the collection tab last visited.
   const [collection, setCollection] = useState(DEFAULT_COLLECTION);
   const [editing, setEditing] = useState<{ seed: number; form?: SavedForm } | null>(null);
+  // Public mode: a tile opens a view-only popup first; editing is one click on.
+  const [viewing, setViewing] = useState<number | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Saved forms survive reloads; load after mount so SSR markup matches.
@@ -105,6 +108,31 @@ export function Generator({ shared = true }: { shared?: boolean } = {}) {
       return { seed, svg: svgFor(seed, color, opts) };
     });
   }, [batch, color, opts]);
+
+  // A tile as a standalone file: same form and colours as on screen.
+  const tileFile = (seed: number) => {
+    const { items } = build(seed, opts);
+    const original = color === "original";
+    const base = original ? PALETTE[5].hex : color;
+    const fills = original ? items.map((it) => ORIGINAL_FILLS[it.id]) : undefined;
+    return svgForItems(items, base, fills, { seed, items, base, original, accent: null });
+  };
+
+  const viewIndex = viewing === null ? -1 : tiles.findIndex((t) => t.seed === viewing);
+  const step = (d: number) => {
+    if (viewIndex < 0) return;
+    setViewing(tiles[(viewIndex + d + tiles.length) % tiles.length].seed);
+  };
+  useEffect(() => {
+    if (viewing === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setViewing(null);
+      if (e.key === "ArrowRight") step(1);
+      if (e.key === "ArrowLeft") step(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
 
   const pickedSeeds = useMemo(() => new Set(picked), [picked]);
   const collections = useMemo(
@@ -419,8 +447,11 @@ export function Generator({ shared = true }: { shared?: boolean } = {}) {
                 key={t.seed}
                 role="button"
                 tabIndex={0}
-                onClick={() => setEditing({ seed: t.seed })}
-                onKeyDown={(e) => e.key === "Enter" && setEditing({ seed: t.seed })}
+                onClick={() => (shared ? setEditing({ seed: t.seed }) : setViewing(t.seed))}
+                onKeyDown={(e) =>
+                  e.key === "Enter" &&
+                  (shared ? setEditing({ seed: t.seed }) : setViewing(t.seed))
+                }
                 className={`group relative aspect-square cursor-pointer bg-white p-4 transition-shadow ${
                   isPicked ? "ring-2 ring-black" : "hover:shadow-md"
                 }`}
@@ -498,6 +529,74 @@ export function Generator({ shared = true }: { shared?: boolean } = {}) {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {viewing !== null && viewIndex >= 0 && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 sm:p-8"
+          onClick={() => setViewing(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Form ${viewing}`}
+        >
+          <div
+            className="flex max-h-full w-full max-w-2xl flex-col gap-4 overflow-y-auto bg-white p-4 sm:p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm font-medium">Form {viewing}</span>
+              <button
+                type="button"
+                aria-label="Close"
+                onClick={() => setViewing(null)}
+                className="px-2 text-xl leading-none"
+              >
+                ✕
+              </button>
+            </div>
+            <div
+              className="aspect-square w-full p-[8%] [&_svg]:h-full [&_svg]:w-full"
+              dangerouslySetInnerHTML={{ __html: tiles[viewIndex].svg }}
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                aria-label="Previous form"
+                onClick={() => step(-1)}
+                className="border border-current px-3 py-2 text-sm"
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                aria-label="Next form"
+                onClick={() => step(1)}
+                className="border border-current px-3 py-2 text-sm"
+              >
+                →
+              </button>
+              <div className="ml-auto flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditing({ seed: viewing });
+                    setViewing(null);
+                  }}
+                  className="border border-current px-4 py-2 text-sm font-medium"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={() => download(tileFile(viewing), `fot-form-${viewing}.svg`, 0)}
+                  className="bg-foreground px-4 py-2 text-sm font-medium text-background"
+                >
+                  Download SVG
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
