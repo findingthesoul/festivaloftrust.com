@@ -523,6 +523,29 @@
   align-items: end;
 }
 
+.playbook {
+  background: var(--cream);
+  padding: clamp(20px, 4vw, 40px);
+  display: grid;
+  gap: 24px;
+}
+.playbook figure {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.playbook img {
+  width: 100%;
+  height: auto;
+  display: block;
+  box-shadow: 0 1px 0 rgba(25, 24, 24, 0.12);
+}
+.spreads {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 16px;
+}
+
 .dont {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -628,6 +651,9 @@
   }
   .dont {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .spreads {
+    grid-template-columns: 1fr;
   }
 }
 

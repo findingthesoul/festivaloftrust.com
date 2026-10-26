@@ -75,6 +75,17 @@ const IN_USE = [
   },
 ];
 
+const PLAYBOOK = [
+  { src: "orientation", alt: "Playbook spread: 'Orientation' in huge black type on yellow, Listen, Gather and Align forms overlapping in translucent orange and green.", note: "Phase opener · Orientation. Forms overlap, translucent." },
+  { src: "listen", alt: "Playbook spread: the Listen form and a huge '01' in blush on cream, with the step title and its opening text.", note: "Step opener · the number set huge in the form's colour." },
+  { src: "doing", alt: "Playbook spread: 'Doing' in huge type on orange with the Connect, Design and Invite forms overlapping.", note: "Phase opener · Doing." },
+  { src: "dimmer-room", alt: "Playbook spread on dark indigo: 'The dimmer room', four sliders topped by forms for Trust, Participation, Art and Festivity, and the settings Candle, Lantern, Bonfire, Fireworks.", note: "The dimmer room · forms as dial heads." },
+  { src: "design-toolkit", alt: "Playbook spread on forest green: 'The design toolkit' with a single white Design star.", note: "Section opener · one white form on a full colour field." },
+  { src: "culmination", alt: "Playbook spread: 'Culmination' in huge type on pink with the Host, Harvest and Grow forms overlapping.", note: "Phase opener · Culmination." },
+  { src: "grow", alt: "Playbook spread: the Grow pentagon and a huge '09', with the step's text.", note: "Step opener · Grow." },
+  { src: "lantern", alt: "Playbook spread: the nine forms scattered in colour, facing 'Now go and light the first lantern.'", note: "Closing · the forms set loose." },
+];
+
 function Chapter({
   id,
   n,
@@ -444,7 +455,7 @@ export default function Page() {
           </div>
         </Chapter>
 
-        <Chapter id="in-use" n="09" title="In use" aside="Posters and the book, sorted by dimmer setting. Made from the same nine forms and the same grid.">
+        <Chapter id="in-use" n="09" title="In use" aside="The book, the Playbook and the posters, sorted by dimmer setting. Made from the same nine forms and the same grid.">
           <div className={s.book}>
             <div style={{ display: "grid", gap: 6 }}>
               <span className={s.label}>The book · the whole dimmer in one object</span>
@@ -470,6 +481,32 @@ export default function Page() {
                 <img src="/brand/guide/book-3.jpg" alt="Book spread: photo of a child in pink sunglasses with the Gather form and wordmark in white, the steps listed with Align highlighted; text on the right." loading="lazy" />
                 <figcaption className={s.small}>Step spread · Layered, the current step highlighted</figcaption>
               </figure>
+            </div>
+          </div>
+
+          <div className={s.playbook}>
+            <div style={{ display: "grid", gap: 6 }}>
+              <span className={s.label}>The Playbook · Trust is made together</span>
+              <p className={s.small}>
+                The 150-page playbook for hosts is the identity at its wildest. Forms overlap and
+                turn translucent, each phase opens on a full field of colour, step numbers run
+                off the page in the form&apos;s colour. Underneath, the same nine forms on the same
+                grid.
+              </p>
+            </div>
+            <figure>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/guide/playbook-cover.jpg" alt="Playbook cover, back, spine and front: 'Trust is made together.' under the nine forms overlapping in translucent colour on cream." loading="lazy" />
+              <figcaption className={s.small}>Cover · back, spine, front</figcaption>
+            </figure>
+            <div className={s.spreads}>
+              {PLAYBOOK.map((it) => (
+                <figure key={it.src}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/brand/guide/playbook-${it.src}.jpg`} alt={it.alt} loading="lazy" />
+                  <figcaption className={s.small}>{it.note}</figcaption>
+                </figure>
+              ))}
             </div>
           </div>
 
