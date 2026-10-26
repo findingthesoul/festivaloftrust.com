@@ -29,7 +29,12 @@ const GEN_TAB = "__gen__";
 
 type SavedForm = FormState & { id: string; version: number; collection: string };
 
-export function Generator() {
+/**
+ * `shared` adds the Festival logos pool from the database. Off on the public
+ * brand guide, where visitors generate, edit and export, but the pool —
+ * and which festival claimed what — stays with organisers on /gen.
+ */
+export function Generator({ shared = true }: { shared?: boolean } = {}) {
   const [batch, setBatch] = useState(0);
   const [color, setColor] = useState<string>(PALETTE[5].hex);
   const [pentagonTail, setPentagonTail] = useState(DEFAULT_OPTIONS.pentagonTail);
@@ -73,8 +78,8 @@ export function Generator() {
   // The shared collection comes from the server, not localStorage.
   const refreshLogos = () => listLogos().then((r) => setDbLogos(r.logos));
   useEffect(() => {
-    void listLogos().then((r) => setDbLogos(r.logos));
-  }, []);
+    if (shared) void listLogos().then((r) => setDbLogos(r.logos));
+  }, [shared]);
   useEffect(() => {
     if (!loaded) return;
     try {
@@ -106,12 +111,12 @@ export function Generator() {
     () => [
       ...new Set([
         DEFAULT_COLLECTION,
-        FESTIVAL_COLLECTION,
+        ...(shared ? [FESTIVAL_COLLECTION] : []),
         ...extraCollections,
         ...saved.map((s) => s.collection),
       ]),
     ],
-    [saved, extraCollections],
+    [saved, extraCollections, shared],
   );
   const tabForms = useMemo(
     () =>

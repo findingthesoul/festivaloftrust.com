@@ -17,6 +17,7 @@ const MENU = [
   ],
   [
     { href: "/about", label: "About" },
+    { href: "/brand-guide", label: "Brand guide" },
     { href: "/contact", label: "Contact" },
     { href: "/privacy", label: "Privacy" },
     { href: "/terms", label: "Terms" },

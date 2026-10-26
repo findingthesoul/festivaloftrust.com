@@ -1,0 +1,638 @@
+/* The brand guide is laid out on the identity's own module x: one cell of
+   the mark. Dotted rules are the grid lines of the identity sheet; a fixed
+   label column sits left of each chapter. Values are the identity file's,
+   which differ slightly from the site palette in globals.css. */
+.guide {
+  --cream: #fbecd2;
+  --ink: #191818;
+  --paper: #ffffff;
+  --blush: #fbb4a8;
+  --marigold: #fbac0f;
+  --signal: #fb2f4a;
+  --plum: #6d5687;
+  --indigo: #4e4c9f;
+  --lagoon: #348eac;
+  --forest: #0c7b4b;
+  --muted: #5b5655;
+  --gutter: clamp(16px, 4vw, 48px);
+
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+  padding-block: 0 96px;
+}
+
+.guide h1,
+.guide h2,
+.guide h3 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.guide h3 {
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.guide p {
+  margin: 0;
+  max-width: 62ch;
+}
+.guide svg {
+  display: block;
+}
+
+.small {
+  font-size: 13px;
+  color: var(--muted);
+}
+.label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.chip {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  padding: 2px 7px 1px;
+  border-radius: 2px;
+  vertical-align: middle;
+  color: var(--signal);
+}
+
+/* cover */
+.cover {
+  background: var(--cream);
+  padding: clamp(28px, 5vw, 56px) var(--gutter) clamp(32px, 6vw, 64px);
+}
+.coverInner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  align-items: end;
+}
+.meta {
+  display: flex;
+  justify-content: space-between;
+  grid-column: 1 / -1;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.tag {
+  color: var(--lagoon);
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.tag b {
+  font-weight: 700;
+}
+.tag span {
+  font-weight: 300;
+}
+.coverWordmark {
+  width: min(100%, 300px);
+  margin-top: 40px;
+}
+.bigmark {
+  width: 100%;
+  max-width: 440px;
+  justify-self: end;
+}
+.coverIntro {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  border-top: 1.5px dotted var(--ink);
+  padding-top: 20px;
+}
+.coverIntro p {
+  font-size: 14px;
+}
+.toc {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+.toc a {
+  text-decoration: none;
+  color: inherit;
+  border-bottom: 1px solid transparent;
+}
+.toc a:hover {
+  border-bottom-color: currentColor;
+}
+
+/* chapters */
+.ch {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 24px 40px;
+  padding-block: 64px 8px;
+  scroll-margin-top: 80px;
+}
+.side {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  display: grid;
+  gap: 6px;
+}
+.num {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.body {
+  display: grid;
+  gap: 36px;
+  min-width: 0;
+}
+.lede {
+  font-size: clamp(19px, 2vw, 23px);
+  line-height: 1.3;
+  font-weight: 300;
+  max-width: 40ch;
+}
+.lede b {
+  font-weight: 700;
+}
+.cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 24px 32px;
+}
+.oneCol {
+  grid-template-columns: 1fr;
+}
+.cols > div {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+/* primitives */
+.prims {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1.5px dotted var(--ink);
+}
+.prims figure {
+  margin: 0;
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  border-right: 1.5px dotted var(--ink);
+}
+.prims figure:last-child {
+  border-right: 0;
+  background: var(--cream);
+}
+.prims svg {
+  width: 100%;
+  max-width: 120px;
+  aspect-ratio: 1;
+}
+
+/* nine steps */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1.5px dotted var(--ink);
+  border-left: 1.5px dotted var(--ink);
+}
+.step {
+  border-right: 1.5px dotted var(--ink);
+  border-bottom: 1.5px dotted var(--ink);
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+}
+.step svg {
+  width: 72px;
+  height: 72px;
+}
+.stepName {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.phase {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+.phase div {
+  font-size: 12px;
+  padding: 8px 18px 0;
+  color: var(--muted);
+}
+
+/* plates */
+.plates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.plate {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+.art {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  padding: 16%;
+  max-width: 100%;
+}
+.wide {
+  aspect-ratio: 16 / 10;
+  padding: 16% 9%;
+}
+.art svg {
+  width: 100%;
+  height: auto;
+}
+.onCream {
+  background: var(--cream);
+  color: var(--ink);
+}
+.onWhite {
+  background: var(--paper);
+  color: var(--ink);
+  outline: 1.5px dotted var(--ink);
+  outline-offset: -1.5px;
+}
+.onInk {
+  background: var(--ink);
+  color: var(--paper);
+}
+.onPhoto {
+  background: url(/photos/cape-town-close-up.jpg) 60% 40% / cover;
+  color: var(--paper);
+  padding: 16% 18%;
+}
+
+/* construction and grid figures */
+.figure {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 32px;
+  align-items: center;
+}
+.figure > svg {
+  width: 100%;
+  height: auto;
+  max-width: 520px;
+}
+
+/* colour */
+.base {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+}
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.sw {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+.chipc {
+  aspect-ratio: 1;
+}
+.base .chipc {
+  aspect-ratio: auto;
+  height: 120px;
+}
+.swName {
+  font-weight: 500;
+}
+.swVal {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.5;
+}
+.spectrum {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  height: 64px;
+}
+.blends {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+.blends div {
+  aspect-ratio: 1;
+}
+
+/* type */
+.spec {
+  display: grid;
+  gap: 28px;
+}
+.row {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 24px;
+  align-items: baseline;
+  border-top: 1.5px dotted var(--ink);
+  padding-top: 16px;
+}
+.weights {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+  font-size: 34px;
+  letter-spacing: -0.01em;
+}
+.wordspec {
+  font-weight: 700;
+  line-height: 0.86;
+}
+.wordspec span {
+  display: block;
+}
+.wordspec span:first-child {
+  font-size: clamp(28px, 4vw, 44px);
+  letter-spacing: -0.01em;
+}
+.wordspec span:last-child {
+  font-size: clamp(56px, 8vw, 88px);
+}
+
+/* dimmer */
+.knob {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 16px 20px;
+}
+.knob input {
+  width: 100%;
+  accent-color: var(--marigold);
+}
+.knobValue {
+  font-weight: 700;
+  font-size: 20px;
+  min-width: 7ch;
+  text-align: right;
+}
+.scrollX {
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+.strip {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 12px;
+  min-width: 780px;
+}
+.level {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  opacity: 0.45;
+  transition: opacity 0.25s;
+}
+.level[aria-pressed="true"] {
+  opacity: 1;
+}
+.level:focus-visible {
+  outline: 2px solid var(--lagoon);
+  outline-offset: 4px;
+}
+.level svg {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+}
+.level small {
+  font-weight: 500;
+  color: var(--muted);
+  margin-right: 6px;
+}
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 760px;
+  font-size: 14px;
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 12px 10px 0;
+  border-top: 1.5px dotted var(--ink);
+  vertical-align: top;
+}
+.table th {
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.table td:first-child {
+  font-weight: 500;
+  white-space: nowrap;
+}
+.table tr[data-on="true"] td {
+  background: var(--cream);
+}
+
+/* in use: posters and the book */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.gallery figure,
+.book figure {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.gallery img,
+.book img {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: var(--cream);
+}
+.groupHead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  border-top: 1.5px dotted var(--ink);
+  padding-top: 14px;
+}
+.book {
+  background: var(--ink);
+  color: var(--paper);
+  padding: clamp(20px, 4vw, 40px);
+  display: grid;
+  gap: 24px;
+}
+.book .small {
+  color: rgba(255, 255, 255, 0.7);
+}
+.bookRow {
+  display: grid;
+  grid-template-columns: minmax(0, 0.62fr) minmax(0, 1.2fr) minmax(0, 1.2fr);
+  gap: 16px;
+  align-items: end;
+}
+
+.dont {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+}
+.dont figure {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.dontArt {
+  aspect-ratio: 1;
+  background: var(--cream);
+  display: grid;
+  place-items: center;
+  padding: 18%;
+  position: relative;
+}
+.dontArt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top right,
+    transparent calc(50% - 1px),
+    var(--signal) calc(50% - 1px),
+    var(--signal) calc(50% + 1px),
+    transparent calc(50% + 1px)
+  );
+}
+.dontArt svg {
+  width: 100%;
+  height: auto;
+}
+
+.genHead {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 64px var(--gutter) 24px;
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 24px 40px;
+  border-top: 1.5px dotted var(--ink);
+  scroll-margin-top: 80px;
+}
+.generator {
+  background: var(--cream);
+  padding-top: 24px;
+}
+
+@media (max-width: 820px) {
+  .coverInner {
+    grid-template-columns: 1fr;
+  }
+  .bigmark {
+    justify-self: start;
+    max-width: 300px;
+  }
+  .coverIntro {
+    grid-template-columns: 1fr;
+  }
+  .ch,
+  .genHead {
+    grid-template-columns: 1fr;
+    padding-top: 44px;
+  }
+  .side {
+    position: static;
+  }
+  .prims {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .prims figure:nth-child(2) {
+    border-right: 0;
+  }
+  .prims figure:nth-child(-n + 2) {
+    border-bottom: 1.5px dotted var(--ink);
+  }
+  .steps {
+    grid-template-columns: 1fr;
+  }
+  .phase {
+    display: none;
+  }
+  .figure {
+    grid-template-columns: 1fr;
+  }
+  .row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .blends {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .base {
+    grid-template-columns: 1fr;
+  }
+  .gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .bookRow {
+    grid-template-columns: 1fr;
+  }
+  .dont {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level {
+    transition: none;
+  }
+}

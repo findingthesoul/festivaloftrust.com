@@ -9,6 +9,7 @@
 const RESERVED = new Set([
   "about",
   "api",
+  "brand-guide",
   "contact",
   "for-organisations",
   "for-society",

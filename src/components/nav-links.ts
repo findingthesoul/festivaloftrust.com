@@ -15,6 +15,7 @@ export const NAV = [
 export const PUBLIC_PATHS = [
   ...NAV.map((n) => n.href),
   "/join",
+  "/brand-guide",
   "/terms",
   "/privacy",
   "/cookies",
